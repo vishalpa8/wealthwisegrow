@@ -1,11 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
 
-interface PageProps {
-  params: { type: string; location: string };
-}
-
-export function generateMetadata({ params }: PageProps): Metadata {
+export function generateMetadata({ params }: { params: any }) {
   const { type, location } = params;
   const title = `${capitalize(type)} Calculator for ${formatLocation(location)} | WealthWise Hub`;
   const description = `Calculate your ${type} in ${formatLocation(location)}. Get instant results, local rates, and actionable insights for your financial planning.`;
@@ -31,10 +27,10 @@ function capitalize(str: string) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
 function formatLocation(str: string) {
-  return str.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return str.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
 }
 
-export default function ProgrammaticCalculatorPage({ params }: PageProps) {
+export default function Page({ params }: { params: any }) {
   const { type, location } = params;
   return (
     <section className="max-w-2xl mx-auto p-8 mt-8 bg-white rounded-2xl shadow-lg border border-gray-100">
