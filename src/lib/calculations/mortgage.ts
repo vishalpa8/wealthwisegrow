@@ -22,15 +22,14 @@ export interface PaymentScheduleItem {
 }
 
 export function calculateMortgage(inputs: MortgageInputs): MortgageResults {
-  const {
-    principal,
-    rate,
-    years,
-    downPayment = 0,
-    propertyTax = 0,
-    insurance = 0,
-    pmi = 0,
-  } = inputs;
+  // Use explicit type assertions for input values
+  const principal = Number(inputs.principal);
+  const rate = Number(inputs.rate);
+  const years = Number(inputs.years);
+  const downPayment = Number(inputs.downPayment || 0);
+  const propertyTax = Number(inputs.propertyTax || 0);
+  const insurance = Number(inputs.insurance || 0);
+  const pmi = Number(inputs.pmi || 0);
 
   const loanAmount = principal - downPayment;
   const monthlyRate = rate / 100 / 12;

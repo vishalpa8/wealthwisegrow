@@ -1,39 +1,169 @@
-import { ComparisonToolSkeleton } from "@/components/ui/comparison-tool-skeleton";
-import { MarketUpdatePlaceholder } from "@/components/ui/market-update-placeholder";
+"use client";
+
+import Link from 'next/link';
+import { useState } from 'react';
+import { CalculatorList } from "@/components/ui/calculator-list";
+import { CalculatorExplorer } from "@/components/ui/calculator-explorer";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const [isExplorerOpen, setIsExplorerOpen] = useState(false);
+
   return (
-    <section className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-10 py-10">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-5xl font-extrabold mb-4 text-blue-700 leading-tight">Personal Finance Calculator Hub</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          25+ interactive calculators for mortgages, loans, investments, retirement, debt payoff, and budgeting. Get instant results, actionable insights, and track your financial progress—all in one place.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="/calculators" className="px-8 py-3 bg-blue-600 text-white rounded-full font-semibold text-lg shadow hover:bg-blue-700 transition">Explore Calculators</a>
-          <a href="/guides" className="px-8 py-3 bg-white border border-blue-600 text-blue-700 rounded-full font-semibold text-lg shadow hover:bg-blue-50 transition">Read Guides</a>
+    <div className="space-y-20">
+      {/* Hero Section */}
+      <section className="text-center section-spacing">
+        <div className="container-narrow">
+          <div className="animate-fade-in">
+            <h1 className="text-heading-1 mb-6">
+              Personal Calculator Hub
+            </h1>
+            <p className="text-body-large mb-10 max-w-3xl mx-auto">
+              25+ interactive calculators for mortgages, loans, investments,
+              retirement, debt payoff, and budgeting. Get instant results,
+              actionable insights, and track your financial progress—all in one
+              place.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              <Button
+                onClick={() => setIsExplorerOpen(true)}
+                className="btn-primary btn-lg"
+              >
+                <span className="mr-2 text-lg">🧮</span>
+                Explore Calculators
+              </Button>
+              <Link
+                href="/calculators"
+                className="btn btn-outline btn-lg"
+              >
+                <span className="mr-2 text-lg">📊</span>
+                View All Calculators
+              </Link>
+              <Link
+                href="/guides"
+                className="btn btn-outline btn-lg"
+              >
+                <span className="mr-2 text-lg">📚</span>
+                Read Guides
+              </Link>
+            </div>
+          </div>
+          
+          {/* Feature Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16">
+            <div className="card text-center p-6 animate-scale-in" style={{animationDelay: '0.1s'}}>
+              <div className="text-3xl font-bold text-gray-900 mb-2">25+</div>
+              <div className="text-sm text-gray-600 font-medium">Calculators</div>
+            </div>
+            <div className="card text-center p-6 animate-scale-in" style={{animationDelay: '0.2s'}}>
+              <div className="text-3xl mb-2">⚡</div>
+              <div className="text-sm text-gray-600 font-medium">Instant Results</div>
+            </div>
+            <div className="card text-center p-6 animate-scale-in" style={{animationDelay: '0.3s'}}>
+              <div className="text-3xl mb-2">📊</div>
+              <div className="text-sm text-gray-600 font-medium">Track Progress</div>
+            </div>
+            <div className="card text-center p-6 animate-scale-in" style={{animationDelay: '0.4s'}}>
+              <div className="text-3xl mb-2">🆓</div>
+              <div className="text-sm text-gray-600 font-medium">Free & No Signup</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-10">
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
-          <span className="text-3xl font-bold text-blue-600">20+</span>
-          <span className="text-sm text-gray-500 mt-1">Calculators</span>
+      </section>
+
+      {/* Calculator Categories */}
+      <section className="animate-slide-up">
+        <div className="text-center mb-12">
+          <h2 className="text-heading-2 mb-4">
+            Financial Calculators for Every Need
+          </h2>
+          <p className="text-body-large max-w-2xl mx-auto">
+            From simple interest calculations to complex retirement planning, 
+            we've got you covered with professional-grade tools.
+          </p>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
-          <span className="text-3xl font-bold text-green-600">Instant</span>
-          <span className="text-sm text-gray-500 mt-1">Results</span>
+        <CalculatorList />
+      </section>
+
+      {/* Features Section */}
+      <section className="section-spacing-sm bg-gray-100 rounded-2xl">
+        <div className="container-narrow">
+          <div className="text-center mb-12">
+            <h2 className="text-heading-3 mb-4">
+              Why Choose WealthWise Hub?
+            </h2>
+            <p className="text-body">
+              Built by financial experts, designed for everyone
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-xl text-white">🎯</span>
+              </div>
+              <h3 className="text-heading-4 mb-3">Accurate Calculations</h3>
+              <p className="text-body">
+                Professional-grade algorithms ensure precise results for all your financial planning needs.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-xl text-white">🚀</span>
+              </div>
+              <h3 className="text-heading-4 mb-3">Lightning Fast</h3>
+              <p className="text-body">
+                Get instant results with our optimized calculators. No waiting, no delays.
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-xl text-white">🔒</span>
+              </div>
+              <h3 className="text-heading-4 mb-3">Privacy First</h3>
+              <p className="text-body">
+                Your data stays on your device. No registration required, completely private.
+              </p>
+            </div>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
-          <span className="text-3xl font-bold text-purple-600">Track</span>
-          <span className="text-sm text-gray-500 mt-1">Progress</span>
+      </section>
+
+      {/* CTA Section */}
+      <section className="text-center section-spacing-sm">
+        <div className="container-narrow">
+          <h2 className="text-heading-3 mb-4">
+            Ready to Take Control of Your Finances?
+          </h2>
+          <p className="text-body-large mb-8">
+            Start with any calculator and discover insights that can transform your financial future.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={() => setIsExplorerOpen(true)}
+              className="btn-primary btn-lg"
+            >
+              <span className="mr-2">🚀</span>
+              Get Started Now
+            </Button>
+            <Link
+              href="/calculators"
+              className="btn btn-outline btn-lg"
+            >
+              <span className="mr-2">📊</span>
+              Browse All
+            </Link>
+          </div>
         </div>
-        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
-          <span className="text-3xl font-bold text-yellow-600">Free</span>
-          <span className="text-sm text-gray-500 mt-1">& No Signup</span>
-        </div>
-      </div>
-      <ComparisonToolSkeleton />
-      <MarketUpdatePlaceholder />
-    </section>
+      </section>
+
+      {/* Calculator Explorer Modal */}
+      <CalculatorExplorer 
+        isOpen={isExplorerOpen} 
+        onClose={() => setIsExplorerOpen(false)} 
+      />
+    </div>
   );
 }

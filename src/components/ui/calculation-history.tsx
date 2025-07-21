@@ -1,4 +1,3 @@
-import React from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { LoadingSpinner } from "./loading-spinner";
 

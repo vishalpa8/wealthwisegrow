@@ -1,5 +1,4 @@
 import React from "react";
-import type { Metadata } from "next";
 
 export function generateMetadata({ params }: { params: any }) {
   const { type, location } = params;

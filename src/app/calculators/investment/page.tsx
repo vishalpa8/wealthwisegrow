@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import React from "react";
+import { useState, useEffect } from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { v4 as uuidv4 } from "uuid";
 import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
@@ -17,12 +16,12 @@ export default function InvestmentCalculator() {
   // Future value of a series formula
   const fv = initial * Math.pow(1 + r, n) +
     (monthly * (Math.pow(1 + r, n) - 1)) / r;
-  const [goal, setGoal] = React.useState(fv);
+  const [goal, setGoal] = useState(fv);
 
   const { addHistory } = useIndexedDBHistory();
 
   // Save to history when calculation changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (initial > 0 && monthly >= 0 && rate > 0 && years > 0 && fv > 0) {
       addHistory({
         id: uuidv4(),
@@ -34,7 +33,6 @@ export default function InvestmentCalculator() {
         notes: "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initial, monthly, rate, years, fv]);
 
   const fields: CalculatorFormField[] = [

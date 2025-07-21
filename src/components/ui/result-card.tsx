@@ -1,8 +1,7 @@
 "use client";
 
-import React from "react";
 import { cn } from "@/lib/utils/cn";
-import { formatCurrency } from "@/lib/utils/format";
+import { formatCurrency } from "@/lib/utils/currency";
 import type { ResultCardProps } from "@/types/calculator";
 
 export function ResultCard({

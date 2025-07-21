@@ -1,6 +1,5 @@
 "use client";
-import { useState } from "react";
-import React from "react";
+import { useState, useEffect } from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { v4 as uuidv4 } from "uuid";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
@@ -15,7 +14,7 @@ export default function BudgetCalculator() {
   const { addHistory } = useIndexedDBHistory();
 
   // Save to history when calculation changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (income > 0 && expenses >= 0 && savings !== undefined) {
       addHistory({
         id: uuidv4(),
@@ -27,7 +26,6 @@ export default function BudgetCalculator() {
         notes: "",
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [income, expenses, savings]);
 
   const fields: CalculatorFormField[] = [

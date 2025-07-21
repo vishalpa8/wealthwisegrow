@@ -1,4 +1,5 @@
 "use client";
+import React from 'react';
 export default function InsuranceCalculator() {
   return (
     <section className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 w-full">

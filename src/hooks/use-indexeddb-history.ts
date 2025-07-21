@@ -3,9 +3,9 @@ import type { CalculatorResult } from "@/types/calculator";
 
 const DB_KEY = "calculator_history";
 
-function getDB() {
-  return window.indexedDB;
-}
+// function getDB() {
+//   return window.indexedDB;
+//}
 
 export function useIndexedDBHistory() {
   const [history, setHistory] = useState<CalculatorResult[]>([]);
@@ -15,7 +15,7 @@ export function useIndexedDBHistory() {
   const openDB = useCallback((): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
       const request = indexedDB.open("WealthWiseHistory", 1);
-      request.onupgradeneeded = (event) => {
+      request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(DB_KEY)) {
           db.createObjectStore(DB_KEY, { keyPath: "id" });
@@ -63,7 +63,7 @@ export function useIndexedDBHistory() {
 
   useEffect(() => {
     loadHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // We only want to run this once
   }, []);
 
   return { history, loading, addHistory, clearHistory, reload: loadHistory };

@@ -1,6 +1,5 @@
 "use client";
-
-import React from "react";
+import { ChangeEvent } from "react";
 import { AlertCircle, HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import type { FormFieldProps } from "@/types/calculator";
@@ -29,7 +28,7 @@ export function FormField({
   const errorId = `${fieldId}-error`;
   const helpId = `${fieldId}-help`;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const newValue = type === "number" ? parseFloat(e.target.value) || 0 : e.target.value;
     onChange(newValue);
   };

@@ -1,0 +1,92 @@
+/* Base responsive styles */
+.responsive-container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Small devices (phones) */
+@media (max-width: 640px) {
+  .responsive-container {
+    max-width: 100%;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .mobile-stack {
+    flex-direction: column !important;
+  }
+
+  .mobile-full-width {
+    width: 100% !important;
+  }
+
+  .mobile-text-center {
+    text-align: center !important;
+  }
+
+  .mobile-hidden {
+    display: none !important;
+  }
+}
+
+/* Medium devices (tablets) */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .responsive-container {
+    max-width: 768px;
+  }
+
+  .tablet-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .tablet-hidden {
+    display: none !important;
+  }
+}
+
+/* Large devices (laptops/desktops) */
+@media (min-width: 1025px) {
+  .responsive-container {
+    max-width: 1280px;
+  }
+
+  .desktop-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .touch-padding {
+    padding: 0.75rem !important;
+  }
+}
+
+/* High contrast and reduced motion preferences */
+@media (prefers-contrast: high) {
+  :root {
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --background-primary: #ffffff;
+    --border-color: #000000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

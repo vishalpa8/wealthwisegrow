@@ -60,13 +60,13 @@ export interface ResultCardProps {
   suffix?: string;
   variant?: "default" | "success" | "warning" | "error";
   className?: string;
-  children?: React.ReactNode;
+  children?: import('react').ReactNode;
 }
 
 export interface CalculatorLayoutProps {
   title: string;
   description?: string;
-  children: React.ReactNode;
-  sidebar?: React.ReactNode;
+  children: import('react').ReactNode;
+  sidebar?: import('react').ReactNode;
   className?: string;
 }

@@ -20,7 +20,11 @@ export interface LoanPaymentScheduleItem {
 }
 
 export function calculateLoan(inputs: LoanInputs): LoanResults {
-  const { principal, rate, years, extraPayment = 0 } = inputs;
+  // Use explicit type assertions for input values
+  const principal = Number(inputs.principal);
+  const rate = Number(inputs.rate);
+  const years = Number(inputs.years);
+  const extraPayment = Number(inputs.extraPayment || 0);
 
   const monthlyRate = rate / 100 / 12;
   const numberOfPayments = years * 12;

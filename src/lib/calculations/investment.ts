@@ -29,7 +29,7 @@ export function calculateInvestment(inputs: InvestmentInputs): InvestmentResults
 
   const compoundingPeriods = getCompoundingPeriods(compoundingFrequency);
   const periodicRate = (annualReturn / 100) / compoundingPeriods;
-  const totalPeriods = years * compoundingPeriods;
+  // const totalPeriods = years * compoundingPeriods; // Not used in the calculation
 
   // Calculate future value with compound interest
   let currentBalance = initialAmount;

@@ -1,10 +1,10 @@
 "use client";
-import React from "react";
+import { useState, useEffect } from "react";
 
 export function FooterYear() {
-  const [year, setYear] = React.useState("");
-  React.useEffect(() => {
+  const [year, setYear] = useState("");
+  useEffect(() => {
     setYear(new Date().getFullYear().toString());
   }, []);
   return <>{year}</>;
-} 
+}

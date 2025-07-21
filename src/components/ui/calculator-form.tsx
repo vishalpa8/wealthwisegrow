@@ -1,4 +1,4 @@
-import React from "react";
+import { ReactNode } from "react";
 import { FormField } from "./form-field";
 
 export interface CalculatorFormField {
@@ -21,7 +21,7 @@ interface CalculatorFormProps {
   onChange: (name: string, value: any) => void;
   onBlur?: (name: string) => void;
   errors?: Record<string, string | undefined>;
-  children?: React.ReactNode;
+  children?: ReactNode;
 }
 
 export function CalculatorForm({ fields, values, onChange, onBlur, errors = {}, children }: CalculatorFormProps) {

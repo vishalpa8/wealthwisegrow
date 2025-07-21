@@ -1,3 +1,4 @@
+import React from 'react';
 import { MortgageCalculator } from "@/components/calculators/mortgage-calculator";
 import type { Metadata } from "next";
 

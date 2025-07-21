@@ -1,56 +1,78 @@
-import Link from "next/link";
-import { ComparisonToolSkeleton } from "@/components/ui/comparison-tool-skeleton";
-import { MarketUpdatePlaceholder } from "@/components/ui/market-update-placeholder";
+import React from 'react';
+import { CalculatorList } from "@/components/ui/calculator-list";
+import type { Metadata } from "next";
 
-const calculators = [
-  { name: "Mortgage Calculator", href: "/calculators/mortgage", category: "Loans & Home" },
-  { name: "Loan Calculator", href: "/calculators/loan", category: "Loans & Home" },
-  { name: "Investment Calculator", href: "/calculators/investment", category: "Investing" },
-  { name: "Retirement Calculator", href: "/calculators/retirement", category: "Retirement" },
-  { name: "Budget Calculator", href: "/calculators/budget", category: "Budgeting" },
-  { name: "Debt Payoff Calculator", href: "/calculators/debt-payoff", category: "Loans & Home" },
-  { name: "Savings Calculator", href: "/calculators/savings", category: "Investing" },
-  { name: "Tax Calculator", href: "/calculators/tax", category: "Budgeting" },
-  { name: "Insurance Calculator", href: "/calculators/insurance", category: "Budgeting" },
-];
-
-const categories = [
-  "Loans & Home",
-  "Investing",
-  "Retirement",
-  "Budgeting",
-];
+export const metadata: Metadata = {
+  title: "Financial Calculators | WealthWise Hub",
+  description: "Comprehensive collection of financial calculators for mortgages, loans, investments, retirement planning, and more. Free, accurate, and easy to use.",
+  keywords: ["financial calculators", "mortgage calculator", "loan calculator", "investment calculator", "retirement planning"],
+  openGraph: {
+    title: "Financial Calculators | WealthWise Hub",
+    description: "Comprehensive collection of financial calculators for mortgages, loans, investments, retirement planning, and more.",
+    type: "website",
+  },
+};
 
 export default function CalculatorsPage() {
   return (
-    <section className="max-w-4xl mx-auto p-4">
-      <h1 className="text-4xl font-bold mb-8 text-blue-700">All Calculators</h1>
-      <div className="mb-6">
-        <input
-          type="text"
-          placeholder="Search calculators..."
-          className="w-full px-4 py-3 border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-lg"
-          // For demo, not wired up
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {categories.map(cat => (
-          <div key={cat} className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-            <h2 className="text-xl font-semibold mb-4 text-gray-700">{cat}</h2>
-            <ul className="space-y-3">
-              {calculators.filter(c => c.category === cat).map(calc => (
-                <li key={calc.href}>
-                  <Link href={calc.href} className="block px-4 py-2 rounded-lg hover:bg-blue-50 text-blue-700 font-medium transition">
-                    {calc.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+    <div className="container-wide py-8">
+      {/* Header */}
+      <header className="text-center mb-12 animate-fade-in">
+        <div className="container-narrow">
+          <h1 className="text-heading-1 mb-6">Financial Calculators</h1>
+          <p className="text-body-large">
+            Comprehensive collection of financial calculators to help you make informed decisions about mortgages, loans, investments, and retirement planning.
+          </p>
+        </div>
+      </header>
+
+      {/* Calculator Grid */}
+      <section className="animate-slide-up">
+        <CalculatorList />
+      </section>
+
+      {/* Information Section */}
+      <section className="section-spacing-sm">
+        <div className="container-narrow">
+          <div className="card">
+            <div className="card-content">
+              <h2 className="text-heading-3 mb-6 text-center">How Our Calculators Help You</h2>
+              
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl text-white">📊</span>
+                  </div>
+                  <h3 className="text-heading-4 mb-3">Make Informed Decisions</h3>
+                  <p className="text-body">
+                    Get accurate calculations to compare different financial scenarios and choose the best option for your situation.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl text-white">💡</span>
+                  </div>
+                  <h3 className="text-heading-4 mb-3">Plan Your Future</h3>
+                  <p className="text-body">
+                    Use our retirement and investment calculators to plan for your financial future and achieve your goals.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-gray-900 rounded-xl flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl text-white">💰</span>
+                  </div>
+                  <h3 className="text-heading-4 mb-3">Save Money</h3>
+                  <p className="text-body">
+                    Find the best loan terms, optimize your investments, and discover ways to reduce your financial costs.
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
-      <ComparisonToolSkeleton />
-      <MarketUpdatePlaceholder />
-    </section>
+        </div>
+      </section>
+    </div>
   );
-} 
+}

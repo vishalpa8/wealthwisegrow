@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { cn } from "@/lib/utils/cn";
-import type { CalculatorLayoutProps } from "@/types/calculator";
+import { cn } from '@/lib/utils/cn';
+import type { CalculatorLayoutProps } from '@/types/calculator';
 
 export function CalculatorLayout({
   title,
@@ -12,30 +11,32 @@ export function CalculatorLayout({
   className,
 }: CalculatorLayoutProps) {
   return (
-    <div className={cn("max-w-6xl mx-auto p-4", className)}>
+    <div className={cn("container-wide py-8", className)}>
       {/* Header */}
-      <header className="mb-8 text-center">
-        <h1 className="text-4xl font-bold mb-4 text-blue-700">{title}</h1>
-        {description && (
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {description}
-          </p>
-        )}
+      <header className="text-center mb-12 animate-fade-in">
+        <div className="container-narrow">
+          <h1 className="text-heading-1 mb-6">{title}</h1>
+          {description && (
+            <p className="text-body-large">
+              {description}
+            </p>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-8">
         {/* Calculator Form */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-2xl shadow-lg p-6 sm:p-8 border border-gray-100">
+        <div className={cn("xl:col-span-3", !sidebar && "xl:col-span-5")}>
+          <div className="animate-slide-up">
             {children}
           </div>
         </div>
 
         {/* Sidebar */}
         {sidebar && (
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100 sticky top-24">
+          <div className="xl:col-span-2">
+            <div className="sticky top-24 animate-slide-up" style={{animationDelay: '0.2s'}}>
               {sidebar}
             </div>
           </div>
