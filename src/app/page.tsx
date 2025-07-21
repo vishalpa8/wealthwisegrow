@@ -1,95 +1,39 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import { ComparisonToolSkeleton } from "@/components/ui/comparison-tool-skeleton";
+import { MarketUpdatePlaceholder } from "@/components/ui/market-update-placeholder";
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <section className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-10 py-10">
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-5xl font-extrabold mb-4 text-blue-700 leading-tight">Personal Finance Calculator Hub</h1>
+        <p className="text-xl text-gray-600 mb-8">
+          25+ interactive calculators for mortgages, loans, investments, retirement, debt payoff, and budgeting. Get instant results, actionable insights, and track your financial progress—all in one place.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/calculators" className="px-8 py-3 bg-blue-600 text-white rounded-full font-semibold text-lg shadow hover:bg-blue-700 transition">Explore Calculators</a>
+          <a href="/guides" className="px-8 py-3 bg-white border border-blue-600 text-blue-700 rounded-full font-semibold text-lg shadow hover:bg-blue-50 transition">Read Guides</a>
         </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-10">
+        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
+          <span className="text-3xl font-bold text-blue-600">20+</span>
+          <span className="text-sm text-gray-500 mt-1">Calculators</span>
+        </div>
+        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
+          <span className="text-3xl font-bold text-green-600">Instant</span>
+          <span className="text-sm text-gray-500 mt-1">Results</span>
+        </div>
+        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
+          <span className="text-3xl font-bold text-purple-600">Track</span>
+          <span className="text-sm text-gray-500 mt-1">Progress</span>
+        </div>
+        <div className="bg-white rounded-xl shadow-md p-6 flex flex-col items-center border border-gray-100">
+          <span className="text-3xl font-bold text-yellow-600">Free</span>
+          <span className="text-sm text-gray-500 mt-1">& No Signup</span>
+        </div>
+      </div>
+      <ComparisonToolSkeleton />
+      <MarketUpdatePlaceholder />
+    </section>
   );
 }
