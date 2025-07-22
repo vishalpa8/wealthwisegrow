@@ -22,7 +22,6 @@ export default function HomeLoanCalculatorPage() {
       name: 'principal',
       type: 'number',
       placeholder: '30,00,000',
-      min: 100000,
       max: 500000000,
       required: true,
       tooltip: 'Total amount you need to borrow for your home'
@@ -32,9 +31,8 @@ export default function HomeLoanCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '8.5',
-      min: 1,
-      max: 20,
-      step: 0.1,
+      max: 50,
+      step: 0.01,
       required: true,
       tooltip: 'Annual interest rate offered by the bank'
     },
@@ -43,8 +41,8 @@ export default function HomeLoanCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '20',
-      min: 1,
-      max: 30,
+      max: 50,
+      step: 0.1,
       unit: 'years',
       required: true,
       tooltip: 'Number of years to repay the loan'
@@ -54,8 +52,8 @@ export default function HomeLoanCalculatorPage() {
       name: 'extraPayment',
       type: 'number',
       placeholder: '0',
-      min: 0,
-      max: 100000,
+      max: 1000000,
+      step: 0.01,
       tooltip: 'Additional amount you can pay monthly to reduce tenure'
     }
   ];

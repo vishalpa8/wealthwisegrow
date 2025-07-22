@@ -16,6 +16,9 @@ export default function NotFound() {
           <Link href="/calculators" className="btn btn-outline">
             Browse Calculators
           </Link>
+          <Link href="/guides" className="btn btn-outline">
+            Read Guides
+          </Link>
         </div>
       </div>
     </div>

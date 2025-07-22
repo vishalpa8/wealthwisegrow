@@ -1,4 +1,12 @@
-import { SafeMath, roundToPrecision, isSafeNumber } from '../utils/currency';
+import { 
+  parseRobustNumber, 
+  safeDivide, 
+  safeMultiply, 
+  safeAdd, 
+  safePower,
+  roundToPrecision,
+  isEffectivelyZero
+} from '../utils/number';
 
 // Error handling wrapper for all calculations
 function safeCalculation<T>(calculation: () => T, fallback: T): T {
@@ -9,6 +17,12 @@ function safeCalculation<T>(calculation: () => T, fallback: T): T {
     // console.warn('Calculation error:', error);
     return fallback;
   }
+}
+
+// Helper function to check if a number is safe for calculations
+function isSafeNumber(value: any): boolean {
+  const parsed = parseRobustNumber(value);
+  return isFinite(parsed) && !isNaN(parsed);
 }
 
 // SIP (Systematic Investment Plan) Calculator
@@ -49,8 +63,8 @@ export function calculateSIP(inputs: SIPInputs): SIPResults {
       };
     }
     
-    const monthlyRate = SafeMath.divide(annualReturn, SafeMath.multiply(100, 12));
-    const totalMonths = SafeMath.multiply(years, 12);
+    const monthlyRate = safeDivide(annualReturn, safeMultiply(100, 12));
+    const totalMonths = safeMultiply(years, 12);
     
     if (totalMonths > 1200) { // Max 100 years
       return {
@@ -67,10 +81,10 @@ export function calculateSIP(inputs: SIPInputs): SIPResults {
     const monthlyBreakdown: SIPMonthlyBreakdown[] = [];
     
     for (let month = 1; month <= totalMonths; month++) {
-      totalInvested = SafeMath.add(totalInvested, monthlyInvestment);
-      balance = SafeMath.multiply(
-        SafeMath.add(balance, monthlyInvestment),
-        SafeMath.add(1, monthlyRate)
+      totalInvested = safeAdd(totalInvested, monthlyInvestment);
+      balance = safeMultiply(
+        safeAdd(balance, monthlyInvestment),
+        safeAdd(1, monthlyRate)
       );
       
       // Prevent infinite loops and memory issues
@@ -83,14 +97,14 @@ export function calculateSIP(inputs: SIPInputs): SIPResults {
         investment: roundToPrecision(monthlyInvestment),
         balance: roundToPrecision(balance),
         totalInvested: roundToPrecision(totalInvested),
-        totalGains: roundToPrecision(SafeMath.subtract(balance, totalInvested))
+        totalGains: roundToPrecision(Math.max(0, balance - totalInvested))
       });
     }
     
     return {
       totalInvestment: roundToPrecision(totalInvested),
       maturityAmount: roundToPrecision(balance),
-      totalGains: roundToPrecision(SafeMath.subtract(balance, totalInvested)),
+      totalGains: roundToPrecision(Math.max(0, balance - totalInvested)),
       monthlyBreakdown
     };
   }, {
@@ -123,29 +137,36 @@ export interface LumpsumYearlyBreakdown {
 }
 
 export function calculateLumpsum(inputs: LumpsumInputs): LumpsumResults {
-  const { principal, annualReturn, years } = inputs;
-  const rate = annualReturn / 100;
-  
-  const yearlyBreakdown: LumpsumYearlyBreakdown[] = [];
-  let currentAmount = principal;
-  
-  for (let year = 1; year <= years; year++) {
-    currentAmount = currentAmount * (1 + rate);
-    yearlyBreakdown.push({
-      year,
-      amount: currentAmount,
-      gains: currentAmount - principal
-    });
-  }
-  
-  const maturityAmount = principal * Math.pow(1 + rate, years);
-  
-  return {
-    principal,
-    maturityAmount,
-    totalGains: maturityAmount - principal,
-    yearlyBreakdown
-  };
+  return safeCalculation(() => {
+    const { principal, annualReturn, years } = inputs;
+    const rate = safeDivide(annualReturn, 100);
+    
+    const yearlyBreakdown: LumpsumYearlyBreakdown[] = [];
+    let currentAmount = parseRobustNumber(principal);
+    
+    for (let year = 1; year <= years; year++) {
+      currentAmount = safeMultiply(currentAmount, safeAdd(1, rate));
+      yearlyBreakdown.push({
+        year,
+        amount: roundToPrecision(currentAmount),
+        gains: roundToPrecision(Math.max(0, currentAmount - principal))
+      });
+    }
+    
+    const maturityAmount = safeMultiply(principal, safePower(safeAdd(1, rate), years));
+    
+    return {
+      principal: roundToPrecision(principal),
+      maturityAmount: roundToPrecision(maturityAmount),
+      totalGains: roundToPrecision(Math.max(0, maturityAmount - principal)),
+      yearlyBreakdown
+    };
+  }, {
+    principal: 0,
+    maturityAmount: 0,
+    totalGains: 0,
+    yearlyBreakdown: []
+  });
 }
 
 // PPF (Public Provident Fund) Calculator
@@ -170,33 +191,40 @@ export interface PPFYearlyBreakdown {
 }
 
 export function calculatePPF(inputs: PPFInputs): PPFResults {
-  const { yearlyInvestment, years } = inputs;
-  const ppfRate = 0.071; // Current PPF rate ~7.1%
-  
-  let balance = 0;
-  let totalInvested = 0;
-  const yearlyBreakdown: PPFYearlyBreakdown[] = [];
-  
-  for (let year = 1; year <= years; year++) {
-    totalInvested += yearlyInvestment;
-    const interest = (balance + yearlyInvestment) * ppfRate;
-    balance += yearlyInvestment + interest;
+  return safeCalculation(() => {
+    const { yearlyInvestment, years } = inputs;
+    const ppfRate = 0.071; // Current PPF rate ~7.1%
     
-    yearlyBreakdown.push({
-      year,
-      investment: yearlyInvestment,
-      interest,
-      balance,
-      totalInvested
-    });
-  }
-  
-  return {
-    totalInvestment: totalInvested,
-    maturityAmount: balance,
-    totalGains: balance - totalInvested,
-    yearlyBreakdown
-  };
+    let balance = 0;
+    let totalInvested = 0;
+    const yearlyBreakdown: PPFYearlyBreakdown[] = [];
+    
+    for (let year = 1; year <= years; year++) {
+      totalInvested = safeAdd(totalInvested, yearlyInvestment);
+      const interest = safeMultiply(safeAdd(balance, yearlyInvestment), ppfRate);
+      balance = safeAdd(safeAdd(balance, yearlyInvestment), interest);
+      
+      yearlyBreakdown.push({
+        year,
+        investment: roundToPrecision(yearlyInvestment),
+        interest: roundToPrecision(interest),
+        balance: roundToPrecision(balance),
+        totalInvested: roundToPrecision(totalInvested)
+      });
+    }
+    
+    return {
+      totalInvestment: roundToPrecision(totalInvested),
+      maturityAmount: roundToPrecision(balance),
+      totalGains: roundToPrecision(Math.max(0, balance - totalInvested)),
+      yearlyBreakdown
+    };
+  }, {
+    totalInvestment: 0,
+    maturityAmount: 0,
+    totalGains: 0,
+    yearlyBreakdown: []
+  });
 }
 
 // Fixed Deposit (FD) Calculator
@@ -215,26 +243,33 @@ export interface FDResults {
 }
 
 export function calculateFD(inputs: FDInputs): FDResults {
-  const { principal, annualRate, years, compoundingFrequency } = inputs;
-  const rate = annualRate / 100;
-  
-  let n: number;
-  switch (compoundingFrequency) {
-    case 'monthly': n = 12; break;
-    case 'quarterly': n = 4; break;
-    default: n = 1;
-  }
-  
-  const maturityAmount = principal * Math.pow(1 + rate/n, n * years);
-  const totalInterest = maturityAmount - principal;
-  const effectiveYield = ((maturityAmount / principal) - 1) * 100;
-  
-  return {
-    principal,
-    maturityAmount,
-    totalInterest,
-    effectiveYield
-  };
+  return safeCalculation(() => {
+    const { principal, annualRate, years, compoundingFrequency } = inputs;
+    const rate = safeDivide(annualRate, 100);
+    
+    let n: number;
+    switch (compoundingFrequency) {
+      case 'monthly': n = 12; break;
+      case 'quarterly': n = 4; break;
+      default: n = 1;
+    }
+    
+    const maturityAmount = safeMultiply(principal, safePower(safeAdd(1, safeDivide(rate, n)), safeMultiply(n, years)));
+    const totalInterest = Math.max(0, maturityAmount - principal);
+    const effectiveYield = safeMultiply(Math.max(0, safeDivide(maturityAmount, principal) - 1), 100);
+    
+    return {
+      principal: roundToPrecision(principal),
+      maturityAmount: roundToPrecision(maturityAmount),
+      totalInterest: roundToPrecision(totalInterest),
+      effectiveYield: roundToPrecision(effectiveYield)
+    };
+  }, {
+    principal: 0,
+    maturityAmount: 0,
+    totalInterest: 0,
+    effectiveYield: 0
+  });
 }
 
 // Recurring Deposit (RD) Calculator
@@ -260,34 +295,41 @@ export interface RDMonthlyBreakdown {
 }
 
 export function calculateRD(inputs: RDInputs): RDResults {
-  const { monthlyDeposit, annualRate, years } = inputs;
-  const monthlyRate = annualRate / 100 / 12;
-  const totalMonths = years * 12;
-  
-  let balance = 0;
-  let totalDeposited = 0;
-  const monthlyBreakdown: RDMonthlyBreakdown[] = [];
-  
-  for (let month = 1; month <= totalMonths; month++) {
-    totalDeposited += monthlyDeposit;
-    const interest = balance * monthlyRate;
-    balance = balance + monthlyDeposit + interest;
+  return safeCalculation(() => {
+    const { monthlyDeposit, annualRate, years } = inputs;
+    const monthlyRate = safeDivide(annualRate, safeMultiply(100, 12));
+    const totalMonths = safeMultiply(years, 12);
     
-    monthlyBreakdown.push({
-      month,
-      deposit: monthlyDeposit,
-      interest,
-      balance,
-      totalDeposited
-    });
-  }
-  
-  return {
-    totalDeposits: totalDeposited,
-    maturityAmount: balance,
-    totalInterest: balance - totalDeposited,
-    monthlyBreakdown
-  };
+    let balance = 0;
+    let totalDeposited = 0;
+    const monthlyBreakdown: RDMonthlyBreakdown[] = [];
+    
+    for (let month = 1; month <= totalMonths; month++) {
+      totalDeposited = safeAdd(totalDeposited, monthlyDeposit);
+      const interest = safeMultiply(balance, monthlyRate);
+      balance = safeAdd(safeAdd(balance, monthlyDeposit), interest);
+      
+      monthlyBreakdown.push({
+        month,
+        deposit: roundToPrecision(monthlyDeposit),
+        interest: roundToPrecision(interest),
+        balance: roundToPrecision(balance),
+        totalDeposited: roundToPrecision(totalDeposited)
+      });
+    }
+    
+    return {
+      totalDeposits: roundToPrecision(totalDeposited),
+      maturityAmount: roundToPrecision(balance),
+      totalInterest: roundToPrecision(Math.max(0, balance - totalDeposited)),
+      monthlyBreakdown
+    };
+  }, {
+    totalDeposits: 0,
+    maturityAmount: 0,
+    totalInterest: 0,
+    monthlyBreakdown: []
+  });
 }
 
 // EPF (Employee Provident Fund) Calculator
@@ -316,46 +358,56 @@ export interface EPFYearlyBreakdown {
 }
 
 export function calculateEPF(inputs: EPFInputs): EPFResults {
-  const { basicSalary, employeeContribution, employerContribution, years } = inputs;
-  const epfRate = 0.085; // Current EPF rate ~8.5%
-  
-  const monthlyEmployeeContrib = (basicSalary * employeeContribution / 100);
-  const monthlyEmployerContrib = (basicSalary * employerContribution / 100);
-  // const monthlyTotal = monthlyEmployeeContrib + monthlyEmployerContrib; // Not used in calculation
-  
-  let balance = 0;
-  let totalEmpContrib = 0;
-  let totalEmprerContrib = 0;
-  const yearlyBreakdown: EPFYearlyBreakdown[] = [];
-  
-  for (let year = 1; year <= years; year++) {
-    const yearlyEmpContrib = monthlyEmployeeContrib * 12;
-    const yearlyEmprerContrib = monthlyEmployerContrib * 12;
-    const yearlyContrib = yearlyEmpContrib + yearlyEmprerContrib;
+  return safeCalculation(() => {
+    const { basicSalary, employeeContribution, employerContribution, years } = inputs;
+    const epfRate = 0.085; // Current EPF rate ~8.5%
     
-    totalEmpContrib += yearlyEmpContrib;
-    totalEmprerContrib += yearlyEmprerContrib;
+    const monthlyEmployeeContrib = safeMultiply(basicSalary, safeDivide(employeeContribution, 100));
+    const monthlyEmployerContrib = safeMultiply(basicSalary, safeDivide(employerContribution, 100));
     
-    const interest = (balance + yearlyContrib) * epfRate;
-    balance += yearlyContrib + interest;
+    let balance = 0;
+    let totalEmpContrib = 0;
+    let totalEmprerContrib = 0;
+    const yearlyBreakdown: EPFYearlyBreakdown[] = [];
     
-    yearlyBreakdown.push({
-      year,
-      employeeContribution: yearlyEmpContrib,
-      employerContribution: yearlyEmprerContrib,
-      interest,
-      balance
-    });
-  }
-  
-  return {
-    totalEmployeeContribution: totalEmpContrib,
-    totalEmployerContribution: totalEmprerContrib,
-    totalContribution: totalEmpContrib + totalEmprerContrib,
-    maturityAmount: balance,
-    totalInterest: balance - (totalEmpContrib + totalEmprerContrib),
-    yearlyBreakdown
-  };
+    for (let year = 1; year <= years; year++) {
+      const yearlyEmpContrib = safeMultiply(monthlyEmployeeContrib, 12);
+      const yearlyEmprerContrib = safeMultiply(monthlyEmployerContrib, 12);
+      const yearlyContrib = safeAdd(yearlyEmpContrib, yearlyEmprerContrib);
+      
+      totalEmpContrib = safeAdd(totalEmpContrib, yearlyEmpContrib);
+      totalEmprerContrib = safeAdd(totalEmprerContrib, yearlyEmprerContrib);
+      
+      const interest = safeMultiply(safeAdd(balance, yearlyContrib), epfRate);
+      balance = safeAdd(safeAdd(balance, yearlyContrib), interest);
+      
+      yearlyBreakdown.push({
+        year,
+        employeeContribution: roundToPrecision(yearlyEmpContrib),
+        employerContribution: roundToPrecision(yearlyEmprerContrib),
+        interest: roundToPrecision(interest),
+        balance: roundToPrecision(balance)
+      });
+    }
+    
+    const totalContrib = safeAdd(totalEmpContrib, totalEmprerContrib);
+    
+    return {
+      totalEmployeeContribution: roundToPrecision(totalEmpContrib),
+      totalEmployerContribution: roundToPrecision(totalEmprerContrib),
+      totalContribution: roundToPrecision(totalContrib),
+      maturityAmount: roundToPrecision(balance),
+      totalInterest: roundToPrecision(Math.max(0, balance - totalContrib)),
+      yearlyBreakdown
+    };
+  }, {
+    totalEmployeeContribution: 0,
+    totalEmployerContribution: 0,
+    totalContribution: 0,
+    maturityAmount: 0,
+    totalInterest: 0,
+    yearlyBreakdown: []
+  });
 }
 
 // Stock Dividend Yield Calculator
@@ -374,19 +426,27 @@ export interface DividendYieldResults {
 }
 
 export function calculateDividendYield(inputs: DividendYieldInputs): DividendYieldResults {
-  const { stockPrice, annualDividend, numberOfShares } = inputs;
-  
-  const dividendYield = (annualDividend / stockPrice) * 100;
-  const annualDividendIncome = annualDividend * numberOfShares;
-  const totalInvestment = stockPrice * numberOfShares;
-  
-  return {
-    dividendYield,
-    annualDividendIncome,
-    quarterlyDividendIncome: annualDividendIncome / 4,
-    monthlyDividendIncome: annualDividendIncome / 12,
-    totalInvestment
-  };
+  return safeCalculation(() => {
+    const { stockPrice, annualDividend, numberOfShares } = inputs;
+    
+    const dividendYield = safeMultiply(safeDivide(annualDividend, stockPrice), 100);
+    const annualDividendIncome = safeMultiply(annualDividend, numberOfShares);
+    const totalInvestment = safeMultiply(stockPrice, numberOfShares);
+    
+    return {
+      dividendYield: roundToPrecision(dividendYield),
+      annualDividendIncome: roundToPrecision(annualDividendIncome),
+      quarterlyDividendIncome: roundToPrecision(safeDivide(annualDividendIncome, 4)),
+      monthlyDividendIncome: roundToPrecision(safeDivide(annualDividendIncome, 12)),
+      totalInvestment: roundToPrecision(totalInvestment)
+    };
+  }, {
+    dividendYield: 0,
+    annualDividendIncome: 0,
+    quarterlyDividendIncome: 0,
+    monthlyDividendIncome: 0,
+    totalInvestment: 0
+  });
 }
 
 // Gold Investment Calculator
@@ -406,19 +466,27 @@ export interface GoldResults {
 }
 
 export function calculateGoldInvestment(inputs: GoldInputs): GoldResults {
-  const { investmentAmount, goldPricePerGram, years, expectedAnnualReturn } = inputs;
-  
-  const gramsOfGold = investmentAmount / goldPricePerGram;
-  const futureGoldPrice = goldPricePerGram * Math.pow(1 + expectedAnnualReturn / 100, years);
-  const futureValue = gramsOfGold * futureGoldPrice;
-  const totalReturns = futureValue - investmentAmount;
-  const annualizedReturn = Math.pow(futureValue / investmentAmount, 1 / years) - 1;
-  
-  return {
-    gramsOfGold,
-    futureGoldPrice,
-    futureValue,
-    totalReturns,
-    annualizedReturn: annualizedReturn * 100
-  };
+  return safeCalculation(() => {
+    const { investmentAmount, goldPricePerGram, years, expectedAnnualReturn } = inputs;
+    
+    const gramsOfGold = safeDivide(investmentAmount, goldPricePerGram);
+    const futureGoldPrice = safeMultiply(goldPricePerGram, safePower(safeAdd(1, safeDivide(expectedAnnualReturn, 100)), years));
+    const futureValue = safeMultiply(gramsOfGold, futureGoldPrice);
+    const totalReturns = Math.max(0, futureValue - investmentAmount);
+    const annualizedReturn = safeMultiply(Math.max(0, safePower(safeDivide(futureValue, investmentAmount), safeDivide(1, years)) - 1), 100);
+    
+    return {
+      gramsOfGold: roundToPrecision(gramsOfGold),
+      futureGoldPrice: roundToPrecision(futureGoldPrice),
+      futureValue: roundToPrecision(futureValue),
+      totalReturns: roundToPrecision(totalReturns),
+      annualizedReturn: roundToPrecision(annualizedReturn)
+    };
+  }, {
+    gramsOfGold: 0,
+    futureGoldPrice: 0,
+    futureValue: 0,
+    totalReturns: 0,
+    annualizedReturn: 0
+  });
 }

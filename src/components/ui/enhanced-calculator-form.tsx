@@ -1,8 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback, useRef, KeyboardEvent } from 'react';
-import { formatCurrency, formatPercentage, SUPPORTED_CURRENCIES, setGlobalCurrency, getCurrentCurrency, detectUserCurrency } from '@/lib/utils/currency';
+import { useCurrency } from '@/contexts/currency-context';
+import { CurrencySelector } from '@/components/ui/currency-selector';
+import { NumericInput } from '@/components/ui/numeric-input';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Copy, Share2, Download, GitCompare, Globe, Calculator, TrendingUp, Info } from 'lucide-react';
+import { AlertTriangle, Copy, Share2, Download, GitCompare, Calculator, TrendingUp, Info } from 'lucide-react';
+import { parseRobustNumber, isEffectivelyZero } from '@/lib/utils/number';
 
 export interface EnhancedCalculatorField {
   label: string;
@@ -64,10 +67,9 @@ export function EnhancedCalculatorForm({
   onAddComparison,
   onRemoveComparison
 }: EnhancedCalculatorFormProps) {
-  const [selectedCurrency, setSelectedCurrency] = useState(getCurrentCurrency().code);
+  const { formatCurrency, formatNumber } = useCurrency();
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-// const [showAdvanced, setShowAdvanced] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   // Handle keyboard navigation
@@ -89,36 +91,20 @@ export function EnhancedCalculatorForm({
     }
   }, [showTooltip]);
 
-  // Initialize currency detection
-  useEffect(() => {
-    const detectedCurrency = detectUserCurrency();
-    setSelectedCurrency(detectedCurrency);
-    setGlobalCurrency(detectedCurrency);
-  }, []);
-
-  // Handle currency change
-  const handleCurrencyChange = (currencyCode: string) => {
-    setSelectedCurrency(currencyCode);
-    setGlobalCurrency(currencyCode);
-  };
-
   // Validate field value
   const validateField = (field: EnhancedCalculatorField, value: any): string | null => {
-    if (field.required && (!value || value === '')) {
+    const parsedValue = parseRobustNumber(value);
+
+    if (field.required && (parsedValue === 0)) {
       return `${field.label} is required`;
     }
 
-    if (field.type === 'number' || field.type === 'percentage') {
-      const numValue = parseFloat(value);
-      if (isNaN(numValue)) {
-        return `${field.label} must be a valid number`;
-      }
-      if (field.min !== undefined && numValue < field.min) {
-        return `${field.label} must be at least ${field.min}`;
-      }
-      if (field.max !== undefined && numValue > field.max) {
-        return `${field.label} cannot exceed ${field.max}`;
-      }
+    if ((field.type === 'number' || field.type === 'percentage') && !isFinite(parsedValue)) {
+      return `${field.label} must be a valid number`;
+    }
+
+    if (field.max !== undefined && parsedValue > field.max) {
+      return `${field.label} cannot exceed ${formatNumber(field.max)}`;
     }
 
     return null;
@@ -135,13 +121,20 @@ export function EnhancedCalculatorForm({
     onChange(field.name, value);
   };
 
+  // Handle number input change with proper decimal support
+  const handleNumberInputChange = (field: EnhancedCalculatorField, inputValue: string) => {
+    // Parse the input safely to handle all edge cases
+    const numValue = parseRobustNumber(inputValue);
+    handleFieldChange(field, numValue);
+  };
+
   // Export results as CSV
   const exportResults = () => {
     const csvContent = results.map(result => 
-      `${result.label},${result.value}`
+      `"${result.label}","${result.value}"`
     ).join('\n');
     
-    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const blob = new Blob([`"Label","Value"\n${csvContent}`], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.style.display = 'none';
@@ -150,6 +143,7 @@ export function EnhancedCalculatorForm({
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   };
 
   // Copy results to clipboard
@@ -160,7 +154,7 @@ export function EnhancedCalculatorForm({
     
     try {
       await navigator.clipboard.writeText(resultText);
-      // Show success toast (you might want to add a toast system)
+      // You might want to show a toast notification here
     } catch (err) {
       console.error('Failed to copy results:', err);
     }
@@ -192,6 +186,7 @@ export function EnhancedCalculatorForm({
   const renderField = (field: EnhancedCalculatorField) => {
     const hasError = validationErrors[field.name];
     const fieldId = `field-${field.name}`;
+    const currentValue = values[field.name];
 
     return (
       <div key={field.name} className="relative">
@@ -215,7 +210,7 @@ export function EnhancedCalculatorForm({
         {field.type === 'select' ? (
           <select
             id={fieldId}
-            value={values[field.name] || ''}
+            value={currentValue || ''}
             onChange={(e) => handleFieldChange(field, e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasError ? 'border-red-500' : 'border-gray-300'
@@ -232,33 +227,31 @@ export function EnhancedCalculatorForm({
           <input
             id={fieldId}
             type="date"
-            value={values[field.name] || ''}
+            value={currentValue || ''}
             onChange={(e) => handleFieldChange(field, e.target.value)}
             className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
               hasError ? 'border-red-500' : 'border-gray-300'
             }`}
           />
         ) : (
-          <div className="relative">
-            <input
-              id={fieldId}
-              type="number"
-              value={values[field.name] || ''}
-              onChange={(e) => handleFieldChange(field, parseFloat(e.target.value) || 0)}
-              placeholder={field.placeholder}
-              min={field.min}
-              max={field.max}
-              step={field.step || 'any'}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                hasError ? 'border-red-500' : 'border-gray-300'
-              } ${field.unit ? 'pr-12' : ''}`}
-            />
-            {field.unit && (
-              <span className="absolute right-3 top-2 text-gray-500 text-sm">
-                {field.type === 'percentage' ? '%' : field.unit}
-              </span>
-            )}
-          </div>
+          <NumericInput
+            id={fieldId}
+            label=""
+            value={currentValue}
+            onValueChange={(value) => handleFieldChange(field, value)}
+            placeholder={field.placeholder}
+            step={field.step}
+            min={field.min}
+            max={field.max}
+            decimalPlaces={field.type === 'percentage' ? 2 : 2}
+            allowNegative={false}
+            allowZero={true}
+            showCurrencySymbol={field.type === 'number'}
+            errorText={hasError}
+            isValid={!hasError}
+            className="w-full"
+            inputClassName={`w-full ${hasError ? 'border-red-500' : ''}`}
+          />
         )}
 
         {hasError && (
@@ -280,15 +273,25 @@ export function EnhancedCalculatorForm({
   const renderResult = (result: CalculatorResult, index: number) => {
     let displayValue: string;
     
+    // Safely handle any type of value with parseRobustNumber
     switch (result.type) {
       case 'currency':
-        displayValue = formatCurrency(result.value as number);
+        displayValue = formatCurrency(parseRobustNumber(result.value));
         break;
       case 'percentage':
-        displayValue = formatPercentage(result.value as number);
+        displayValue = `${formatNumber(parseRobustNumber(result.value))}%`;
+        break;
+      case 'number':
+        if (result.value !== null && result.value !== undefined) {
+          displayValue = formatNumber(parseRobustNumber(result.value));
+        } else {
+          displayValue = '0';
+        }
         break;
       default:
-        displayValue = result.value.toString();
+        // For any other types, just convert to string safely
+        displayValue = result.value !== null && result.value !== undefined ? 
+          result.value.toString() : '0';
     }
 
     return (
@@ -341,20 +344,7 @@ export function EnhancedCalculatorForm({
           </div>
           
           {/* Currency Selector */}
-          <div className="flex items-center space-x-2">
-            <Globe className="w-5 h-5 text-gray-500" />
-            <select
-              value={selectedCurrency}
-              onChange={(e) => handleCurrencyChange(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {Object.entries(SUPPORTED_CURRENCIES).map(([code, config]) => (
-                <option key={code} value={code}>
-                  {config.symbol} {code}
-                </option>
-              ))}
-            </select>
-          </div>
+          <CurrencySelector />
         </div>
         
         {description && (

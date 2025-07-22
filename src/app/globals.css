@@ -150,6 +150,38 @@
     box-shadow: var(--shadow-sm);
   }
   
+  /* Sidebar Card Styles - Responsive Height */
+  .sidebar-card {
+    @apply bg-white rounded-xl border border-gray-200 overflow-hidden transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+    min-height: fit-content;
+    height: auto;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-card-header {
+    @apply px-4 py-3 border-b border-gray-100 bg-gray-50/50;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-card-content {
+    @apply p-4;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .sidebar-card-title {
+    @apply text-base font-semibold text-gray-900;
+  }
+  
+  /* Responsive sidebar adjustments */
+  @media (max-width: 1024px) {
+    .sidebar-card {
+      @apply w-full;
+    }
+  }
+  
   .card-hover {
     @apply hover:border-gray-300 hover:-translate-y-0.5;
     box-shadow: var(--shadow-md);
@@ -160,11 +192,32 @@
   }
   
   .card-content {
-    @apply p-6;
+    @apply p-6 h-full flex flex-col;
   }
   
   .card-footer {
     @apply px-6 py-4 border-t border-gray-100 bg-gray-50/50;
+  }
+  
+  /* Calculator Card Specific Styles */
+  .calculator-card {
+    @apply h-full;
+  }
+  
+  .calculator-card .card-content {
+    @apply flex flex-col justify-between min-h-[200px];
+  }
+  
+  .calculator-card-title {
+    @apply text-lg font-semibold text-gray-900 mb-3 line-clamp-2;
+  }
+  
+  .calculator-card-description {
+    @apply text-body-small text-gray-600 flex-1 line-clamp-3 leading-relaxed;
+  }
+  
+  .calculator-card-footer {
+    @apply mt-4 pt-4 border-t border-gray-100;
   }
   
   /* Clean Form Styles */
@@ -331,6 +384,28 @@
   
   .section-spacing-sm {
     @apply py-8 md:py-12;
+  }
+  
+  /* Text Clamping */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 

@@ -4,6 +4,7 @@ import "./globals.css";
 import Link from "next/link";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { FooterYear } from "@/components/ui/footer-year";
+import { CurrencyProvider } from "@/contexts/currency-context";
 
 export const metadata: Metadata = {
   title: "WealthWise Hub",
@@ -18,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen flex flex-col font-sans">
+        <CurrencyProvider>
         {/* Header */}
         <header className="w-full bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
           <div className="flex items-center space-x-3">
@@ -60,20 +62,14 @@ export default function RootLayout({
         
         <div className="flex flex-1 w-full container-wide gap-8 py-8">
           {/* Sidebar */}
-          <aside className="hidden lg:block w-80 space-y-6">
-            <div className="card sticky top-24">
-              <div className="card-content">
-                <AdsPlaceholder position="sidebar" size="300x250" />
-              </div>
-            </div>
-            
-            <div className="card sticky top-80">
-              <div className="card-header">
-                <h3 className="font-semibold text-gray-900 text-base">
+          <aside className="hidden lg:block w-80 space-y-4 flex-shrink-0">
+            <div className="sidebar-card">
+              <div className="sidebar-card-header">
+                <h3 className="sidebar-card-title">
                   Popular Calculators
                 </h3>
               </div>
-              <div className="card-content pt-0">
+              <div className="sidebar-card-content">
                 <ul className="space-y-1">
                   <li>
                     <Link
@@ -123,6 +119,12 @@ export default function RootLayout({
                 </ul>
               </div>
             </div>
+            
+            <div className="sidebar-card">
+              <div className="sidebar-card-content">
+                <AdsPlaceholder position="sidebar" size="300x250" />
+              </div>
+            </div>
           </aside>
           
           {/* Main Content */}
@@ -149,6 +151,7 @@ export default function RootLayout({
             </div>
           </div>
         </footer>
+        </CurrencyProvider>
       </body>
     </html>
   );

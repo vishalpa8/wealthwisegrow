@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { parseRobustNumber, safeMultiply, safeAdd, safePower, safeDivide, safeSubtract } from "@/lib/utils/number";
+import { NumericInput } from "@/components/ui/numeric-input";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { v4 as uuidv4 } from "uuid";
 import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
@@ -14,8 +16,8 @@ export default function InvestmentCalculator() {
   const n = years * 12;
   const r = rate / 100 / 12;
   // Future value of a series formula
-  const fv = initial * Math.pow(1 + r, n) +
-    (monthly * (Math.pow(1 + r, n) - 1)) / r;
+const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
+    safeMultiply(monthly, safeDivide(safeSubtract(safePower(1 + r, n), 1), r)));
   const [goal, setGoal] = useState(fv);
 
   const { addHistory } = useIndexedDBHistory();
@@ -39,7 +41,8 @@ export default function InvestmentCalculator() {
     {
       label: "Initial Investment ($)",
       name: "initial",
-      type: "number",
+      type: "custom",
+      component: NumericInput,
       placeholder: "Enter initial investment",
       min: 0,
       required: true,
@@ -47,7 +50,8 @@ export default function InvestmentCalculator() {
     {
       label: "Monthly Contribution ($)",
       name: "monthly",
-      type: "number",
+      type: "custom",
+      component: NumericInput,
       placeholder: "Enter monthly contribution",
       min: 0,
       required: true,
@@ -55,7 +59,8 @@ export default function InvestmentCalculator() {
     {
       label: "Annual Return Rate (%)",
       name: "rate",
-      type: "number",
+      type: "custom",
+      component: NumericInput,
       placeholder: "e.g. 7",
       min: 0,
       step: 0.01,
@@ -64,7 +69,8 @@ export default function InvestmentCalculator() {
     {
       label: "Years",
       name: "years",
-      type: "number",
+      type: "custom",
+      component: NumericInput,
       placeholder: "e.g. 20",
       min: 1,
       required: true,
@@ -73,10 +79,10 @@ export default function InvestmentCalculator() {
 
   const values = { initial, monthly, rate, years };
   const handleChange = (name: string, value: any) => {
-    if (name === "initial") setInitial(Number(value));
-    if (name === "monthly") setMonthly(Number(value));
-    if (name === "rate") setRate(Number(value));
-    if (name === "years") setYears(Number(value));
+    if (name === "initial") setInitial(parseRobustNumber(value));
+    if (name === "monthly") setMonthly(parseRobustNumber(value));
+    if (name === "rate") setRate(parseRobustNumber(value));
+    if (name === "years") setYears(parseRobustNumber(value));
   };
 
   return (
@@ -91,11 +97,10 @@ export default function InvestmentCalculator() {
       </div>
       <div className="mt-6">
         <label className="block text-sm font-medium text-gray-700 mb-1">Set Investment Goal ($)</label>
-        <input
-          type="number"
+        <NumericInput
           min={1}
           value={goal}
-          onChange={e => setGoal(Number(e.target.value))}
+          onChange={(value) => setGoal(parseRobustNumber(value))}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg mb-2"
         />
         <GoalProgressChart currentValue={fv} goalValue={goal || 1} label="Investment Growth Progress" unit="$" />

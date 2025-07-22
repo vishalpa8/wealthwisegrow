@@ -1,7 +1,7 @@
 "use client";
 import { ChangeEvent } from "react";
 import { AlertCircle, HelpCircle } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/lib/utils";
 import type { FormFieldProps } from "@/types/calculator";
 
 export function FormField({

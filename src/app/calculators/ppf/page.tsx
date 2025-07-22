@@ -1,95 +1,92 @@
 "use client";
-import React, { useState, useMemo } from "react";
-import {
-  EnhancedCalculatorForm,
-  EnhancedCalculatorField,
-  CalculatorResult,
-} from "@/components/ui/enhanced-calculator-form";
-import { calculatePPF, PPFInputs } from "@/lib/calculations/savings";
-import { ppfSchema } from "@/lib/validations/calculator";
+import React, { useState, useMemo } from 'react';
+import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { calculatePPF, PPFInputs } from '@/lib/calculations/savings';
+import { ppfSchema } from '@/lib/validations/calculator';
 
 const initialValues = {
-  yearlyInvestment: 50000,
-  years: 15,
+  yearlyInvestment: 150000,
+  years: 15
 };
 
 export default function PPFCalculatorPage() {
   const [values, setValues] = useState(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
 
   const fields: EnhancedCalculatorField[] = [
     {
-      label: "Yearly Investment",
-      name: "yearlyInvestment",
-      type: "number",
-      placeholder: "50,000",
+      label: 'Yearly Investment',
+      name: 'yearlyInvestment',
+      type: 'number',
+      placeholder: '1,50,000',
       min: 500,
       max: 150000,
       required: true,
-      tooltip: "Amount you plan to invest every year in PPF",
+      tooltip: 'Amount you plan to invest annually in PPF (Min: ₹500, Max: ₹1,50,000)'
     },
     {
-      label: "Investment Period",
-      name: "years",
-      type: "number",
-      placeholder: "15",
+      label: 'Investment Period',
+      name: 'years',
+      type: 'number',
+      placeholder: '15',
       min: 15,
       max: 50,
-      unit: "years",
+      unit: 'years',
       required: true,
-      tooltip: "Number of years you plan to keep investing in PPF",
-    },
+      tooltip: 'Duration for PPF investment (Minimum 15 years lock-in period)'
+    }
   ];
 
   const results = useMemo(() => {
     try {
-      setError("");
+      setError('');
       const validation = ppfSchema.safeParse(values);
       if (!validation.success) {
-        setError(validation.error.errors[0]?.message || "Invalid input");
+        setError(validation.error.errors[0]?.message || 'Invalid input');
         return [];
       }
 
-      // Ensure the data is correctly typed
-      const ppfInputs: PPFInputs = {
-        yearlyInvestment: Number(validation.data.yearlyInvestment),
-        years: Number(validation.data.years)
-      };
-      
-      const calculation = calculatePPF(ppfInputs);
+      const calculation = calculatePPF(validation.data as PPFInputs);
 
       const calculatorResults: CalculatorResult[] = [
         {
-          label: "Maturity Amount",
+          label: 'Maturity Amount',
           value: calculation.maturityAmount,
-          type: "currency",
+          type: 'currency',
           highlight: true,
-          tooltip: "Total amount received at maturity",
+          tooltip: 'Total amount you will receive at maturity'
         },
         {
-          label: "Total Investment",
+          label: 'Total Investment',
           value: calculation.totalInvestment,
-          type: "currency",
-          tooltip: "Total amount invested over the period",
+          type: 'currency',
+          tooltip: 'Total amount you will invest over the period'
         },
         {
-          label: "Total Returns",
+          label: 'Total Returns',
           value: calculation.totalGains,
-          type: "currency",
-          tooltip: "Interest earned on your investments",
+          type: 'currency',
+          tooltip: 'Interest earned on your PPF investment'
         },
+        {
+          label: 'Effective Annual Return',
+          value: ((calculation.maturityAmount / calculation.totalInvestment) ** (1 / values.years) - 1) * 100,
+          type: 'percentage',
+          tooltip: 'Annualized return rate considering compounding'
+        }
       ];
 
       return calculatorResults;
     } catch {
-      setError("Calculation failed. Please check your inputs.");
+      setError('Calculation failed. Please check your inputs.');
       return [];
     }
   }, [values]);
 
   const handleChange = (name: string, value: any) => {
-    setValues((prev) => ({ ...prev, [name]: value }));
+    const parsedValue = parseFloat(value);
+    setValues(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
   };
 
   const handleCalculate = () => {
@@ -101,7 +98,7 @@ export default function PPFCalculatorPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <EnhancedCalculatorForm
         title="PPF Calculator"
-        description="Calculate the future value of your Public Provident Fund investments."
+        description="Calculate the maturity amount and returns on your Public Provident Fund (PPF) investment with tax benefits."
         fields={fields}
         values={values}
         onChange={handleChange}

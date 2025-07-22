@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils/cn';
+import { cn } from '@/lib/utils';
 import type { CalculatorLayoutProps } from '@/types/calculator';
 
 export function CalculatorLayout({

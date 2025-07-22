@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { ResultCardProps } from "@/types/calculator";
 

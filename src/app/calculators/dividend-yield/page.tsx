@@ -64,7 +64,6 @@ export default function DividendYieldCalculatorPage() {
       }
       return [];
     }
-    // console.log(validation.data);
 
     try {
       setError('');

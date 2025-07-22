@@ -5,17 +5,14 @@ import { CalculatorLayout } from "@/components/layout/calculator-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
-import { formatLargeCurrency, formatLargeNumber } from "@/lib/utils/number-format";
+import { NumericInput } from "@/components/ui/numeric-input";
+import { useCurrency } from "@/contexts/currency-context";
+import { calculateMortgage } from "@/lib/calculations/mortgage";
+import type { MortgageInputs } from "@/lib/validations/calculator";
+import { roundToPrecision } from "@/lib/utils/number";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface MortgageInputs {
-  principal: number;
-  downPayment: number;
-  rate: number;
-  years: number;
-  propertyTax: number;
-  insurance: number;
-  pmi: number;
-}
+// Using the MortgageInputs type from the validation schema
 
 const initialValues: MortgageInputs = {
   principal: 500000,
@@ -27,96 +24,132 @@ const initialValues: MortgageInputs = {
   pmi: 0,
 };
 
-function calculateMortgage(inputs: MortgageInputs) {
-  const { principal, downPayment, rate, years, propertyTax, insurance, pmi } = inputs;
-  
-  const loanAmount = Math.max(0, principal - downPayment);
-  
-  // Handle cases where rate or years might be zero
-  let monthlyPI = 0;
-  if (rate > 0 && years > 0) {
-    const monthlyRate = rate / 100 / 12;
-    const numPayments = years * 12;
-    
-    // Monthly principal and interest (only calculate if rate and years are positive)
-    monthlyPI = loanAmount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
-                    (Math.pow(1 + monthlyRate, numPayments) - 1);
-  } else if (years > 0) {
-    // If rate is zero but years is not, divide loan by number of months
-    monthlyPI = loanAmount / (years * 12);
-  }
-  
-  // If monthlyPI is NaN or infinite, set it to zero
-  if (isNaN(monthlyPI) || !isFinite(monthlyPI)) {
-    monthlyPI = 0;
-  }
-  
-  // Monthly escrow amounts
-  const monthlyPropertyTax = propertyTax > 0 ? propertyTax / 12 : 0;
-  const monthlyInsurance = insurance > 0 ? insurance / 12 : 0;
-  const monthlyPMI = pmi > 0 ? pmi / 12 : 0;
-  
-  // Total monthly payment
-  const monthlyPayment = monthlyPI + monthlyPropertyTax + monthlyInsurance + monthlyPMI;
-  
-  // Total amounts
-  const numPayments = years * 12;
-  const totalPayment = monthlyPI * numPayments;
-  const totalInterest = totalPayment - loanAmount;
-  
-  // Loan-to-value ratio (prevent division by zero)
-  const loanToValue = principal > 0 ? (loanAmount / principal) * 100 : 0;
-  
-  return {
-    monthlyPayment,
-    monthlyPrincipalAndInterest: monthlyPI,
-    monthlyPropertyTax,
-    monthlyInsurance,
-    monthlyPMI,
-    totalPayment,
-    totalInterest,
-    loanAmount,
-    loanToValue,
-  };
-}
+// Using the mortgage calculator from the calculations utility
 
 export function MortgageCalculator() {
   const [values, setValues] = useState<MortgageInputs>(initialValues);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("overview");
+  const [showFullSchedule, setShowFullSchedule] = useState<boolean>(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [showSuggestion, setShowSuggestion] = useState<boolean>(false);
+  const [suggestedDownPayment, setSuggestedDownPayment] = useState<number>(0);
 
   const results = useMemo(() => {
-    // Allow zero values to be used in calculations
-    if (values.principal >= 0 && values.rate >= 0 && values.years >= 0) {
-      return calculateMortgage(values);
+    try {
+      // Allow zero values to be used in calculations
+      if (values.principal >= 0 && values.rate >= 0 && values.years >= 0) {
+        return calculateMortgage(values);
+      }
+    } catch (error) {
+      console.error('Error calculating mortgage:', error);
     }
     return null;
   }, [values]);
 
-  const handleInputChange = (field: keyof MortgageInputs, value: number) => {
-    setValues(prev => ({ ...prev, [field]: value }));
+  const handleInputChange = (field: keyof MortgageInputs, value: number | null) => {
+    // Clear validation error for this field when the user changes the input
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+    
+    const numericValue = value === null ? 0 : value;
+    
+    // If user is changing principal, calculate suggested 20% down payment
+    if (field === 'principal' && numericValue > 0) {
+      const suggested = roundToPrecision(numericValue * 0.2, 2);
+      setSuggestedDownPayment(suggested);
+      setShowSuggestion(true);
+    }
+    
+    setValues(prev => ({
+      ...prev,
+      [field]: numericValue
+    }));
   };
 
   const handleCalculate = () => {
     setLoading(true);
-    setTimeout(() => setLoading(false), 500);
-  };
-
-  const formatCurrency = (amount: number) => {
-    // For large numbers, use our utility function to prevent overflow
-    if (amount >= 1000) {
-      return formatLargeCurrency(amount);
+    // Reset validation errors
+    setValidationErrors({});
+    
+    // Validate inputs
+    const errors: Record<string, string> = {};
+    
+    // Principal validation
+    if (values.principal <= 0) {
+      errors.principal = "Home price must be greater than 0";
+    } else if (values.principal > 1e15) {
+      errors.principal = "Home price is too large";
     }
     
-    // For smaller numbers, use full formatting
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
-      maximumFractionDigits: 0,
-    }).format(amount);
+    // Down payment validation
+    if (values.downPayment < 0) {
+      errors.downPayment = "Down payment can't be negative";
+    } else if (values.downPayment >= values.principal) {
+      errors.downPayment = "Down payment can't exceed home price";
+    }
+    
+    // Interest rate validation
+    if (values.rate < 0) {
+      errors.rate = "Interest rate can't be negative";
+    } else if (values.rate > 50) {
+      errors.rate = "Interest rate is too high";
+    }
+    
+    // Years validation
+    if (values.years <= 0) {
+      errors.years = "Loan term must be at least 1 year";
+    } else if (values.years > 50) {
+      errors.years = "Loan term can't exceed 50 years";
+    }
+    
+    // Property tax validation
+    if (values.propertyTax < 0) {
+      errors.propertyTax = "Property tax can't be negative";
+    }
+    
+    // Insurance validation
+    if (values.insurance < 0) {
+      errors.insurance = "Insurance amount can't be negative";
+    }
+    
+    // PMI validation
+    if (values.pmi < 0) {
+      errors.pmi = "PMI amount can't be negative";
+    }
+    
+    // If there are validation errors, show them and stop
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      setLoading(false);
+      return;
+    }
+    
+    // Add a small delay for UI feedback
+    setTimeout(() => {
+      try {
+        // This will trigger a re-render with the updated results
+        setValues({...values});
+      } catch (error) {
+        console.error('Error calculating mortgage:', error);
+        setValidationErrors({
+          general: "An error occurred while calculating the mortgage. Please check your inputs."
+        });
+      } finally {
+        setLoading(false);
+      }
+    }, 300);
   };
 
+  const { formatCurrency, currency } = useCurrency();
+
   const formatPercentage = (value: number) => {
-    return `${value.toFixed(2)}%`;
+    return `${roundToPrecision(value, 2).toFixed(2)}%`;
   };
 
   const sidebar = (
@@ -200,111 +233,157 @@ export function MortgageCalculator() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="form-group">
-                <label className="form-label">Home Price (₹)</label>
-                <input
-                  type="number"
-                  value={values.principal}
-                  onChange={(e) => handleInputChange('principal', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="5,00,000"
-                />
-                <p className="form-help">Total purchase price of the home</p>
-              </div>
+              <NumericInput
+                label="Home Price"
+                value={values.principal}
+                onValueChange={(value) => handleInputChange('principal', value)}
+                placeholder="500000"
+                helpText="Total purchase price of the home"
+                showCurrencySymbol
+                decimalPlaces={2}
+                min={0}
+                allowZero={false}
+                isValid={!validationErrors.principal}
+                errorText={validationErrors.principal}
+              />
 
-              <div className="form-group">
-                <label className="form-label">Down Payment (₹)</label>
-                <input
-                  type="number"
+              <div className="space-y-1">
+                <NumericInput
+                  label="Down Payment"
                   value={values.downPayment}
-                  onChange={(e) => handleInputChange('downPayment', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="1,00,000"
+                  onValueChange={(value) => handleInputChange('downPayment', value)}
+                  placeholder="100000"
+                  helpText="Amount paid upfront (typically 10-20%)"
+                  showCurrencySymbol
+                  decimalPlaces={2}
+                  min={0}
+                  allowZero={true}
+                  isValid={!validationErrors.downPayment}
+                  errorText={validationErrors.downPayment}
                 />
-                <p className="form-help">Amount paid upfront (typically 10-20%)</p>
+                {showSuggestion && (
+                  <div className="flex justify-between items-center mt-1 text-xs text-blue-600">
+                    <span>Suggested 20% down payment: {formatCurrency(suggestedDownPayment)}</span>
+                    <button 
+                      className="text-blue-700 hover:text-blue-900 font-medium"
+                      onClick={() => {
+                        handleInputChange('downPayment', suggestedDownPayment);
+                        setShowSuggestion(false);
+                      }}
+                    >
+                      Apply
+                    </button>
+                  </div>
+                )}
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Interest Rate (%)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={values.rate}
-                  onChange={(e) => handleInputChange('rate', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="7.5"
-                />
-                <p className="form-help">Annual interest rate</p>
-              </div>
+              <NumericInput
+                label="Interest Rate"
+                value={values.rate}
+                onValueChange={(value) => handleInputChange('rate', value)}
+                placeholder="7.5"
+                helpText="Annual interest rate"
+                decimalPlaces={3}
+                min={0}
+                max={50}
+                allowZero={true}
+                isValid={!validationErrors.rate}
+                errorText={validationErrors.rate}
+              />
 
-              <div className="form-group">
-                <label className="form-label">Loan Term (years)</label>
-                <input
-                  type="number"
-                  value={values.years}
-                  onChange={(e) => handleInputChange('years', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="30"
-                />
-                <p className="form-help">Length of the mortgage</p>
-              </div>
+              <NumericInput
+                label="Loan Term"
+                value={values.years}
+                onValueChange={(value) => handleInputChange('years', value)}
+                placeholder="30"
+                helpText="Length of the mortgage in years"
+                decimalPlaces={0}
+                min={1}
+                max={50}
+                isValid={!validationErrors.years}
+                errorText={validationErrors.years}
+              />
 
-              <div className="form-group">
-                <label className="form-label">Annual Property Tax (₹)</label>
-                <input
-                  type="number"
-                  value={values.propertyTax}
-                  onChange={(e) => handleInputChange('propertyTax', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="6,000"
-                />
-                <p className="form-help">Yearly property tax amount</p>
-              </div>
+              <NumericInput
+                label="Annual Property Tax"
+                value={values.propertyTax}
+                onValueChange={(value) => handleInputChange('propertyTax', value)}
+                placeholder="6000"
+                helpText="Yearly property tax amount"
+                showCurrencySymbol
+                decimalPlaces={2}
+                min={0}
+                allowZero={true}
+                isValid={!validationErrors.propertyTax}
+                errorText={validationErrors.propertyTax}
+              />
 
-              <div className="form-group">
-                <label className="form-label">Annual Home Insurance (₹)</label>
-                <input
-                  type="number"
-                  value={values.insurance}
-                  onChange={(e) => handleInputChange('insurance', Number(e.target.value))}
-                  className="form-input"
-                  placeholder="1,500"
-                />
-                <p className="form-help">Yearly homeowner's insurance</p>
-              </div>
+              <NumericInput
+                label="Annual Home Insurance"
+                value={values.insurance}
+                onValueChange={(value) => handleInputChange('insurance', value)}
+                placeholder="1500"
+                helpText="Yearly homeowner's insurance"
+                showCurrencySymbol
+                decimalPlaces={2}
+                min={0}
+                allowZero={true}
+                isValid={!validationErrors.insurance}
+                errorText={validationErrors.insurance}
+              />
+              
+              <NumericInput
+                label="Private Mortgage Insurance (PMI)"
+                value={values.pmi}
+                onValueChange={(value) => handleInputChange('pmi', value)}
+                placeholder="0"
+                helpText="Annual PMI (if down payment < 20%)"
+                showCurrencySymbol
+                decimalPlaces={2}
+                min={0}
+                allowZero={true}
+                isValid={!validationErrors.pmi}
+                errorText={validationErrors.pmi}
+              />
             </div>
 
-            <Button 
-              onClick={handleCalculate}
-              loading={loading}
-              className="w-full md:w-auto"
-              size="lg"
-            >
-              Calculate Mortgage
-            </Button>
+            <div className="space-y-2">
+              <Button 
+                onClick={handleCalculate}
+                loading={loading}
+                className="w-full md:w-auto"
+                size="lg"
+              >
+                Calculate Mortgage
+              </Button>
+              
+              {validationErrors.general && (
+                <div className="text-red-500 text-sm mt-2">{validationErrors.general}</div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         {/* Results */}
         {results && (
           <div className="space-y-6 animate-fade-in">
-            <div className="calculator-results-grid">
-              <div className="result-card result-card-primary">
-                <div className="result-label result-label-primary">Monthly Payment</div>
-                <div className="result-highlight result-highlight-primary">{formatCurrency(results.monthlyPayment)}</div>
-                <div className="result-description result-description-primary">Principal, Interest, Tax & Insurance</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-primary/10 rounded-lg p-4 text-center sm:col-span-3">
+                <div className="text-sm text-primary-700 font-medium mb-1">Monthly Payment</div>
+                <div className="text-3xl font-bold text-primary-900 mb-1">{formatCurrency(results.monthlyPayment)}</div>
+                <div className="text-xs text-primary-700">Principal, Interest, Tax & Insurance</div>
               </div>
 
-              <div className="pricing-card">
-                <div className="pricing-card-title">Total Interest</div>
-                <div className="pricing-card-value">{formatCurrency(results.totalInterest)}</div>
-                <div className="pricing-card-description">Over {values.years} years</div>
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-sm text-gray-500 font-medium mb-1">Total Interest</div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">{formatCurrency(results.totalInterest)}</div>
+                <div className="text-xs text-gray-500">Over {values.years} years</div>
               </div>
 
-              <div className="pricing-card">
-                <div className="pricing-card-title">Loan Amount</div>
-                <div className="pricing-card-value">{formatCurrency(results.loanAmount)}</div>
-                <div className="pricing-card-description">LTV: {formatPercentage(results.loanToValue)}</div>
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-sm text-gray-500 font-medium mb-1">Loan Amount</div>
+                <div className="text-2xl font-bold text-gray-900 mb-1">{formatCurrency(results.loanAmount)}</div>
+                <div className="text-xs text-gray-500">LTV: {formatPercentage(results.loanToValue)}</div>
               </div>
             </div>
 
@@ -367,6 +446,135 @@ export function MortgageCalculator() {
               </Card>
             </div>
           </div>
+        )}
+
+        {/* Amortization Schedule */}
+        {results && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle>Mortgage Breakdown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="schedule">Amortization Schedule</TabsTrigger>
+                </TabsList>
+                <TabsContent value="overview" className="py-4">
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Payment Distribution</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Principal</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.loanAmount)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Total Interest</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.totalInterest)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between border-t border-gray-200 pt-2">
+                            <span>Total Cost</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.totalPayment)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900 mb-3">Monthly Payment</h4>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span>Principal & Interest</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.monthlyPrincipalAndInterest)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Property Tax</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.monthlyPropertyTax)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span>Insurance</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.monthlyInsurance)}
+                            </span>
+                          </div>
+                          {results.monthlyPMI > 0 && (
+                            <div className="flex justify-between">
+                              <span>PMI</span>
+                              <span className="font-semibold">
+                                {formatCurrency(results.monthlyPMI)}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between border-t border-gray-200 pt-2">
+                            <span>Total Monthly Payment</span>
+                            <span className="font-semibold">
+                              {formatCurrency(results.monthlyPayment)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+                <TabsContent value="schedule" className="py-4">
+                  <div className="space-y-4">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm min-w-[600px]">
+                        <thead>
+                          <tr className="bg-gray-50">
+                            <th className="px-4 py-2 text-left font-medium">Year</th>
+                            <th className="px-4 py-2 text-right font-medium">Payment</th>
+                            <th className="px-4 py-2 text-right font-medium">Principal</th>
+                            <th className="px-4 py-2 text-right font-medium">Interest</th>
+                            <th className="px-4 py-2 text-right font-medium">Remaining Balance</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {results.paymentSchedule
+                            .filter((item, index) => {
+                              // Show only year-end entries unless showFullSchedule is true
+                              return showFullSchedule || (item.month % 12 === 0 || 
+                                index === results.paymentSchedule.length - 1);
+                            })
+                            .map((item) => {
+                              const year = Math.ceil(item.month / 12);
+                              return (
+                                <tr key={item.month} className="border-b border-gray-100">
+                                  <td className="px-4 py-2">{year}</td>
+                                  <td className="px-4 py-2 text-right">{formatCurrency(item.payment)}</td>
+                                  <td className="px-4 py-2 text-right">{formatCurrency(item.principal)}</td>
+                                  <td className="px-4 py-2 text-right">{formatCurrency(item.interest)}</td>
+                                  <td className="px-4 py-2 text-right">{formatCurrency(item.balance)}</td>
+                                </tr>
+                              );
+                            })}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="flex justify-center mt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setShowFullSchedule(!showFullSchedule)}
+                      >
+                        {showFullSchedule ? "Show Yearly Summary" : "Show Monthly Details"}
+                      </Button>
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         )}
 
         <div className="my-8">

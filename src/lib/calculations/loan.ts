@@ -1,4 +1,13 @@
 import type { LoanInputs } from "../validations/calculator";
+import { 
+  parseRobustNumber, 
+  safeDivide, 
+  safeMultiply, 
+  safeAdd, 
+  safePower,
+  roundToPrecision,
+  isEffectivelyZero
+} from "../utils/number";
 
 export interface LoanResults {
   monthlyPayment: number;
@@ -20,24 +29,33 @@ export interface LoanPaymentScheduleItem {
 }
 
 export function calculateLoan(inputs: LoanInputs): LoanResults {
-  // Use explicit type assertions for input values
-  const principal = Number(inputs.principal);
-  const rate = Number(inputs.rate);
-  const years = Number(inputs.years);
-  const extraPayment = Number(inputs.extraPayment || 0);
+  // Use robust number parsing for all input values
+  const principal = parseRobustNumber(inputs.principal);
+  const rate = parseRobustNumber(inputs.rate);
+  const years = parseRobustNumber(inputs.years);
+  const extraPayment = parseRobustNumber(inputs.extraPayment);
 
-  const monthlyRate = rate / 100 / 12;
-  const numberOfPayments = years * 12;
+  const monthlyRate = safeDivide(rate, 1200); // rate / 100 / 12
+  const numberOfPayments = Math.max(1, years * 12);
 
-  // Calculate standard monthly payment
-  const monthlyPayment = monthlyRate === 0 
-    ? principal / numberOfPayments
-    : (principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
-      (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+  // Calculate standard monthly payment with safe operations
+  let monthlyPayment: number;
+  
+  if (isEffectivelyZero(monthlyRate)) {
+    // Zero interest rate case
+    monthlyPayment = safeDivide(principal, numberOfPayments);
+  } else {
+    // Standard loan formula with safe operations
+    const onePlusRate = 1 + monthlyRate;
+    const powerTerm = safePower(onePlusRate, numberOfPayments);
+    const numerator = safeMultiply(safeMultiply(principal, monthlyRate), powerTerm);
+    const denominator = powerTerm - 1;
+    monthlyPayment = safeDivide(numerator, denominator);
+  }
 
-  // Calculate without extra payments
-  const standardTotalPayment = monthlyPayment * numberOfPayments;
-  const standardTotalInterest = standardTotalPayment - principal;
+  // Calculate without extra payments using safe operations
+  const standardTotalPayment = safeMultiply(monthlyPayment, numberOfPayments);
+  const standardTotalInterest = Math.max(0, standardTotalPayment - principal);
 
   // Calculate with extra payments
   const paymentSchedule = generateLoanPaymentSchedule(
@@ -53,11 +71,11 @@ export function calculateLoan(inputs: LoanInputs): LoanResults {
   const interestSaved = standardTotalInterest - totalInterest;
 
   return {
-    monthlyPayment,
-    totalPayment,
-    totalInterest,
+    monthlyPayment: roundToPrecision(monthlyPayment, 2),
+    totalPayment: roundToPrecision(totalPayment, 2),
+    totalInterest: roundToPrecision(totalInterest, 2),
     payoffTime: actualPayoffTime,
-    interestSaved,
+    interestSaved: roundToPrecision(Math.max(0, interestSaved), 2),
     paymentSchedule,
   };
 }
@@ -69,29 +87,26 @@ function generateLoanPaymentSchedule(
   extraPayment: number
 ): LoanPaymentScheduleItem[] {
   const schedule: LoanPaymentScheduleItem[] = [];
-  let balance = loanAmount;
+  let balance = parseRobustNumber(loanAmount);
   let cumulativeInterest = 0;
   let month = 1;
 
-  while (balance > 0.01) { // Small threshold to handle rounding
-    const interestPayment = balance * monthlyRate;
+  while (!isEffectivelyZero(balance) && balance > 0) {
+    const interestPayment = safeMultiply(balance, monthlyRate);
     const principalPayment = Math.min(monthlyPayment - interestPayment, balance);
-    const actualExtraPayment = Math.min(extraPayment, balance - principalPayment);
+    const actualExtraPayment = Math.min(extraPayment, Math.max(0, balance - principalPayment));
     
-    balance -= (principalPayment + actualExtraPayment);
-    cumulativeInterest += interestPayment;
-
-    // Ensure balance doesn't go negative
-    if (balance < 0) balance = 0;
+    balance = Math.max(0, balance - principalPayment - actualExtraPayment);
+    cumulativeInterest = safeAdd(cumulativeInterest, interestPayment);
 
     schedule.push({
       month,
-      payment: monthlyPayment,
-      principal: principalPayment,
-      interest: interestPayment,
-      extraPayment: actualExtraPayment,
-      balance,
-      cumulativeInterest,
+      payment: roundToPrecision(monthlyPayment, 2),
+      principal: roundToPrecision(principalPayment, 2),
+      interest: roundToPrecision(interestPayment, 2),
+      extraPayment: roundToPrecision(actualExtraPayment, 2),
+      balance: roundToPrecision(balance, 2),
+      cumulativeInterest: roundToPrecision(cumulativeInterest, 2),
     });
 
     month++;

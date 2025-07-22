@@ -1,4 +1,13 @@
 import type { MortgageInputs } from "../validations/calculator";
+import { 
+  parseRobustNumber, 
+  safeDivide, 
+  safeMultiply, 
+  safeAdd, 
+  safePower,
+  roundToPrecision,
+  isEffectivelyZero
+} from "../utils/number";
 
 export interface MortgageResults {
   monthlyPayment: number;
@@ -22,52 +31,66 @@ export interface PaymentScheduleItem {
 }
 
 export function calculateMortgage(inputs: MortgageInputs): MortgageResults {
-  // Use explicit type assertions for input values
-  const principal = Number(inputs.principal);
-  const rate = Number(inputs.rate);
-  const years = Number(inputs.years);
-  const downPayment = Number(inputs.downPayment || 0);
-  const propertyTax = Number(inputs.propertyTax || 0);
-  const insurance = Number(inputs.insurance || 0);
-  const pmi = Number(inputs.pmi || 0);
+  // Use robust number parsing for all input values
+  const principal = parseRobustNumber(inputs.principal);
+  const rate = parseRobustNumber(inputs.rate);
+  const years = parseRobustNumber(inputs.years);
+  const downPayment = parseRobustNumber(inputs.downPayment);
+  const propertyTax = parseRobustNumber(inputs.propertyTax);
+  const insurance = parseRobustNumber(inputs.insurance);
+  const pmi = parseRobustNumber(inputs.pmi);
 
-  const loanAmount = principal - downPayment;
-  const monthlyRate = rate / 100 / 12;
-  const numberOfPayments = years * 12;
+  const loanAmount = Math.max(0, principal - downPayment);
+  const monthlyRate = safeDivide(rate, 1200); // rate / 100 / 12
+  const numberOfPayments = Math.max(1, years * 12);
 
   // Calculate monthly principal and interest payment
-  const monthlyPrincipalAndInterest = monthlyRate === 0 
-    ? loanAmount / numberOfPayments
-    : (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
-      (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+  let monthlyPrincipalAndInterest: number;
+  
+  if (isEffectivelyZero(monthlyRate)) {
+    // Zero interest rate case
+    monthlyPrincipalAndInterest = safeDivide(loanAmount, numberOfPayments);
+  } else {
+    // Standard mortgage formula with safe operations
+    const onePlusRate = 1 + monthlyRate;
+    const powerTerm = safePower(onePlusRate, numberOfPayments);
+    const numerator = safeMultiply(safeMultiply(loanAmount, monthlyRate), powerTerm);
+    const denominator = powerTerm - 1;
+    monthlyPrincipalAndInterest = safeDivide(numerator, denominator);
+  }
 
-  // Calculate other monthly costs
-  const monthlyPropertyTax = propertyTax / 12;
-  const monthlyInsurance = insurance / 12;
-  const monthlyPMI = pmi / 12;
+  // Calculate other monthly costs with safe division
+  const monthlyPropertyTax = safeDivide(propertyTax, 12);
+  const monthlyInsurance = safeDivide(insurance, 12);
+  const monthlyPMI = safeDivide(pmi, 12);
 
-  // Total monthly payment
-  const monthlyPayment = monthlyPrincipalAndInterest + monthlyPropertyTax + monthlyInsurance + monthlyPMI;
+  // Total monthly payment with safe addition
+  const monthlyPayment = safeAdd(
+    monthlyPrincipalAndInterest, 
+    monthlyPropertyTax, 
+    monthlyInsurance, 
+    monthlyPMI
+  );
 
-  // Calculate totals
-  const totalPayment = monthlyPrincipalAndInterest * numberOfPayments;
-  const totalInterest = totalPayment - loanAmount;
+  // Calculate totals with safe operations
+  const totalPayment = safeMultiply(monthlyPrincipalAndInterest, numberOfPayments);
+  const totalInterest = Math.max(0, totalPayment - loanAmount);
 
-  // Calculate loan-to-value ratio
-  const loanToValue = (loanAmount / principal) * 100;
+  // Calculate loan-to-value ratio with safe division
+  const loanToValue = principal > 0 ? safeDivide(loanAmount, principal) * 100 : 0;
 
   // Generate payment schedule
   const paymentSchedule = generatePaymentSchedule(loanAmount, monthlyRate, numberOfPayments, monthlyPrincipalAndInterest);
 
   return {
-    monthlyPayment,
-    totalPayment,
-    totalInterest,
-    monthlyPrincipalAndInterest,
-    monthlyPropertyTax,
-    monthlyInsurance,
-    monthlyPMI,
-    loanToValue,
+    monthlyPayment: roundToPrecision(monthlyPayment, 2),
+    totalPayment: roundToPrecision(totalPayment, 2),
+    totalInterest: roundToPrecision(totalInterest, 2),
+    monthlyPrincipalAndInterest: roundToPrecision(monthlyPrincipalAndInterest, 2),
+    monthlyPropertyTax: roundToPrecision(monthlyPropertyTax, 2),
+    monthlyInsurance: roundToPrecision(monthlyInsurance, 2),
+    monthlyPMI: roundToPrecision(monthlyPMI, 2),
+    loanToValue: roundToPrecision(loanToValue, 2),
     paymentSchedule,
   };
 }
@@ -79,28 +102,26 @@ function generatePaymentSchedule(
   monthlyPayment: number
 ): PaymentScheduleItem[] {
   const schedule: PaymentScheduleItem[] = [];
-  let balance = loanAmount;
+  let balance = parseRobustNumber(loanAmount);
   let cumulativeInterest = 0;
 
   for (let month = 1; month <= numberOfPayments; month++) {
-    const interestPayment = balance * monthlyRate;
-    const principalPayment = monthlyPayment - interestPayment;
-    balance -= principalPayment;
-    cumulativeInterest += interestPayment;
-
-    // Ensure balance doesn't go negative due to rounding
-    if (balance < 0) balance = 0;
+    const interestPayment = safeMultiply(balance, monthlyRate);
+    const principalPayment = Math.min(monthlyPayment - interestPayment, balance);
+    balance = Math.max(0, balance - principalPayment);
+    cumulativeInterest = safeAdd(cumulativeInterest, interestPayment);
 
     schedule.push({
       month,
-      payment: monthlyPayment,
-      principal: principalPayment,
-      interest: interestPayment,
-      balance,
-      cumulativeInterest,
+      payment: roundToPrecision(monthlyPayment, 2),
+      principal: roundToPrecision(principalPayment, 2),
+      interest: roundToPrecision(interestPayment, 2),
+      balance: roundToPrecision(balance, 2),
+      cumulativeInterest: roundToPrecision(cumulativeInterest, 2),
     });
 
-    if (balance === 0) break;
+    // Break if balance is effectively zero
+    if (isEffectivelyZero(balance)) break;
   }
 
   return schedule;

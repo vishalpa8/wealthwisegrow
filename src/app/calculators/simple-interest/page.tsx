@@ -1,7 +1,14 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { SafeMath, isSafeNumber, roundToPrecision } from '@/lib/utils/currency';
+import { 
+  parseRobustNumber, 
+  safeDivide, 
+  safeMultiply, 
+  safeAdd, 
+  roundToPrecision,
+  isEffectivelyZero
+} from '@/lib/utils/number';
 
 const initialValues = {
   principal: 100000,
@@ -16,31 +23,29 @@ interface SimpleInterestInputs {
 }
 
 function calculateSimpleInterest(inputs: SimpleInterestInputs) {
-  const { principal, rate, time } = inputs;
+  const principal = parseRobustNumber(inputs.principal);
+  const rate = parseRobustNumber(inputs.rate);
+  const time = parseRobustNumber(inputs.time);
 
   // Validate inputs
-  if (!isSafeNumber(principal) || !isSafeNumber(rate) || !isSafeNumber(time)) {
-    throw new Error('Invalid input values');
-  }
-
   if (principal <= 0) throw new Error('Principal must be positive');
   if (rate < 0) throw new Error('Interest rate cannot be negative');
   if (time <= 0) throw new Error('Time period must be positive');
 
   // Simple Interest formula: SI = P * R * T / 100
-  const simpleInterest = SafeMath.divide(
-    SafeMath.multiply(SafeMath.multiply(principal, rate), time),
+  const simpleInterest = safeDivide(
+    safeMultiply(safeMultiply(principal, rate), time),
     100
   );
 
-  const totalAmount = SafeMath.add(principal, simpleInterest);
+  const totalAmount = safeAdd(principal, simpleInterest);
 
   return {
     principal: roundToPrecision(principal),
     simpleInterest: roundToPrecision(simpleInterest),
     totalAmount: roundToPrecision(totalAmount),
-    effectiveRate: roundToPrecision(SafeMath.divide(SafeMath.multiply(simpleInterest, 100), principal)),
-    monthlyInterest: roundToPrecision(SafeMath.divide(simpleInterest, SafeMath.multiply(time, 12)))
+    effectiveRate: roundToPrecision(safeDivide(safeMultiply(simpleInterest, 100), principal)),
+    monthlyInterest: roundToPrecision(safeDivide(simpleInterest, safeMultiply(time, 12)))
   };
 }
 
@@ -128,7 +133,7 @@ export default function SimpleInterestCalculatorPage() {
       const calculation = calculateSimpleInterest(values);
 
       // Validate calculation results
-      if (!isSafeNumber(calculation.simpleInterest) || !isSafeNumber(calculation.totalAmount)) {
+      if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
         setError('Calculation overflow. Please use smaller values.');
         return [];
       }

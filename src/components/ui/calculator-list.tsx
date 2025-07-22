@@ -27,10 +27,27 @@ const calculators: Calculator[] = [
   { name: 'Gold', description: 'Calculate returns on your gold investment portfolio.', path: '/calculators/gold', category: 'Investments', icon: '🥇', difficulty: 'Medium' },
   { name: 'Income Tax', description: 'Calculate your annual income tax liability.', path: '/calculators/income-tax', category: 'Tax', icon: '📋', difficulty: 'Advanced' },
   { name: 'GST', description: 'Calculate GST on goods and services.', path: '/calculators/gst', category: 'Tax', icon: '🧾', difficulty: 'Easy' },
+  { name: 'Tax Calculator', description: 'Comprehensive tax calculator for income tax and other taxes.', path: '/calculators/tax', category: 'Tax', icon: '💰', difficulty: 'Advanced' },
   { name: 'Salary', description: 'Calculate your take-home salary after deductions.', path: '/calculators/salary', category: 'Planning', icon: '💼', difficulty: 'Medium' },
+  { name: 'HRA', description: 'Calculate House Rent Allowance exemption and tax benefits.', path: '/calculators/hra', category: 'Tax', icon: '🏠', difficulty: 'Medium' },
   { name: 'Compound Interest', description: 'Calculate compound interest on investments and loans.', path: '/calculators/compound-interest', category: 'Investments', icon: '📈', difficulty: 'Easy' },
+  { name: 'Simple Interest', description: 'Calculate simple interest on loans and investments.', path: '/calculators/simple-interest', category: 'Investments', icon: '📊', difficulty: 'Easy' },
   { name: 'Debt Payoff', description: 'Plan strategies to pay off your debts efficiently.', path: '/calculators/debt-payoff', category: 'Planning', icon: '💸', difficulty: 'Medium' },
   { name: 'Insurance', description: 'Calculate your life and health insurance needs.', path: '/calculators/insurance', category: 'Planning', icon: '🛡️', difficulty: 'Advanced' },
+  { name: 'Car Loan', description: 'Calculate your car loan EMI and total interest.', path: '/calculators/car-loan', category: 'Loans', icon: '🚗', difficulty: 'Easy' },
+  { name: 'Home Loan', description: 'Calculate home loan EMI with detailed breakdown.', path: '/calculators/home-loan', category: 'Loans', icon: '🏡', difficulty: 'Medium' },
+  { name: 'Personal Loan', description: 'Calculate personal loan EMI and interest costs.', path: '/calculators/personal-loan', category: 'Loans', icon: '👤', difficulty: 'Easy' },
+  { name: 'Education Loan', description: 'Calculate education loan EMI and repayment schedule.', path: '/calculators/education-loan', category: 'Loans', icon: '🎓', difficulty: 'Medium' },
+  { name: 'Business Loan', description: 'Calculate business loan EMI and cash flow impact.', path: '/calculators/business-loan', category: 'Loans', icon: '🏢', difficulty: 'Medium' },
+  { name: 'Balloon Loan', description: 'Calculate payments for balloon loans with large final payment.', path: '/calculators/balloon-loan', category: 'Loans', icon: '🎈', difficulty: 'Advanced' },
+  { name: 'Mutual Fund', description: 'Calculate mutual fund returns and SIP planning.', path: '/calculators/mutual-fund', category: 'Investments', icon: '📊', difficulty: 'Medium' },
+  { name: 'SIP', description: 'Calculate Systematic Investment Plan returns.', path: '/calculators/sip', category: 'Investments', icon: '📈', difficulty: 'Easy' },
+  { name: 'SWP', description: 'Calculate Systematic Withdrawal Plan duration and sustainability.', path: '/calculators/swp', category: 'Investments', icon: '💵', difficulty: 'Medium' },
+  { name: 'Lump Sum', description: 'Calculate lump sum investment returns.', path: '/calculators/lumpsum', category: 'Investments', icon: '💰', difficulty: 'Easy' },
+  { name: 'Savings', description: 'Plan your savings strategy with goal-based calculations.', path: '/calculators/savings', category: 'Planning', icon: '💶', difficulty: 'Easy' },
+  { name: 'ROI', description: 'Calculate Return on Investment for projects and investments.', path: '/calculators/roi', category: 'Investments', icon: '📉', difficulty: 'Medium' },
+  { name: 'Break-even', description: 'Calculate break-even point for business and projects.', path: '/calculators/break-even', category: 'Planning', icon: '⚖️', difficulty: 'Medium' },
+  { name: 'Education Goal', description: 'Plan and calculate savings for children\'s education expenses.', path: '/calculators/education-goal', category: 'Planning', icon: '🎓', difficulty: 'Medium' },
 ];
 
 const categories = ['All', 'Loans', 'Investments', 'Planning', 'Tax'];
@@ -64,7 +81,7 @@ export function CalculatorList() {
   return (
     <div className="container-wide">
       {/* Search and Filters */}
-      <div className="mb-8 space-y-6">
+      <div className="mb-8 space-y-4">
         {/* Search Bar */}
         <div className="max-w-md mx-auto">
           <div className="relative">
@@ -73,7 +90,7 @@ export function CalculatorList() {
               placeholder="Search calculators..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 transition-all duration-200"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="text-gray-400">🔍</span>
@@ -82,99 +99,99 @@ export function CalculatorList() {
         </div>
 
         {/* Filter Buttons */}
-        <div className="flex flex-wrap justify-center gap-4">
+        <div className="flex flex-wrap justify-center gap-2">
           {/* Category Filter */}
-          <div className="flex flex-wrap gap-2">
-            {categories.map((category) => (
-              <button
-                key={category}
-                onClick={() => setSelectedCategory(category)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  selectedCategory === category
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {category}
-              </button>
-            ))}
-          </div>
-
+          {categories.map((category) => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedCategory === category
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+          
           {/* Difficulty Filter */}
-          <div className="flex flex-wrap gap-2">
-            {difficulties.map((difficulty) => (
-              <button
-                key={difficulty}
-                onClick={() => setSelectedDifficulty(difficulty)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  selectedDifficulty === difficulty
-                    ? 'bg-gray-900 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {difficulty}
-              </button>
-            ))}
-          </div>
+          {difficulties.map((difficulty) => (
+            <button
+              key={difficulty}
+              onClick={() => setSelectedDifficulty(difficulty)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                selectedDifficulty === difficulty
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {difficulty}
+            </button>
+          ))}
 
           {/* Popular Toggle */}
           <button
             onClick={() => setShowPopularOnly(!showPopularOnly)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               showPopularOnly
-                ? 'bg-gray-900 text-white'
+                ? 'bg-yellow-500 text-white'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            ⭐ Popular Only
+            ⭐ Popular
           </button>
         </div>
 
         {/* Results Count */}
-        <div className="text-center text-gray-600">
+        <div className="text-center text-sm text-gray-600">
           Showing {filteredCalculators.length} of {calculators.length} calculators
         </div>
       </div>
 
       {/* Calculator Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="space-y-4">
         {filteredCalculators.map((calculator) => (
           <Link 
             key={calculator.name} 
             href={calculator.path}
-            className="card card-hover group relative"
+            className="group block bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200"
           >
-            <div className="card-content">
-              {/* Popular Badge */}
-              {calculator.popular && (
-                <div className="absolute top-4 right-4">
-                  <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
-                    ⭐ Popular
-                  </span>
-                </div>
-              )}
-              
-              {/* Icon and Title */}
-              <div className="flex items-center mb-3">
-                <span className="text-2xl mr-3">{calculator.icon}</span>
-                <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
-                  {calculator.name}
-                </h3>
+            <div className="p-6 flex items-center">
+              {/* Icon */}
+              <div className="flex-shrink-0 mr-6">
+                <span className="text-3xl">{calculator.icon}</span>
               </div>
               
-              {/* Description */}
-              <p className="text-body-small text-gray-600 group-hover:text-gray-500 transition-colors mb-4">
-                {calculator.description}
-              </p>
-              
-              {/* Tags */}
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                  {calculator.category}
-                </span>
-                <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDifficultyColor(calculator.difficulty)}`}>
-                  {calculator.difficulty}
-                </span>
+              {/* Content */}
+              <div className="flex-grow min-w-0">
+                <div className="flex items-start justify-between">
+                  <div className="flex-grow">
+                    <div className="flex items-center mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
+                        {calculator.name}
+                      </h3>
+                      {calculator.popular && (
+                        <span className="ml-3 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
+                          ⭐ Popular
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-500 transition-colors">
+                      {calculator.description}
+                    </p>
+                  </div>
+                  
+                  {/* Tags */}
+                  <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
+                    <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
+                      {calculator.category}
+                    </span>
+                    <span className={`text-xs font-medium px-2 py-1 rounded ${getDifficultyColor(calculator.difficulty)}`}>
+                      {calculator.difficulty}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           </Link>

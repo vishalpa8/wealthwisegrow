@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X, Calculator } from "lucide-react";
-import { cn } from "@/lib/utils/cn";
+import { cn } from "@/lib/utils";
+import { CurrencySelector } from "@/components/ui/currency-selector";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -37,6 +38,8 @@ export function Header() {
               </Link>
             ))}
           </nav>
+
+          <CurrencySelector className="ml-4" />
 
           {/* Mobile menu button */}
           <button

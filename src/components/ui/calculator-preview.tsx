@@ -117,4 +117,4 @@ export function CalculatorPreview({ calculatorName, isOpen, onClose }: Calculato
       </div>
     </div>
   );
-}"
+}
