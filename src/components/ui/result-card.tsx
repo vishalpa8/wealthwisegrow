@@ -36,29 +36,29 @@ export function ResultCard({
   return (
     <div
       className={cn(
-        "rounded-xl p-4 sm:p-6 text-center shadow-sm border transition-all duration-200 hover:shadow-md w-full min-w-0 flex flex-col items-center justify-center",
+        "rounded-xl p-4 sm:p-6 lg:p-8 text-center shadow-sm border transition-all duration-200 hover:shadow-md w-full min-w-0 flex flex-col items-center justify-center overflow-wrap-anywhere",
         variantStyles[variant],
         className
       )}
       role="region"
       aria-labelledby={`result-${title.replace(/\s+/g, "-").toLowerCase()}`}
     >
-      <div className="space-y-2 w-full min-w-0 flex flex-col items-center justify-center">
+      <div className="space-y-3 w-full min-w-0 flex flex-col items-center justify-center">
         <h3
           id={`result-${title.replace(/\s+/g, "-").toLowerCase()}`}
-          className="text-lg font-semibold break-words max-w-full min-w-0 overflow-hidden w-full"
+          className="text-sm sm:text-base lg:text-lg font-semibold break-words overflow-wrap-anywhere max-w-full min-w-0 w-full leading-tight"
         >
           {title}
         </h3>
         
-        <div className="text-3xl font-extrabold break-words max-w-full min-w-0 overflow-hidden w-full">
-          {prefix && <span className="text-2xl">{prefix}</span>}
+        <div className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-extrabold break-words overflow-wrap-anywhere max-w-full min-w-0 w-full leading-tight">
+          {prefix && <span className="text-base sm:text-lg lg:text-xl xl:text-2xl">{prefix}</span>}
           {formatValue(value)}
-          {suffix && <span className="text-2xl">{suffix}</span>}
+          {suffix && <span className="text-base sm:text-lg lg:text-xl xl:text-2xl">{suffix}</span>}
         </div>
         
         {subtitle && (
-          <p className="text-sm opacity-75 break-words max-w-full min-w-0 overflow-hidden w-full">{subtitle}</p>
+          <p className="text-xs sm:text-sm opacity-75 break-words overflow-wrap-anywhere max-w-full min-w-0 w-full leading-relaxed">{subtitle}</p>
         )}
       </div>
       

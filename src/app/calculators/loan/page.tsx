@@ -255,19 +255,19 @@ export default function LoanCalculator() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="result-card bg-primary-600 text-white">
                       <div className="text-sm font-medium mb-2">Monthly EMI</div>
-                      <div className="text-2xl md:text-3xl font-bold mb-2">{formatCurrency(monthly)}</div>
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 font-mono overflow-hidden">{formatCurrency(monthly)}</div>
                       <div className="text-sm opacity-90">Principal + Interest</div>
                     </div>
 
                     <div className="result-card">
                       <div className="text-sm font-medium text-neutral-600 mb-2">Total Payment</div>
-                      <div className="text-xl md:text-2xl font-bold text-neutral-900 mb-2">{formatCurrency(totalPayment)}</div>
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-900 mb-2 font-mono overflow-hidden">{formatCurrency(totalPayment)}</div>
                       <div className="text-sm text-neutral-500">Over {years} years</div>
                     </div>
 
                     <div className="result-card">
                       <div className="text-sm font-medium text-neutral-600 mb-2">Total Interest</div>
-                      <div className="text-xl md:text-2xl font-bold text-neutral-900 mb-2">{formatCurrency(totalInterest)}</div>
+                      <div className="text-lg sm:text-xl md:text-2xl font-bold text-neutral-900 mb-2 font-mono overflow-hidden">{formatCurrency(totalInterest)}</div>
                       <div className="text-sm text-neutral-500">{formatPercentage(interestPercentage)} of principal</div>
                     </div>
                   </div>

@@ -200,6 +200,7 @@
     flex-direction: column;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    min-width: 0;
   }
   
   @media (min-width: 1024px) {
@@ -415,6 +416,9 @@
   .pricing-card {
     @apply bg-white rounded-lg border border-neutral-200 text-center p-6 transition-colors duration-200;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
   
   .result-card:hover,
@@ -445,12 +449,13 @@
   }
   
   .result-highlight {
-    @apply text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 tracking-tight;
+    @apply text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-gray-900 mb-2 tracking-tight;
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
     line-height: 1.2;
     max-width: 100%;
+    font-variant-numeric: tabular-nums;
   }
   
   .result-highlight-primary {
@@ -601,7 +606,12 @@
   }
   
   .container-content-extensive {
-    @apply max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12;
+    @apply max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16;
+  }
+  
+  /* Ultra-wide container for maximum calculator width */
+  .container-content-ultra {
+    @apply max-w-[2000px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-20;
   }
   
   /* Modern Design System */
@@ -752,6 +762,65 @@
   
   .section-spacing-sm {
     @apply py-8 md:py-12;
+  }
+  
+  /* Numeric Display Utilities */
+  .numeric-display {
+    @apply font-mono tabular-nums;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+  }
+  
+  .numeric-display-sm {
+    @apply text-sm sm:text-base font-mono tabular-nums;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .numeric-display-lg {
+    @apply text-lg sm:text-xl md:text-2xl font-mono tabular-nums font-bold;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  .numeric-display-xl {
+    @apply text-xl sm:text-2xl lg:text-3xl font-mono tabular-nums font-bold;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+  }
+  
+  /* Enhanced overflow handling for large numbers */
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    hyphens: auto;
+  }
+  
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1.5rem);
+    line-height: 1.2;
+  }
+  
+  .text-responsive-lg {
+    font-size: clamp(1rem, 3vw, 2rem);
+    line-height: 1.2;
+  }
+  
+  .text-responsive-xl {
+    font-size: clamp(1.25rem, 4vw, 3rem);
+    line-height: 1.1;
   }
   
   /* Text Clamping */
