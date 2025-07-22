@@ -108,13 +108,13 @@ function calculateTax(inputs: TaxInputs) {
         
         if (taxableAmount <= 300000) {
           incomeTax += taxableAmount * 0.05;
-        } else if (taxableAmount <= 300000) {
+        } else if (taxableAmount <= 600000) {
           incomeTax += 300000 * 0.05 + (taxableAmount - 300000) * 0.10;
-        } else if (taxableAmount <= 300000) {
+        } else if (taxableAmount <= 900000) {
           incomeTax += 300000 * 0.05 + 300000 * 0.10 + (taxableAmount - 600000) * 0.15;
-        } else if (taxableAmount <= 300000) {
+        } else if (taxableAmount <= 1200000) {
           incomeTax += 300000 * 0.05 + 300000 * 0.10 + 300000 * 0.15 + (taxableAmount - 900000) * 0.20;
-        } else if (taxableAmount <= 300000) {
+        } else if (taxableAmount <= 1500000) {
           incomeTax += 300000 * 0.05 + 300000 * 0.10 + 300000 * 0.15 + 300000 * 0.20 + (taxableAmount - 1200000) * 0.25;
         } else {
           incomeTax += 300000 * 0.05 + 300000 * 0.10 + 300000 * 0.15 + 300000 * 0.20 + 300000 * 0.25 + (taxableAmount - 1500000) * 0.30;

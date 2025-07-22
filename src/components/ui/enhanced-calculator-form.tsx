@@ -5,7 +5,7 @@ import { CurrencySelector } from '@/components/ui/currency-selector';
 import { NumericInput } from '@/components/ui/numeric-input';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Copy, Share2, Download, GitCompare, Calculator, TrendingUp, Info } from 'lucide-react';
-import { parseRobustNumber, isEffectivelyZero } from '@/lib/utils/number';
+import { parseRobustNumber } from '@/lib/utils/number';
 
 export interface EnhancedCalculatorField {
   label: string;
@@ -122,11 +122,11 @@ export function EnhancedCalculatorForm({
   };
 
   // Handle number input change with proper decimal support
-  const handleNumberInputChange = (field: EnhancedCalculatorField, inputValue: string) => {
-    // Parse the input safely to handle all edge cases
-    const numValue = parseRobustNumber(inputValue);
-    handleFieldChange(field, numValue);
-  };
+  // const handleNumberInputChange = (field: EnhancedCalculatorField, inputValue: string) => {
+  //   // Parse the input safely to handle all edge cases
+  //   const numValue = parseRobustNumber(inputValue);
+  //   handleFieldChange(field, numValue);
+  // };
 
   // Export results as CSV
   const exportResults = () => {
@@ -332,7 +332,9 @@ export function EnhancedCalculatorForm({
   return (
     <div 
       ref={formRef}
-      className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100"
+      className={`mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 ${
+        results.length === 3 ? 'max-w-6xl' : 'max-w-4xl'
+      }`}
       onKeyDown={handleKeyDown}
     >
       {/* Header */}
@@ -426,8 +428,54 @@ export function EnhancedCalculatorForm({
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {results.map(renderResult)}
+              <div className={results.length === 3 ? "calculator-results-grid" : "space-y-3"}>
+                {results.length === 3 ? (
+                  results.map((result, index) => {
+                    const isHighlight = result.highlight || index === 0;
+                    let displayValue: string;
+                    
+                    // Format display value
+                    switch (result.type) {
+                      case 'currency':
+                        displayValue = formatCurrency(parseRobustNumber(result.value));
+                        break;
+                      case 'percentage':
+                        displayValue = `${formatNumber(parseRobustNumber(result.value))}%`;
+                        break;
+                      case 'number':
+                        if (result.value !== null && result.value !== undefined) {
+                          displayValue = formatNumber(parseRobustNumber(result.value));
+                        } else {
+                          displayValue = '0';
+                        }
+                        break;
+                      default:
+                        displayValue = result.value !== null && result.value !== undefined ? 
+                          result.value.toString() : '0';
+                    }
+                    
+                    return (
+                      <div
+                        key={index}
+                        className={isHighlight ? "result-card result-card-primary" : "pricing-card"}
+                      >
+                        <div className={isHighlight ? "result-label result-label-primary" : "pricing-card-title"}>
+                          {result.label}
+                        </div>
+                        <div className={isHighlight ? "result-highlight result-highlight-primary" : "pricing-card-value"}>
+                          {displayValue}
+                        </div>
+                        {result.tooltip && (
+                          <div className={isHighlight ? "result-description result-description-primary" : "pricing-card-description"}>
+                            {result.tooltip}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  results.map(renderResult)
+                )}
               </div>
             </div>
           )}

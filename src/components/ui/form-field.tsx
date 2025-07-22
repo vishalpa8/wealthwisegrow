@@ -38,17 +38,17 @@ export function FormField({
       <div className="flex items-center gap-2">
         <label
           htmlFor={fieldId}
-          className="block text-sm font-medium text-gray-700"
+          className="block text-sm font-semibold text-gray-800"
         >
           {label}
-          {required && <span className="text-red-500 ml-1" aria-label="required">*</span>}
+          {required && <span className="text-red-400 ml-1" aria-label="required">*</span>}
         </label>
         {helpText && (
           <div className="group relative">
-            <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
-            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+            <HelpCircle className="h-4 w-4 text-gray-300 cursor-help" />
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
               {helpText}
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800"></div>
             </div>
           </div>
         )}
@@ -57,7 +57,7 @@ export function FormField({
       <div className="relative">
         {prefix && (
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 text-sm">{prefix}</span>
+            <span className="text-gray-400 text-sm">{prefix}</span>
           </div>
         )}
         
@@ -81,26 +81,26 @@ export function FormField({
             ariaDescribedBy
           )}
           className={cn(
-            "w-full px-4 py-3 border rounded-xl text-lg transition-colors duration-200",
-            "focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent",
-            "disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed",
+            "w-full px-4 py-3 border rounded-lg text-base transition-colors duration-200",
+            "focus:outline-none focus:ring-2 focus:ring-gray-300 focus:border-transparent",
+            "disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed",
             prefix && "pl-8",
             suffix && "pr-12",
             error
-              ? "border-red-300 bg-red-50 text-red-900 placeholder-red-400"
+              ? "border-red-200 bg-red-50 text-red-700 placeholder-red-400"
               : "border-gray-200 bg-white text-gray-900 placeholder-gray-400 hover:border-gray-300"
           )}
         />
 
         {suffix && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <span className="text-gray-500 text-sm">{suffix}</span>
+            <span className="text-gray-400 text-sm">{suffix}</span>
           </div>
         )}
 
         {error && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <AlertCircle className="h-5 w-5 text-red-500" />
+            <AlertCircle className="h-5 w-5 text-red-400" />
           </div>
         )}
       </div>
@@ -108,7 +108,7 @@ export function FormField({
       {error && (
         <p
           id={errorId}
-          className="text-sm text-red-600 flex items-center gap-1"
+          className="text-sm text-red-400 flex items-center gap-1"
           role="alert"
         >
           <AlertCircle className="h-4 w-4 flex-shrink-0" />
@@ -117,7 +117,7 @@ export function FormField({
       )}
 
       {helpText && !error && (
-        <p id={helpId} className="text-sm text-gray-500">
+        <p id={helpId} className="text-sm text-gray-400">
           {helpText}
         </p>
       )}

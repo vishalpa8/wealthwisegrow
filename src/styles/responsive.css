@@ -11,8 +11,8 @@
 @media (max-width: 640px) {
   .responsive-container {
     max-width: 100%;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
   }
 
   .mobile-stack {
@@ -30,6 +30,28 @@
   .mobile-hidden {
     display: none !important;
   }
+
+  /* Mobile-specific calculator improvements */
+  .calculator-results-grid {
+    gap: 1rem !important;
+  }
+
+  .result-card,
+  .pricing-card {
+    padding: 1.25rem 1rem !important;
+  }
+
+  .card {
+    padding: 1rem !important;
+  }
+
+  .card-content {
+    padding: 1rem !important;
+  }
+
+  .sidebar-card-content {
+    padding: 1rem !important;
+  }
 }
 
 /* Medium devices (tablets) */
@@ -41,11 +63,25 @@
   .tablet-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
   }
 
   .tablet-hidden {
     display: none !important;
+  }
+
+  /* Tablet-specific improvements */
+  .calculator-results-grid {
+    gap: 1.5rem !important;
+  }
+
+  .result-card,
+  .pricing-card {
+    padding: 1.5rem 1.25rem !important;
+  }
+
+  .sidebar-card {
+    margin-bottom: 1.5rem;
   }
 }
 
@@ -58,7 +94,12 @@
   .desktop-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1.5rem;
+    gap: 2rem;
+  }
+
+  /* Desktop-specific improvements */
+  .calculator-results-grid {
+    gap: 2rem !important;
   }
 }
 
@@ -71,6 +112,22 @@
 
   .touch-padding {
     padding: 0.75rem !important;
+  }
+
+  /* Better touch targets for calculator elements */
+  .btn {
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  .form-input,
+  .form-select {
+    min-height: 44px;
+    padding: 0.75rem;
+  }
+
+  .calculator-card {
+    min-height: 200px;
   }
 }
 

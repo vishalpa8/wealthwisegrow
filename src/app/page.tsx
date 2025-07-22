@@ -10,121 +10,92 @@ export default function Home() {
 
   return (
     <div className="space-y-20">
-      {/* Hero Section */}
-      <section className="text-center section-spacing">
+      {/* Simple Hero Section */}
+      <section className="bg-white py-16">
         <div className="container-narrow">
-          <div className="animate-fade-in">
-            <h1 className="text-heading-1 mb-6">Calculator Collections</h1>
-            <p className="text-body-large mb-10 max-w-3xl mx-auto">
-              34+ interactive financial calculators for mortgages, loans, investments,
-              retirement, debt payoff, and budgeting. Get instant results,
-              actionable insights, and track your financial progress—all in one
-              place. No signup required, completely free.
+          <div className="text-center">
+            <h1 className="text-4xl md:text-5xl font-bold text-neutral-900 mb-6">
+              Financial Calculator Hub
+            </h1>
+            <p className="text-lg text-neutral-600 mb-8 max-w-2xl mx-auto">
+              34+ financial calculators for mortgages, loans, investments, and retirement planning. 
+              Get instant results to make informed financial decisions.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Button
                 onClick={() => setIsExplorerOpen(true)}
                 className="btn-primary btn-lg"
               >
-                <span className="mr-2 text-lg">🧮</span>
+                <span className="mr-2">🧮</span>
                 Explore Calculators
               </Button>
               <Link href="/guides" className="btn btn-outline btn-lg">
-                <span className="mr-2 text-lg">📚</span>
+                <span className="mr-2">📚</span>
                 Read Guides
               </Link>
             </div>
           </div>
 
-          {/* Quick Access to Popular Calculators */}
-          <div className="mt-16">
-            <h3 className="text-xl font-semibold text-gray-900 text-center mb-6">
-              Quick Access - Most Popular
+          {/* Quick Access */}
+          <div>
+            <h3 className="text-xl font-semibold text-neutral-900 text-center mb-6">
+              Popular Calculators
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <Link
                 href="/calculators/mortgage"
-                className="group bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-lg transition-all duration-200 text-center"
+                className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors text-center"
               >
-                <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">
-                  🏠
-                </span>
-                <span className="text-sm font-medium text-gray-900">
-                  Mortgage
-                </span>
+                <span className="text-2xl block mb-2">🏠</span>
+                <span className="text-sm font-medium text-neutral-900">Mortgage</span>
               </Link>
               <Link
                 href="/calculators/loan"
-                className="group bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-lg transition-all duration-200 text-center"
+                className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors text-center"
               >
-                <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">
-                  💳
-                </span>
-                <span className="text-sm font-medium text-gray-900">Loan</span>
+                <span className="text-2xl block mb-2">💳</span>
+                <span className="text-sm font-medium text-neutral-900">Loan</span>
               </Link>
               <Link
                 href="/calculators/investment"
-                className="group bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-lg transition-all duration-200 text-center"
+                className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors text-center"
               >
-                <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">
-                  📈
-                </span>
-                <span className="text-sm font-medium text-gray-900">
-                  Investment
-                </span>
+                <span className="text-2xl block mb-2">📈</span>
+                <span className="text-sm font-medium text-neutral-900">Investment</span>
               </Link>
               <Link
                 href="/calculators/retirement"
-                className="group bg-white rounded-xl border border-gray-200 p-4 hover:border-gray-300 hover:shadow-lg transition-all duration-200 text-center"
+                className="bg-white rounded-lg border border-neutral-200 p-4 hover:border-neutral-300 transition-colors text-center"
               >
-                <span className="text-2xl block mb-2 group-hover:scale-110 transition-transform">
-                  🧓
-                </span>
-                <span className="text-sm font-medium text-gray-900">
-                  Retirement
-                </span>
+                <span className="text-2xl block mb-2">🧓</span>
+                <span className="text-sm font-medium text-neutral-900">Retirement</span>
               </Link>
             </div>
           </div>
 
           {/* Feature Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12">
-            <div className="card text-center p-6 animate-scale-in" style={{animationDelay: '0.1s'}}>
-              <div className="text-3xl font-bold text-gray-900 mb-2">34+</div>
-              <div className="text-sm text-gray-600 font-medium">Calculators</div>
+            <div className="card text-center">
+              <div className="text-3xl font-bold text-primary-600 mb-2">34+</div>
+              <div className="text-sm text-neutral-600 font-medium">Calculators</div>
             </div>
-            <div
-              className="card text-center p-6 animate-scale-in"
-              style={{ animationDelay: "0.2s" }}
-            >
+            <div className="card text-center">
               <div className="text-3xl mb-2">⚡</div>
-              <div className="text-sm text-gray-600 font-medium">
-                Instant Results
-              </div>
+              <div className="text-sm text-neutral-600 font-medium">Instant Results</div>
             </div>
-            <div
-              className="card text-center p-6 animate-scale-in"
-              style={{ animationDelay: "0.3s" }}
-            >
+            <div className="card text-center">
               <div className="text-3xl mb-2">📊</div>
-              <div className="text-sm text-gray-600 font-medium">
-                Track Progress
-              </div>
+              <div className="text-sm text-neutral-600 font-medium">Track Progress</div>
             </div>
-            <div
-              className="card text-center p-6 animate-scale-in"
-              style={{ animationDelay: "0.4s" }}
-            >
+            <div className="card text-center">
               <div className="text-3xl mb-2">🆓</div>
-              <div className="text-sm text-gray-600 font-medium">
-                Free & No Signup
-              </div>
+              <div className="text-sm text-neutral-600 font-medium">Free & No Signup</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Calculator Categories Preview */}
+      {/* Enhanced Calculator Categories Preview */}
       <section className="bg-white rounded-lg border border-gray-200 p-8">
         <div className="text-center mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">

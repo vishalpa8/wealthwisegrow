@@ -124,11 +124,28 @@ export default function HRACalculatorClient() {
         return [];
       }
 
-      const result = secureCalculation(
-        'hra',
+      const secureResult = secureCalculation(
         values,
-        () => calculateHRAExemption(values)
+        (validatedInputs) => calculateHRAExemption(validatedInputs),
+        {
+          requiredFields: ['basicSalary', 'hraReceived', 'rentPaid', 'cityType', 'monthsRented'],
+          numericFields: ['basicSalary', 'hraReceived', 'rentPaid', 'monthsRented'],
+          minValues: {
+            basicSalary: 1000,
+            hraReceived: 0,
+            rentPaid: 0,
+            monthsRented: 1
+          },
+          maxValues: {
+            basicSalary: 1000000,
+            hraReceived: 500000,
+            rentPaid: 500000,
+            monthsRented: 12
+          }
+        }
       );
+
+      const result = secureResult.result;
 
       if (!result) {
         setError('Calculation failed. Please verify your inputs.');

@@ -104,7 +104,7 @@ export function parseRobustNumber(value: any): number {
       if (matches && matches.length > 0) {
         return parseFloat(matches[0]) || 0;
       }
-    } catch (e) {
+  } catch {
       // If any errors occur during object processing, return 0
       return 0;
     }

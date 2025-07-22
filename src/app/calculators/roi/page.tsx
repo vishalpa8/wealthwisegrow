@@ -223,11 +223,32 @@ export default function ROICalculatorPage() {
         return [];
       }
 
-      const result = secureCalculation(
-        'roi',
+      const secureResult = secureCalculation(
         values,
-        () => calculateROI(values)
+        (validatedInputs) => calculateROI(validatedInputs),
+        {
+          requiredFields: ['initialInvestment', 'projectDuration', 'monthlyRevenue', 'operatingCosts', 'maintenanceCosts', 'discountRate', 'taxRate'],
+          numericFields: ['initialInvestment', 'projectDuration', 'monthlyRevenue', 'oneTimeRevenue', 'operatingCosts', 'maintenanceCosts', 'salvageValue', 'discountRate', 'taxRate'],
+          minValues: {
+            initialInvestment: 1,
+            projectDuration: 1,
+            monthlyRevenue: 0,
+            oneTimeRevenue: 0,
+            operatingCosts: 0,
+            maintenanceCosts: 0,
+            salvageValue: 0,
+            discountRate: 0,
+            taxRate: 0
+          },
+          maxValues: {
+            projectDuration: 360,
+            discountRate: 100,
+            taxRate: 100
+          }
+        }
       );
+
+      const result = secureResult.result;
 
       if (!result) {
         setError('Calculation failed. Please verify your inputs.');

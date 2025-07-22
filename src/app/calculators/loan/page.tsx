@@ -3,18 +3,13 @@
 import { useState, useEffect } from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { v4 as uuidv4 } from "uuid";
-import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
-import { CalculatorLayout } from "@/components/layout/calculator-layout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 export default function LoanCalculator() {
   const [loanType, setLoanType] = useState('personal');
   const [amount, setAmount] = useState(500000);
   const [rate, setRate] = useState(12);
   const [years, setYears] = useState(5);
-  const [goal, setGoal] = useState(500000);
   const [loading, setLoading] = useState(false);
 
   // Enhanced calculations
@@ -69,431 +64,315 @@ export default function LoanCalculator() {
   };
 
   const loanTypeConfig = {
-    personal: { min: 10000, max: 5000000, rateRange: "8-30%", termRange: "1-7 years" },
-    home: { min: 100000, max: 100000000, rateRange: "6-15%", termRange: "5-30 years" },
-    car: { min: 50000, max: 10000000, rateRange: "7-20%", termRange: "1-8 years" },
-    business: { min: 100000, max: 50000000, rateRange: "10-35%", termRange: "1-15 years" },
-    education: { min: 50000, max: 20000000, rateRange: "7-15%", termRange: "1-15 years" },
+    personal: { min: 10000, max: 5000000, rateRange: "8-30%", termRange: "1-7 years", icon: "👤", color: "from-blue-500 to-blue-600" },
+    home: { min: 100000, max: 100000000, rateRange: "6-15%", termRange: "5-30 years", icon: "🏠", color: "from-green-500 to-green-600" },
+    car: { min: 50000, max: 10000000, rateRange: "7-20%", termRange: "1-8 years", icon: "🚗", color: "from-purple-500 to-purple-600" },
+    business: { min: 100000, max: 50000000, rateRange: "10-35%", termRange: "1-15 years", icon: "🏢", color: "from-orange-500 to-orange-600" },
+    education: { min: 50000, max: 20000000, rateRange: "7-15%", termRange: "1-15 years", icon: "🎓", color: "from-indigo-500 to-indigo-600" },
   };
 
   const currentConfig = loanTypeConfig[loanType as keyof typeof loanTypeConfig];
 
   const sidebar = (
-    <div className="space-y-6">
-      <div className="sidebar-card">
-        <div className="sidebar-card-content">
-          <AdsPlaceholder position="sidebar" size="300x250" />
-        </div>
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
       </div>
       
-      <div className="sidebar-card">
-        <div className="sidebar-card-header">
-          <h3 className="sidebar-card-title">Loan Information</h3>
-        </div>
-        <div className="sidebar-card-content space-y-4">
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Current Loan Type</h4>
-            <p className="text-sm text-gray-600 capitalize">{loanType} Loan</p>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Loan Information</h3>
+        <div className="space-y-3">
+          <div className="bg-neutral-50 rounded-lg p-3">
+            <h4 className="font-medium text-neutral-900 mb-1 text-sm">Current Type</h4>
+            <p className="text-sm text-neutral-700 capitalize">{loanType} Loan</p>
           </div>
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Typical Rate Range</h4>
-            <p className="text-sm text-gray-600">{currentConfig.rateRange}</p>
+          <div className="bg-neutral-50 rounded-lg p-3">
+            <h4 className="font-medium text-neutral-900 mb-1 text-sm">Rate Range</h4>
+            <p className="text-sm text-neutral-700">{currentConfig.rateRange}</p>
           </div>
-          <div>
-            <h4 className="font-medium text-gray-900 mb-2 text-xs uppercase tracking-wide">Term Range</h4>
-            <p className="text-sm text-gray-600">{currentConfig.termRange}</p>
+          <div className="bg-neutral-50 rounded-lg p-3">
+            <h4 className="font-medium text-neutral-900 mb-1 text-sm">Term Range</h4>
+            <p className="text-sm text-neutral-700">{currentConfig.termRange}</p>
           </div>
         </div>
       </div>
 
-      <div className="sidebar-card">
-        <div className="sidebar-card-header">
-          <h3 className="sidebar-card-title">Loan Tips</h3>
-        </div>
-        <div className="sidebar-card-content">
-          <ul className="text-sm text-gray-600 space-y-2">
-            <li>• Compare rates from multiple lenders</li>
-            <li>• Consider prepayment options</li>
-            <li>• Check for processing fees</li>
-            <li>• Maintain good credit score</li>
-          </ul>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Compare rates from multiple lenders</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider prepayment options</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Check for processing fees</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Maintain good credit score</p>
+          </div>
         </div>
       </div>
     </div>
   );
 
   return (
-    <CalculatorLayout
-      title="Loan Calculator"
-      description="Calculate EMI, total interest, and payment schedule for personal, home, car, business, and education loans with detailed breakdown."
-      sidebar={sidebar}
-    >
-      <div className="space-y-8">
-        {/* Loan Type Selection */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Loan Details</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="form-group">
-              <label htmlFor="loanType" className="form-label">Loan Type</label>
-              <select 
-                id="loanType" 
-                name="loanType" 
-                value={loanType} 
-                onChange={(e) => setLoanType(e.target.value)} 
-                className="form-select"
-              >
-                <option value="personal">Personal Loan</option>
-                <option value="home">Home Loan</option>
-                <option value="car">Car Loan</option>
-                <option value="business">Business Loan</option>
-                <option value="education">Education Loan</option>
-              </select>
-              <p className="form-help">Select the type of loan you want to calculate</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="form-group">
-                <label htmlFor="amount" className="form-label">Loan Amount (₹)</label>
-                <input
-                  type="number"
-                  id="amount"
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  min={currentConfig.min}
-                  max={currentConfig.max}
-                  className="form-input"
-                  placeholder="Enter loan amount"
-                />
-                <p className="form-help">Amount between ₹{currentConfig.min.toLocaleString()} - ₹{currentConfig.max.toLocaleString()}</p>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="rate" className="form-label">Interest Rate (%)</label>
-                <input
-                  type="number"
-                  id="rate"
-                  value={rate}
-                  onChange={(e) => setRate(Number(e.target.value))}
-                  min={0}
-                  max={50}
-                  step={0.1}
-                  className="form-input"
-                  placeholder="e.g. 12.5"
-                />
-                <p className="form-help">Annual interest rate</p>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="years" className="form-label">Loan Term (years)</label>
-                <input
-                  type="number"
-                  id="years"
-                  value={years}
-                  onChange={(e) => setYears(Number(e.target.value))}
-                  min={1}
-                  max={30}
-                  className="form-input"
-                  placeholder="e.g. 5"
-                />
-                <p className="form-help">Loan duration in years</p>
-              </div>
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button 
-                onClick={handleCalculate}
-                loading={loading}
-                className="flex-1 sm:flex-none"
-                size="lg"
-              >
-                <span className="mr-2">🧮</span>
-                Calculate EMI
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  setAmount(500000);
-                  setRate(12);
-                  setYears(5);
-                  setGoal(500000);
-                }}
-                className="flex-1 sm:flex-none"
-                size="lg"
-              >
-                <span className="mr-2">🔄</span>
-                Reset
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Results */}
-        {monthly > 0 && (
-          <div className="space-y-8 animate-fade-in">
-            {/* Primary Results */}
-            <div className="calculator-results-grid">
-              <div className="result-card result-card-primary">
-                <div className="result-label result-label-primary">Monthly EMI</div>
-                <div className="result-highlight result-highlight-primary">{formatCurrency(monthly)}</div>
-                <div className="result-description result-description-primary">Principal + Interest per month</div>
-              </div>
-
-              <div className="pricing-card">
-                <div className="pricing-card-title">Total Payment</div>
-                <div className="pricing-card-value">{formatCurrency(totalPayment)}</div>
-                <div className="pricing-card-description">Over {years} years</div>
-              </div>
-
-              <div className="pricing-card">
-                <div className="pricing-card-title">Total Interest</div>
-                <div className="pricing-card-value">{formatCurrency(totalInterest)}</div>
-                <div className="pricing-card-description">{formatPercentage(interestPercentage)} of principal</div>
-              </div>
-            </div>
-            
-            {/* Action Buttons */}
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Button variant="outline" size="sm">
-                <span className="mr-2">📊</span>
-                View Amortization
-              </Button>
-              <Button variant="outline" size="sm">
-                <span className="mr-2">📈</span>
-                Compare Loans
-              </Button>
-              <Button variant="outline" size="sm">
-                <span className="mr-2">💾</span>
-                Save Results
-              </Button>
-              <Button variant="outline" size="sm">
-                <span className="mr-2">📤</span>
-                Share
-              </Button>
-            </div>
+    <div className="min-h-screen bg-neutral-50">
+      {/* Simple Header */}
+      <div className="bg-white border-b border-neutral-200 py-8">
+        <div className="container-wide">
+          <div className="text-center">
+            <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-4">
+              Loan Calculator
+            </h1>
+            <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
+              Calculate EMI, total interest, and payment schedule for different types of loans.
+            </p>
           </div>
-        )}
-
-        {/* Detailed Analysis */}
-        {monthly > 0 && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Loan Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Loan Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Principal Amount</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(amount)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Interest Rate</span>
-                    <span className="font-medium text-gray-900">{rate}% per annum</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Loan Term</span>
-                    <span className="font-medium text-gray-900">{years} years ({n} months)</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Monthly EMI</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(monthly)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Total Payment</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(totalPayment)}</span>
-                  </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600">Total Interest</span>
-                    <span className="font-medium text-gray-900">{formatCurrency(totalInterest)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Key Insights */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Key Insights</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2 text-sm">Interest Burden</h4>
-                    <p className="text-2xl font-bold text-gray-900">{formatPercentage(interestPercentage)}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      of principal amount goes to interest
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2 text-sm">Effective Rate</h4>
-                    <p className="text-2xl font-bold text-gray-900">{formatPercentage(effectiveRate)}</p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      effective annual cost of borrowing
-                    </p>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <h4 className="font-medium text-gray-900 mb-2 text-sm">Monthly Breakdown</h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Principal:</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(monthlyPrincipal)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Interest:</span>
-                        <span className="font-medium text-gray-900">{formatCurrency(monthlyInterest)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
-        
-        {/* Loan Progress Tracker */}
-        {monthly > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Loan Progress Tracker</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <div className="form-group mb-4">
-                    <label className="form-label">Set Payoff Goal (₹)</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={goal}
-                      onChange={e => setGoal(Number(e.target.value))}
-                      className="form-input"
-                      placeholder="Enter your goal amount"
-                    />
-                  </div>
-                  <GoalProgressChart 
-                    currentValue={amount} 
-                    goalValue={goal || 1} 
-                    label="Loan Payoff Progress" 
-                    unit="₹" 
-                  />
-                </div>
-                <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900 mb-3">Prepayment Benefits</h4>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-2">If you pay an extra ₹5,000 per month:</p>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Time saved:</span>
-                        <span className="font-medium">~{Math.round(years * 0.3)} years</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Interest saved:</span>
-                        <span className="font-medium">{formatCurrency(totalInterest * 0.25)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <p className="text-sm text-gray-600 mb-2">If you pay an extra ₹10,000 per month:</p>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span>Time saved:</span>
-                        <span className="font-medium">~{Math.round(years * 0.5)} years</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Interest saved:</span>
-                        <span className="font-medium">{formatCurrency(totalInterest * 0.4)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="my-8">
-          <AdsPlaceholder position="below-results" size="728x90" />
-        </div>
-
-        {/* Loan Comparison & Information */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card>
-            <CardHeader>
-              <CardTitle>Loan Type Comparison</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Object.entries(loanTypeConfig).map(([type, config]) => (
-                  <div 
-                    key={type} 
-                    className={`p-3 rounded-lg border transition-all duration-200 cursor-pointer ${
-                      loanType === type 
-                        ? 'border-gray-900 bg-gray-50' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                    onClick={() => setLoanType(type)}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <h4 className="font-medium text-gray-900 capitalize">{type} Loan</h4>
-                        <p className="text-sm text-gray-600">Rate: {config.rateRange}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Term: {config.termRange}</p>
-                        <p className="text-xs text-gray-500">
-                          ₹{(config.min/100000).toFixed(0)}L - ₹{(config.max/10000000).toFixed(0)}Cr
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card>
-            <CardHeader>
-              <CardTitle>How to Use This Calculator</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="max-w-none">
-                <p className="text-body mb-6">
-                  This calculator estimates your monthly loan payment (EMI) based on the loan amount, 
-                  interest rate, and term. The calculation uses the standard EMI formula and provides 
-                  accurate results for personal, home, car, business, and education loans.
-                </p>
-                <div className="grid grid-cols-1 gap-6">
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Features:</h4>
-                    <ul className="text-body-small space-y-1">
-                      <li>• Multiple loan types with specific ranges</li>
-                      <li>• Instant EMI calculation with detailed breakdown</li>
-                      <li>• Interest burden analysis</li>
-                      <li>• Prepayment benefits calculator</li>
-                      <li>• Progress tracking and goal setting</li>
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Smart Tips:</h4>
-                    <ul className="text-body-small space-y-1">
-                      <li>• Compare rates from 3-4 lenders before deciding</li>
-                      <li>• Consider shorter terms to save on total interest</li>
-                      <li>• Factor in processing fees and other charges</li>
-                      <li>• Maintain good credit score for better rates</li>
-                      <li>• Consider prepayment to reduce interest burden</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </div>
-    </CalculatorLayout>
+
+      <div className="container-wide py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Calculator */}
+          <div className="lg:col-span-3">
+            <div className="space-y-6">
+              {/* Calculator Form */}
+              <div className="card">
+                <h2 className="text-xl font-bold text-neutral-900 mb-6">Loan Details</h2>
+
+                {/* Loan Type Selection */}
+                <div className="mb-6">
+                  <label className="block text-base font-medium text-neutral-900 mb-3">Choose Your Loan Type</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {Object.entries(loanTypeConfig).map(([type, config]) => (
+                      <button
+                        key={type}
+                        onClick={() => setLoanType(type)}
+                        className={`p-4 rounded-lg border transition-colors ${
+                          loanType === type
+                            ? 'border-primary-500 bg-primary-50'
+                            : 'border-neutral-200 bg-white hover:border-neutral-300'
+                        }`}
+                      >
+                        <div className="text-2xl mb-2">{config.icon}</div>
+                        <div className="font-medium text-neutral-900 capitalize text-sm">{type}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Input Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-900 mb-2">Loan Amount</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500">₹</span>
+                      <input
+                        type="number"
+                        value={amount}
+                        onChange={(e) => setAmount(Number(e.target.value))}
+                        min={currentConfig.min}
+                        max={currentConfig.max}
+                        className="form-input pl-8"
+                        placeholder="Enter amount"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-900 mb-2">Interest Rate</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={rate}
+                        onChange={(e) => setRate(Number(e.target.value))}
+                        min={0}
+                        max={50}
+                        step={0.1}
+                        className="form-input"
+                        placeholder="e.g. 12.5"
+                      />
+                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500">%</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-900 mb-2">Loan Term</label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        value={years}
+                        onChange={(e) => setYears(Number(e.target.value))}
+                        min={1}
+                        max={30}
+                        className="form-input"
+                        placeholder="e.g. 5"
+                      />
+                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500">years</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={handleCalculate}
+                    disabled={loading}
+                    className="btn btn-primary btn-md flex items-center justify-center"
+                  >
+                    {loading ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    ) : (
+                      <>
+                        <span className="mr-2">🧮</span>
+                        Calculate EMI
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAmount(500000);
+                      setRate(12);
+                      setYears(5);
+                    }}
+                    className="btn btn-outline btn-md"
+                  >
+                    <span className="mr-2">🔄</span>
+                    Reset
+                  </button>
+                </div>
+              </div>
+
+              {/* Results */}
+              {monthly > 0 && (
+                <div className="space-y-6">
+                  {/* Primary Results */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="result-card bg-primary-600 text-white">
+                      <div className="text-sm font-medium mb-2">Monthly EMI</div>
+                      <div className="text-2xl md:text-3xl font-bold mb-2">{formatCurrency(monthly)}</div>
+                      <div className="text-sm opacity-90">Principal + Interest</div>
+                    </div>
+
+                    <div className="result-card">
+                      <div className="text-sm font-medium text-neutral-600 mb-2">Total Payment</div>
+                      <div className="text-xl md:text-2xl font-bold text-neutral-900 mb-2">{formatCurrency(totalPayment)}</div>
+                      <div className="text-sm text-neutral-500">Over {years} years</div>
+                    </div>
+
+                    <div className="result-card">
+                      <div className="text-sm font-medium text-neutral-600 mb-2">Total Interest</div>
+                      <div className="text-xl md:text-2xl font-bold text-neutral-900 mb-2">{formatCurrency(totalInterest)}</div>
+                      <div className="text-sm text-neutral-500">{formatPercentage(interestPercentage)} of principal</div>
+                    </div>
+                  </div>
+                  
+                  {/* Action Buttons */}
+                  <div className="modern-card p-6">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <button className="modern-button-secondary text-sm py-3">
+                        <span className="mr-2">📊</span>
+                        Amortization
+                      </button>
+                      <button className="modern-button-secondary text-sm py-3">
+                        <span className="mr-2">📈</span>
+                        Compare
+                      </button>
+                      <button className="modern-button-secondary text-sm py-3">
+                        <span className="mr-2">💾</span>
+                        Save
+                      </button>
+                      <button className="modern-button-secondary text-sm py-3">
+                        <span className="mr-2">📤</span>
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Detailed Analysis */}
+              {monthly > 0 && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Loan Summary */}
+                  <div className="modern-card p-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                      <span className="mr-3">📋</span>
+                      Loan Summary
+                    </h3>
+                    <div className="space-y-4">
+                      {[
+                        { label: 'Principal Amount', value: formatCurrency(amount) },
+                        { label: 'Interest Rate', value: `${rate}% per annum` },
+                        { label: 'Loan Term', value: `${years} years (${n} months)` },
+                        { label: 'Monthly EMI', value: formatCurrency(monthly) },
+                        { label: 'Total Payment', value: formatCurrency(totalPayment) },
+                        { label: 'Total Interest', value: formatCurrency(totalInterest) },
+                      ].map((item, index) => (
+                        <div key={index} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
+                          <span className="text-gray-600 font-medium">{item.label}</span>
+                          <span className="font-bold text-gray-900">{item.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Key Insights */}
+                  <div className="modern-card p-8">
+                    <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                      <span className="mr-3">💡</span>
+                      Key Insights
+                    </h3>
+                    <div className="space-y-6">
+                      <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-2xl p-6">
+                        <h4 className="font-bold text-red-900 mb-2">Interest Burden</h4>
+                        <p className="text-3xl font-bold text-red-800">{formatPercentage(interestPercentage)}</p>
+                        <p className="text-sm text-red-700 mt-1">of principal amount goes to interest</p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-6">
+                        <h4 className="font-bold text-blue-900 mb-2">Effective Rate</h4>
+                        <p className="text-3xl font-bold text-blue-800">{formatPercentage(effectiveRate)}</p>
+                        <p className="text-sm text-blue-700 mt-1">effective annual cost of borrowing</p>
+                      </div>
+                      
+                      <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-2xl p-6">
+                        <h4 className="font-bold text-green-900 mb-3">Monthly Breakdown</h4>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-green-700">Principal:</span>
+                            <span className="font-bold text-green-800">{formatCurrency(monthlyPrincipal)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-green-700">Interest:</span>
+                            <span className="font-bold text-green-800">{formatCurrency(monthlyInterest)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="my-8">
+                <AdsPlaceholder position="below-results" size="728x90" />
+              </div>
+            </div>
+          </div>
+
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              {sidebar}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

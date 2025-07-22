@@ -9,6 +9,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   children: ReactNode;
+  fullWidth?: boolean;
 }
 
 export function Button({
@@ -18,6 +19,7 @@ export function Button({
   disabled,
   className,
   children,
+  fullWidth = false,
   ...props
 }: ButtonProps) {
   const baseClasses = "btn";
@@ -44,6 +46,7 @@ export function Button({
         variantClasses[variant],
         sizeClasses[size],
         loading && "cursor-wait",
+        fullWidth && "w-full",
         className
       )}
       disabled={disabled || loading}

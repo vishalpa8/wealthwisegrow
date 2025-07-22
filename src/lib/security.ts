@@ -40,8 +40,8 @@ export function secureCalculation<T extends Record<string, any>, R>(
       }
 
       // Validate against min/max constraints
-      const minValue = minValues[field];
-      const maxValue = maxValues[field];
+      const minValue = minValues[field as keyof typeof minValues];
+      const maxValue = maxValues[field as keyof typeof maxValues];
       
       if (minValue !== undefined && parsed < minValue) {
         return { error: `${String(field)} must be at least ${minValue}` };
@@ -77,7 +77,7 @@ export function sanitizeInput(input: any): any {
   if (typeof input === 'string') {
     // Remove potentially dangerous characters
     return input
-      .replace(/[<>\"'&]/g, '') // Remove HTML/XML characters
+      .replace(/[<>'&]/g, '') // Remove HTML/XML characters
       .replace(/javascript:/gi, '') // Remove javascript: protocol
       .replace(/on\w+=/gi, '') // Remove event handlers
       .trim();
@@ -155,7 +155,7 @@ export function validateCalculationContext(context: {
   origin?: string;
   timestamp?: number;
 }): boolean {
-  const { userAgent, origin, timestamp } = context;
+  const { userAgent, timestamp } = context;
   
   // Check for suspicious user agents
   if (userAgent) {

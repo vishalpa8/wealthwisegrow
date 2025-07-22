@@ -6,8 +6,7 @@ import {
   safeDivide, 
   safeMultiply, 
   safeAdd, 
-  roundToPrecision,
-  isEffectivelyZero
+  roundToPrecision
 } from '@/lib/utils/number';
 
 const initialValues = {

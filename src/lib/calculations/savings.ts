@@ -4,8 +4,7 @@ import {
   safeMultiply, 
   safeAdd, 
   safePower,
-  roundToPrecision,
-  isEffectivelyZero
+  roundToPrecision
 } from '../utils/number';
 
 // Error handling wrapper for all calculations

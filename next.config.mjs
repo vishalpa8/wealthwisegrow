@@ -2,13 +2,13 @@
 const nextConfig = {
   // Configuration options go here
   eslint: {
-    // Temporarily ignore ESLint errors during builds to allow build to succeed
-    ignoreDuringBuilds: true,
+    // Enable ESLint checks during builds
+    ignoreDuringBuilds: false,
   },
   // Enable TypeScript strict mode
   typescript: {
-    // Temporarily ignore TypeScript errors during builds
-    ignoreBuildErrors: true,
+    // Enable TypeScript error checking during builds
+    ignoreBuildErrors: false,
   },
 };
 

@@ -1,13 +1,12 @@
 "use client";
 import React, { useState, useMemo } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { 
-  parseRobustNumber, 
-  safeDivide, 
-  safeMultiply, 
-  safePower, 
-  isEffectivelyZero,
-  roundToPrecision
+import {
+  parseRobustNumber,
+  safeDivide,
+  safeMultiply,
+  safePower,
+  isEffectivelyZero
 } from '@/lib/utils/number';
 
 const initialValues = {

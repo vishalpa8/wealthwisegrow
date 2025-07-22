@@ -16,52 +16,54 @@ export const metadata: Metadata = {
 export default function CalculatorsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="container-wide py-8">
+      <div className="container-content-extensive py-6 sm:py-8">
         {/* Header */}
-        <header className="text-center mb-12">
+        <header className="text-center mb-8 sm:mb-12">
           <div className="container-narrow">
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 tracking-tight">
               Financial Calculators
             </h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed">
               Comprehensive collection of 26+ financial calculators to help you make informed decisions about mortgages, loans, investments, and retirement planning.
             </p>
           </div>
         </header>
 
         {/* Calculator Grid */}
-        <section className="animate-slide-up">
-          <CalculatorList />
+        <section className="animate-slide-up mb-12 sm:mb-16">
+          <div className="container-content-extensive">
+            <CalculatorList />
+          </div>
         </section>
 
         {/* Information Section */}
-        <section className="mt-16">
+        <section>
           <div className="container-narrow">
-            <div className="bg-white rounded-lg border border-gray-200 p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+            <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-6 sm:mb-8 text-center">
                 Calculator Categories
               </h2>
               
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mb-2">🏠</div>
-                  <div className="font-medium text-gray-900">Loans</div>
-                  <div className="text-sm text-gray-600">Mortgage, Personal, Car</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                <div className="text-center p-4 sm:p-6 bg-gray-50 rounded-xl transition-all duration-200 hover:bg-gray-100">
+                  <div className="text-3xl sm:text-4xl mb-3">🏠</div>
+                  <div className="font-semibold text-gray-900 mb-2">Loans</div>
+                  <div className="text-sm text-gray-600 leading-relaxed">Mortgage, Personal, Car</div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mb-2">📈</div>
-                  <div className="font-medium text-gray-900">Investments</div>
-                  <div className="text-sm text-gray-600">SIP, Mutual Funds, FD</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-50 rounded-xl transition-all duration-200 hover:bg-gray-100">
+                  <div className="text-3xl sm:text-4xl mb-3">📈</div>
+                  <div className="font-semibold text-gray-900 mb-2">Investments</div>
+                  <div className="text-sm text-gray-600 leading-relaxed">SIP, Mutual Funds, FD</div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mb-2">💰</div>
-                  <div className="font-medium text-gray-900">Planning</div>
-                  <div className="text-sm text-gray-600">Budget, Retirement, Insurance</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-50 rounded-xl transition-all duration-200 hover:bg-gray-100">
+                  <div className="text-3xl sm:text-4xl mb-3">💰</div>
+                  <div className="font-semibold text-gray-900 mb-2">Planning</div>
+                  <div className="text-sm text-gray-600 leading-relaxed">Budget, Retirement, Insurance</div>
                 </div>
-                <div className="text-center p-4 bg-gray-50 rounded-lg">
-                  <div className="text-2xl mb-2">📋</div>
-                  <div className="font-medium text-gray-900">Tax</div>
-                  <div className="text-sm text-gray-600">Income Tax, GST</div>
+                <div className="text-center p-4 sm:p-6 bg-gray-50 rounded-xl transition-all duration-200 hover:bg-gray-100">
+                  <div className="text-3xl sm:text-4xl mb-3">📋</div>
+                  <div className="font-semibold text-gray-900 mb-2">Tax</div>
+                  <div className="text-sm text-gray-600 leading-relaxed">Income Tax, GST</div>
                 </div>
               </div>
             </div>

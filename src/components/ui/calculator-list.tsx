@@ -79,7 +79,7 @@ export function CalculatorList() {
   };
 
   return (
-    <div className="container-wide">
+    <div className="w-full">
       {/* Search and Filters */}
       <div className="mb-8 space-y-4">
         {/* Search Bar */}
@@ -150,48 +150,39 @@ export function CalculatorList() {
       </div>
 
       {/* Calculator Grid */}
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6 lg:gap-8 xl:gap-6 items-start">
         {filteredCalculators.map((calculator) => (
           <Link 
             key={calculator.name} 
             href={calculator.path}
-            className="group block bg-white rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200"
+            className="calculator-card group block bg-white rounded-2xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 w-full max-w-[300px] mx-auto"
           >
-            <div className="p-6 flex items-center">
-              {/* Icon */}
-              <div className="flex-shrink-0 mr-6">
-                <span className="text-3xl">{calculator.icon}</span>
-              </div>
-              
-              {/* Content */}
-              <div className="flex-grow min-w-0">
-                <div className="flex items-start justify-between">
-                  <div className="flex-grow">
-                    <div className="flex items-center mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900 group-hover:text-gray-700 transition-colors">
-                        {calculator.name}
-                      </h3>
-                      {calculator.popular && (
-                        <span className="ml-3 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
-                          ⭐ Popular
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 text-sm leading-relaxed group-hover:text-gray-500 transition-colors">
-                      {calculator.description}
-                    </p>
-                  </div>
-                  
-                  {/* Tags */}
-                  <div className="flex items-center space-x-2 ml-4 flex-shrink-0">
-                    <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700">
-                      {calculator.category}
-                    </span>
-                    <span className={`text-xs font-medium px-2 py-1 rounded ${getDifficultyColor(calculator.difficulty)}`}>
-                      {calculator.difficulty}
-                    </span>
+            <div className="calculator-card-content p-6 flex flex-col min-h-[240px]">
+              <div className="flex items-start gap-4 mb-4">
+                <span className="text-3xl flex-shrink-0">{calculator.icon}</span>
+                <div className="flex flex-col flex-grow min-w-0">
+                  <div className="flex items-start gap-2 mb-2">
+                    <h3 className="calculator-card-title text-lg font-bold text-gray-900 group-hover:text-gray-700 transition-colors flex-1 min-w-0 line-clamp-2 leading-tight">
+                      {calculator.name}
+                    </h3>
+                    {calculator.popular && (
+                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full whitespace-nowrap flex-shrink-0">
+                        ⭐
+                      </span>
+                    )}
                   </div>
                 </div>
+              </div>
+              <p className="calculator-card-description text-gray-600 text-sm leading-relaxed group-hover:text-gray-500 transition-colors line-clamp-3 overflow-hidden mb-4 flex-1">
+                {calculator.description}
+              </p>
+              <div className="calculator-card-footer flex items-center flex-wrap gap-2 mt-auto">
+                <span className="text-xs font-medium px-2 py-1 rounded bg-gray-100 text-gray-700 whitespace-nowrap">
+                  {calculator.category}
+                </span>
+                <span className={`text-xs font-medium px-2 py-1 rounded whitespace-nowrap ${getDifficultyColor(calculator.difficulty)}`}> 
+                  {calculator.difficulty}
+                </span>
               </div>
             </div>
           </Link>

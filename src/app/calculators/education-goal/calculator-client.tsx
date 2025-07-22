@@ -217,11 +217,33 @@ export default function EducationPlanningCalculatorClient() {
         return [];
       }
 
-      const result = secureCalculation(
-        'education-planning',
+      const secureResult = secureCalculation(
         values,
-        () => calculateEducationPlan(values)
+        (validatedInputs) => calculateEducationPlan(validatedInputs),
+        {
+          requiredFields: ['childAge', 'courseType', 'currentCost', 'courseDuration', 'startingAge', 'expectedInflation', 'existingSavings', 'expectedReturn'],
+          numericFields: ['childAge', 'currentCost', 'courseDuration', 'startingAge', 'expectedInflation', 'existingSavings', 'expectedReturn'],
+          minValues: {
+            childAge: 0,
+            currentCost: 10000,
+            courseDuration: 1,
+            startingAge: 15,
+            expectedInflation: 5,
+            existingSavings: 0,
+            expectedReturn: 6
+          },
+          maxValues: {
+            childAge: 20,
+            currentCost: 10000000,
+            courseDuration: 10,
+            startingAge: 25,
+            expectedInflation: 20,
+            expectedReturn: 18
+          }
+        }
       );
+
+      const result = secureResult.result;
 
       if (!result) {
         setError('Calculation failed. Please verify your inputs.');

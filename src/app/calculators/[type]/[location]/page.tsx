@@ -32,18 +32,19 @@ function formatLocation(str: string) {
 export default function Page({ params }: { params: any }) {
   const { type, location } = params;
   return (
-    <section className="max-w-2xl mx-auto p-8 mt-8 bg-white rounded-2xl shadow-lg border border-gray-100">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">
-        {capitalize(type)} Calculator for {formatLocation(location)}
+    <section className="max-w-2xl mx-auto p-10 mt-12 bg-white rounded-3xl shadow-xl border border-gray-200 font-sans">
+      <h1 className="text-4xl font-extrabold mb-4 text-gray-800 tracking-tight">
+        {capitalize(type)} Calculator
+        <span className="block text-lg font-medium text-gray-400 mt-1">for {formatLocation(location)}</span>
       </h1>
-      <p className="mb-4 text-gray-600">
-        This is a programmatic SEO page for the <strong>{type}</strong> calculator in <strong>{formatLocation(location)}</strong>.
+      <p className="mb-8 text-gray-500 text-base leading-relaxed">
+        Easily calculate your <strong className="text-gray-700 font-semibold">{type}</strong> in <strong className="text-gray-700 font-semibold">{formatLocation(location)}</strong>.<br />
         Get local rates, instant results, and actionable insights for your financial planning.
       </p>
-      <div className="bg-blue-50 rounded-xl p-6 text-center border border-blue-100 mb-6">
-        <span className="text-blue-700 font-semibold">[Calculator for {capitalize(type)} in {formatLocation(location)} will appear here]</span>
+      <div className="bg-gray-50 rounded-2xl p-8 text-center border border-gray-100 mb-8 shadow-sm">
+        <span className="text-gray-600 font-medium">[Calculator for {capitalize(type)} in {formatLocation(location)} will appear here]</span>
       </div>
-      <p className="text-xs text-gray-500">Location-based calculators help users find relevant financial information for their area. More features coming soon!</p>
+      <p className="text-xs text-gray-400 text-center">Location-based calculators help users find relevant financial information for their area.<br />More features coming soon!</p>
     </section>
   );
 } 

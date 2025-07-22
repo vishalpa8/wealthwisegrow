@@ -183,11 +183,30 @@ export default function MutualFundCalculatorPage() {
         return [];
       }
 
-      const result = secureCalculation(
-        'mutual-fund',
+      const secureResult = secureCalculation(
         values,
-        () => calculateReturns(values)
+        (validatedInputs) => calculateReturns(validatedInputs),
+        {
+          requiredFields: ['investmentType', 'startDate', 'initialInvestment', 'purchaseNav', 'currentNav'],
+          numericFields: ['initialInvestment', 'monthlyInvestment', 'purchaseNav', 'currentNav', 'entryLoad', 'exitLoad'],
+          minValues: {
+            initialInvestment: 100,
+            monthlyInvestment: 100,
+            purchaseNav: 0.01,
+            currentNav: 0.01,
+            entryLoad: 0,
+            exitLoad: 0
+          },
+          maxValues: {
+            initialInvestment: 10000000,
+            monthlyInvestment: 10000000,
+            entryLoad: 5,
+            exitLoad: 5
+          }
+        }
       );
+
+      const result = secureResult.result;
 
       if (!result) {
         setError('Calculation failed. Please verify your inputs.');

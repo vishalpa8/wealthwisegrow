@@ -5,18 +5,28 @@ const Card = forwardRef<
   HTMLDivElement,
   HTMLAttributes<HTMLDivElement> & {
     hover?: boolean;
+    variant?: "default" | "elevated" | "outlined" | "glass";
   }
->(({ className, hover = false, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "card",
-      hover && "card-hover",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, hover = false, variant = "default", ...props }, ref) => {
+  const variantClasses = {
+    default: "card",
+    elevated: "card bg-white shadow-large border-0",
+    outlined: "card border-2 border-neutral-200 shadow-none",
+    glass: "glass-card",
+  };
+  
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        variantClasses[variant],
+        hover && "card-hover",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 Card.displayName = "Card";
 
 const CardHeader = forwardRef<
@@ -37,7 +47,7 @@ const CardTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <h3
     ref={ref}
-    className={cn("text-lg font-semibold leading-none tracking-tight text-gray-900", className)}
+    className={cn("text-lg font-semibold leading-none tracking-tight text-neutral-900", className)}
     {...props}
   />
 ));
@@ -49,7 +59,7 @@ const CardDescription = forwardRef<
 >(({ className, ...props }, ref) => (
   <p
     ref={ref}
-    className={cn("text-sm text-gray-600 mt-2", className)}
+    className={cn("text-sm text-neutral-600 mt-2 leading-relaxed", className)}
     {...props}
   />
 ));

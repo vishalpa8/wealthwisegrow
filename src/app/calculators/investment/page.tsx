@@ -41,8 +41,7 @@ const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
     {
       label: "Initial Investment ($)",
       name: "initial",
-      type: "custom",
-      component: NumericInput,
+      type: "number",
       placeholder: "Enter initial investment",
       min: 0,
       required: true,
@@ -50,8 +49,7 @@ const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
     {
       label: "Monthly Contribution ($)",
       name: "monthly",
-      type: "custom",
-      component: NumericInput,
+      type: "number",
       placeholder: "Enter monthly contribution",
       min: 0,
       required: true,
@@ -59,8 +57,7 @@ const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
     {
       label: "Annual Return Rate (%)",
       name: "rate",
-      type: "custom",
-      component: NumericInput,
+      type: "number",
       placeholder: "e.g. 7",
       min: 0,
       step: 0.01,
@@ -69,8 +66,7 @@ const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
     {
       label: "Years",
       name: "years",
-      type: "custom",
-      component: NumericInput,
+      type: "number",
       placeholder: "e.g. 20",
       min: 1,
       required: true,
@@ -100,7 +96,7 @@ const fv = safeAdd(safeMultiply(initial, safePower(1 + r, n)),
         <NumericInput
           min={1}
           value={goal}
-          onChange={(value) => setGoal(parseRobustNumber(value))}
+          onValueChange={(value) => setGoal(value || 0)}
           className="w-full px-4 py-2 border border-gray-200 rounded-lg mb-2"
         />
         <GoalProgressChart currentValue={fv} goalValue={goal || 1} label="Investment Growth Progress" unit="$" />

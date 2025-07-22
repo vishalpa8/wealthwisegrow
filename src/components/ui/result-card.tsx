@@ -25,10 +25,12 @@ export function ResultCard({
   };
 
   const variantStyles = {
-    default: "bg-blue-50 border-blue-100 text-blue-700",
+    default: "bg-white border-gray-200 text-gray-700",
     success: "bg-green-50 border-green-100 text-green-700",
     warning: "bg-yellow-50 border-yellow-100 text-yellow-700",
     error: "bg-red-50 border-red-100 text-red-700",
+    primary: "bg-gray-900 border-gray-900 text-white",
+    pricing: "bg-white border-gray-200 text-gray-700",
   };
 
   return (

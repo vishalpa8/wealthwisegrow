@@ -132,11 +132,30 @@ export default function SWPCalculatorPage() {
         return [];
       }
 
-      const result = secureCalculation(
-        'swp',
+      const secureResult = secureCalculation(
         values,
-        () => calculateSWP(values)
+        (validatedInputs) => calculateSWP(validatedInputs),
+        {
+          requiredFields: ['totalCorpus', 'monthlyWithdrawal', 'expectedReturn', 'inflationRate', 'withdrawalIncrease'],
+          numericFields: ['totalCorpus', 'monthlyWithdrawal', 'expectedReturn', 'inflationRate', 'withdrawalIncrease'],
+          minValues: {
+            totalCorpus: 100000,
+            monthlyWithdrawal: 1000,
+            expectedReturn: 1,
+            inflationRate: 0,
+            withdrawalIncrease: 0
+          },
+          maxValues: {
+            totalCorpus: 1000000000,
+            monthlyWithdrawal: 10000000,
+            expectedReturn: 30,
+            inflationRate: 20,
+            withdrawalIncrease: 20
+          }
+        }
       );
+
+      const result = secureResult.result;
 
       if (!result) {
         setError('Calculation failed. Please verify your inputs.');

@@ -40,7 +40,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       min,
       max,
       formatOptions,
-      hideControls = false,
+      // hideControls = false,
       showCurrencySymbol = false,
       placeholder,
       label,
@@ -118,7 +118,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         return;
       }
       
-      let finalValue = parsedValue;
+      const finalValue = parsedValue;
       
       // Apply min/max constraints if specified
       if (min !== undefined && parsedValue < min) {

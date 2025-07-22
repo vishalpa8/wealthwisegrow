@@ -58,7 +58,7 @@ export interface ResultCardProps {
   subtitle?: string;
   prefix?: string;
   suffix?: string;
-  variant?: "default" | "success" | "warning" | "error";
+  variant?: "default" | "success" | "warning" | "error" | "primary" | "pricing";
   className?: string;
   children?: import('react').ReactNode;
 }
