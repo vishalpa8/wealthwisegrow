@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 
 const initialValues = {
   loanAmount: 1000000,
@@ -83,9 +86,49 @@ function calculateBalloonLoan(inputs: BalloonLoanInputs) {
 }
 
 export default function BalloonLoanCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<BalloonLoanInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const balloonLoanResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.loanAmount <= 0) {
+        throw new Error('Loan amount must be greater than zero');
+      }
+
+      if (values.interestRate <= 0) {
+        throw new Error('Interest rate must be greater than zero');
+      }
+
+      if (values.loanTerm <= 0) {
+        throw new Error('Loan term must be greater than zero');
+      }
+
+      if (values.balloonPayment <= 0) {
+        throw new Error('Balloon payment must be greater than zero');
+      }
+
+      if (values.balloonPayment >= values.loanAmount) {
+        throw new Error('Balloon payment should be less than the total loan amount');
+      }
+
+      const calculation = calculateBalloonLoan(values);
+
+      if (isNaN(calculation.regularPayment) || calculation.regularPayment <= 0) {
+        throw new Error('Unable to calculate payment. Please check your inputs.');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Balloon loan calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -93,6 +136,7 @@ export default function BalloonLoanCalculatorPage() {
       name: 'loanAmount',
       type: 'number',
       placeholder: '10,00,000',
+      unit: currency.symbol,
       min: 50000,
       max: 100000000,
       required: true,
@@ -125,6 +169,7 @@ export default function BalloonLoanCalculatorPage() {
       name: 'balloonPayment',
       type: 'number',
       placeholder: '3,00,000',
+      unit: currency.symbol,
       min: 10000,
       max: 50000000,
       required: true,
@@ -143,145 +188,122 @@ export default function BalloonLoanCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.loanAmount <= 0) {
-        setError('Loan amount must be greater than zero');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!balloonLoanResults) return [];
+
+    return [
+      {
+        label: 'Regular Payment',
+        value: balloonLoanResults.regularPayment,
+        type: 'currency',
+        highlight: true,
+        tooltip: `${values.paymentFrequency === 'monthly' ? 'Monthly' : 'Quarterly'} payment amount`
+      },
+      {
+        label: 'Balloon Payment',
+        value: balloonLoanResults.balloonPayment,
+        type: 'currency',
+        tooltip: 'Final large payment due at loan maturity'
+      },
+      {
+        label: 'Total Regular Payments',
+        value: balloonLoanResults.totalRegularPayments,
+        type: 'currency',
+        tooltip: 'Sum of all regular payments over loan term'
+      },
+      {
+        label: 'Total Amount Paid',
+        value: balloonLoanResults.totalPayments,
+        type: 'currency',
+        tooltip: 'Total amount including regular payments and balloon payment'
+      },
+      {
+        label: 'Total Interest',
+        value: balloonLoanResults.totalInterest,
+        type: 'currency',
+        tooltip: 'Total interest paid over the life of the loan'
+      },
+      {
+        label: 'Interest as % of Loan',
+        value: balloonLoanResults.interestPercentage,
+        type: 'percentage',
+        tooltip: 'Total interest as percentage of loan amount'
+      },
+      {
+        label: 'Traditional Loan Payment',
+        value: balloonLoanResults.traditionalPayment,
+        type: 'currency',
+        tooltip: 'What the payment would be for a traditional amortizing loan'
+      },
+      {
+        label: 'Payment Savings',
+        value: balloonLoanResults.paymentSavings,
+        type: 'currency',
+        tooltip: 'Amount saved per payment compared to traditional loan'
+      },
+      {
+        label: 'Effective Annual Rate',
+        value: balloonLoanResults.effectiveRate,
+        type: 'percentage',
+        tooltip: 'Effective annual cost of the balloon loan'
       }
+    ];
+  }, [balloonLoanResults, values.paymentFrequency, currency.symbol]);
 
-      if (values.interestRate <= 0) {
-        setError('Interest rate must be greater than zero');
-        return [];
-      }
-
-      if (values.loanTerm <= 0) {
-        setError('Loan term must be greater than zero');
-        return [];
-      }
-
-      if (values.balloonPayment <= 0) {
-        setError('Balloon payment must be greater than zero');
-        return [];
-      }
-
-      if (values.balloonPayment >= values.loanAmount) {
-        setError('Balloon payment should be less than the total loan amount');
-        return [];
-      }
-
-      const calculation = calculateBalloonLoan(values);
-
-      if (isNaN(calculation.regularPayment) || calculation.regularPayment <= 0) {
-        setError('Unable to calculate payment. Please check your inputs.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Regular Payment',
-          value: calculation.regularPayment,
-          type: 'currency',
-          highlight: true,
-          tooltip: `${values.paymentFrequency === 'monthly' ? 'Monthly' : 'Quarterly'} payment amount`
-        },
-        {
-          label: 'Balloon Payment',
-          value: calculation.balloonPayment,
-          type: 'currency',
-          tooltip: 'Final large payment due at loan maturity'
-        },
-        {
-          label: 'Total Regular Payments',
-          value: calculation.totalRegularPayments,
-          type: 'currency',
-          tooltip: 'Sum of all regular payments over loan term'
-        },
-        {
-          label: 'Total Amount Paid',
-          value: calculation.totalPayments,
-          type: 'currency',
-          tooltip: 'Total amount including regular payments and balloon payment'
-        },
-        {
-          label: 'Total Interest',
-          value: calculation.totalInterest,
-          type: 'currency',
-          tooltip: 'Total interest paid over the life of the loan'
-        },
-        {
-          label: 'Interest as % of Loan',
-          value: calculation.interestPercentage,
-          type: 'percentage',
-          tooltip: 'Total interest as percentage of loan amount'
-        },
-        {
-          label: 'Traditional Loan Payment',
-          value: calculation.traditionalPayment,
-          type: 'currency',
-          tooltip: 'What the payment would be for a traditional amortizing loan'
-        },
-        {
-          label: 'Payment Savings',
-          value: calculation.paymentSavings,
-          type: 'currency',
-          tooltip: 'Amount saved per payment compared to traditional loan'
-        },
-        {
-          label: 'Effective Annual Rate',
-          value: calculation.effectiveRate,
-          type: 'percentage',
-          tooltip: 'Effective annual cost of the balloon loan'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Balloon loan calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      if ((name === 'loanAmount' || name === 'interestRate' || name === 'loanTerm' || name === 'balloonPayment') && numValue < 0) {
-        setError(`${name} cannot be negative`);
-        return;
-      }
-
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 600);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Balloon Loan Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Balloon loans have lower monthly payments but a large final payment.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Plan how you will pay the balloon amount at maturity.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Often used for real estate or business financing.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Balloon Loan Calculator"
+      description="Calculate payments for balloon loans with lower regular payments and a large final payment. Compare with traditional loan options."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Balloon Loan Calculator"
-        description="Calculate payments for balloon loans with lower regular payments and a large final payment. Compare with traditional loan options."
+        title="Balloon Loan Details"
+        description="Enter your balloon loan details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={balloonLoanResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

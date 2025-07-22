@@ -1,8 +1,19 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { secureCalculation } from '@/lib/security';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+import {
+  parseRobustNumber,
+  safeDivide,
+  safeMultiply,
+  safePower,
+  safeAdd,
+  safeSubtract,
+  isEffectivelyZero
+} from '@/lib/utils/number';
 
 const initialValues = {
   initialInvestment: 100000,
@@ -16,6 +27,19 @@ const initialValues = {
   discountRate: 10,
   taxRate: 20
 };
+
+interface ROIInputs {
+  initialInvestment: number;
+  projectDuration: number;
+  revenueType: string;
+  monthlyRevenue: number;
+  oneTimeRevenue: number;
+  operatingCosts: number;
+  maintenanceCosts: number;
+  salvageValue: number;
+  discountRate: number;
+  taxRate: number;
+}
 
 interface ROIResults {
   roi: number;
@@ -31,7 +55,7 @@ interface ROIResults {
   roiAfterTax: number;
 }
 
-function calculateROI(inputs: typeof initialValues): ROIResults {
+function calculateROI(inputs: ROIInputs): ROIResults {
   const {
     initialInvestment,
     projectDuration,
@@ -46,37 +70,37 @@ function calculateROI(inputs: typeof initialValues): ROIResults {
   } = inputs;
 
   // Calculate total revenue
-  const recurringRevenue = revenueType === 'recurring' ? monthlyRevenue * projectDuration : 0;
-  const totalRevenue = recurringRevenue + oneTimeRevenue;
+  const recurringRevenue = revenueType === 'recurring' ? safeMultiply(monthlyRevenue, projectDuration) : 0;
+  const totalRevenue = safeAdd(recurringRevenue, oneTimeRevenue);
 
   // Calculate total costs
-  const totalOperatingCosts = operatingCosts * projectDuration;
-  const totalMaintenanceCosts = maintenanceCosts * projectDuration;
-  const totalCosts = totalOperatingCosts + totalMaintenanceCosts;
+  const totalOperatingCosts = safeMultiply(operatingCosts, projectDuration);
+  const totalMaintenanceCosts = safeMultiply(maintenanceCosts, projectDuration);
+  const totalCosts = safeAdd(totalOperatingCosts, totalMaintenanceCosts);
 
   // Calculate net profit before tax
-  const netProfitBeforeTax = totalRevenue - totalCosts + salvageValue - initialInvestment;
-  const taxAmount = Math.max(0, netProfitBeforeTax * (taxRate / 100));
-  const netProfit = netProfitBeforeTax - taxAmount;
+  const netProfitBeforeTax = safeSubtract(safeAdd(safeSubtract(totalRevenue, totalCosts), salvageValue), initialInvestment);
+  const taxAmount = safeMultiply(Math.max(0, netProfitBeforeTax), safeDivide(taxRate, 100));
+  const netProfit = safeSubtract(netProfitBeforeTax, taxAmount);
 
   // Calculate ROI
-  const roi = (netProfit / initialInvestment) * 100;
-  const roiAfterTax = ((netProfit - taxAmount) / initialInvestment) * 100;
+  const roi = safeMultiply(safeDivide(netProfit, initialInvestment), 100);
+  const roiAfterTax = safeMultiply(safeDivide(safeSubtract(netProfit, taxAmount), initialInvestment), 100);
 
   // Calculate annualized ROI
-  const annualizedROI = (Math.pow(1 + roi / 100, 12 / projectDuration) - 1) * 100;
+  const annualizedROI = safeMultiply(safeSubtract(safePower(safeAdd(1, safeDivide(roi, 100)), safeDivide(12, projectDuration)), 1), 100);
 
   // Calculate payback period (in months)
-  const monthlyNetCashFlow = (totalRevenue - totalCosts) / projectDuration;
-  const paybackPeriod = initialInvestment / monthlyNetCashFlow;
+  const monthlyNetCashFlow = safeDivide(safeSubtract(totalRevenue, totalCosts), projectDuration);
+  const paybackPeriod = safeDivide(initialInvestment, monthlyNetCashFlow);
 
   // Calculate NPV
-  const monthlyRate = discountRate / 12 / 100;
+  const monthlyRate = safeDivide(safeDivide(discountRate, 12), 100);
   let npv = -initialInvestment;
   for (let i = 1; i <= projectDuration; i++) {
-    npv += monthlyNetCashFlow / Math.pow(1 + monthlyRate, i);
+    npv = safeAdd(npv, safeDivide(monthlyNetCashFlow, safePower(safeAdd(1, monthlyRate), i)));
   }
-  npv += salvageValue / Math.pow(1 + monthlyRate, projectDuration);
+  npv = safeAdd(npv, safeDivide(salvageValue, safePower(safeAdd(1, monthlyRate), projectDuration)));
 
   // Calculate IRR using iterative method
   let irr = 0;
@@ -86,22 +110,22 @@ function calculateROI(inputs: typeof initialValues): ROIResults {
 
   while (iteration < maxIterations) {
     let npvAtRate = -initialInvestment;
-    const rate = irr / 12 / 100;
+    const rate = safeDivide(safeDivide(irr, 12), 100);
 
     for (let i = 1; i <= projectDuration; i++) {
-      npvAtRate += monthlyNetCashFlow / Math.pow(1 + rate, i);
+      npvAtRate = safeAdd(npvAtRate, safeDivide(monthlyNetCashFlow, safePower(safeAdd(1, rate), i)));
     }
-    npvAtRate += salvageValue / Math.pow(1 + rate, projectDuration);
+    npvAtRate = safeAdd(npvAtRate, safeDivide(salvageValue, safePower(safeAdd(1, rate), projectDuration)));
 
     if (Math.abs(npvAtRate) < 0.1) break;
-    if (npvAtRate > 0) irr += step;
-    else irr -= step;
-    step /= 2;
+    if (npvAtRate > 0) irr = safeAdd(irr, step);
+    else irr = safeSubtract(irr, step);
+    step = safeDivide(step, 2);
     iteration++;
   }
 
   // Calculate Profitability Index
-  const profitabilityIndex = (npv + initialInvestment) / initialInvestment;
+  const profitabilityIndex = safeDivide(safeAdd(npv, initialInvestment), initialInvestment);
 
   return {
     roi,
@@ -119,29 +143,64 @@ function calculateROI(inputs: typeof initialValues): ROIResults {
 }
 
 export default function ROICalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<ROIInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const roiResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.initialInvestment <= 0) {
+        throw new Error('Initial investment must be greater than zero');
+      }
+      if (values.projectDuration <= 0) {
+        throw new Error('Project duration must be greater than zero');
+      }
+      if (values.discountRate < 0) {
+        throw new Error('Discount rate cannot be negative');
+      }
+      if (values.taxRate < 0 || values.taxRate > 100) {
+        throw new Error('Tax rate must be between 0 and 100');
+      }
+
+      const calculation = calculateROI(values);
+
+      if (!isFinite(calculation.roi) || !isFinite(calculation.npv)) {
+        throw new Error('Calculation overflow. Please use smaller values.');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('ROI calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
       label: 'Initial Investment',
       name: 'initialInvestment',
       type: 'number',
-      placeholder: '100000',
+      placeholder: '100,000',
+      unit: currency.symbol,
       min: 1,
       required: true,
       tooltip: 'Total upfront investment amount'
     },
     {
-      label: 'Project Duration (Months)',
+      label: 'Project Duration',
       name: 'projectDuration',
       type: 'number',
       placeholder: '12',
       min: 1,
       max: 360,
+      unit: 'months',
       required: true,
-      tooltip: 'Duration of the investment project'
+      tooltip: 'Duration of the investment project in months'
     },
     {
       label: 'Revenue Type',
@@ -158,7 +217,8 @@ export default function ROICalculatorPage() {
       label: values.revenueType === 'recurring' ? 'Monthly Revenue' : 'One-time Revenue',
       name: values.revenueType === 'recurring' ? 'monthlyRevenue' : 'oneTimeRevenue',
       type: 'number',
-      placeholder: values.revenueType === 'recurring' ? '15000' : '100000',
+      placeholder: values.revenueType === 'recurring' ? '15,000' : '100,000',
+      unit: currency.symbol,
       min: 0,
       required: true,
       tooltip: values.revenueType === 'recurring' ? 'Expected monthly revenue' : 'Expected one-time revenue'
@@ -167,7 +227,8 @@ export default function ROICalculatorPage() {
       label: 'Monthly Operating Costs',
       name: 'operatingCosts',
       type: 'number',
-      placeholder: '5000',
+      placeholder: '5,000',
+      unit: currency.symbol,
       min: 0,
       required: true,
       tooltip: 'Regular operating expenses'
@@ -176,7 +237,8 @@ export default function ROICalculatorPage() {
       label: 'Monthly Maintenance Costs',
       name: 'maintenanceCosts',
       type: 'number',
-      placeholder: '1000',
+      placeholder: '1,000',
+      unit: currency.symbol,
       min: 0,
       required: true,
       tooltip: 'Regular maintenance and upkeep costs'
@@ -186,11 +248,12 @@ export default function ROICalculatorPage() {
       name: 'salvageValue',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       tooltip: 'Expected value at end of project'
     },
     {
-      label: 'Discount Rate (%)',
+      label: 'Discount Rate',
       name: 'discountRate',
       type: 'percentage',
       placeholder: '10',
@@ -198,10 +261,10 @@ export default function ROICalculatorPage() {
       max: 100,
       step: 0.1,
       required: true,
-      tooltip: 'Rate used to calculate present value'
+      tooltip: 'Rate used to calculate present value of future cash flows'
     },
     {
-      label: 'Tax Rate (%)',
+      label: 'Tax Rate',
       name: 'taxRate',
       type: 'percentage',
       placeholder: '20',
@@ -213,149 +276,134 @@ export default function ROICalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!roiResults) return [];
 
-      // Validate inputs
-      if (values.initialInvestment <= 0) {
-        setError('Initial investment must be greater than zero');
-        return [];
+    return [
+      {
+        label: 'Return on Investment (ROI)',
+        value: roiResults.roi,
+        type: 'percentage',
+        highlight: true,
+        tooltip: 'Total return on investment percentage'
+      },
+      {
+        label: 'ROI After Tax',
+        value: roiResults.roiAfterTax,
+        type: 'percentage',
+        tooltip: 'ROI after considering tax implications'
+      },
+      {
+        label: 'Annualized ROI',
+        value: roiResults.annualizedROI,
+        type: 'percentage',
+        tooltip: 'ROI expressed as an annual rate'
+      },
+      {
+        label: 'Payback Period',
+        value: roiResults.paybackPeriod,
+        type: 'number',
+        tooltip: 'Months needed to recover initial investment'
+      },
+      {
+        label: 'Net Present Value (NPV)',
+        value: roiResults.npv,
+        type: 'currency',
+        tooltip: 'Present value of all cash flows'
+      },
+      {
+        label: 'Internal Rate of Return (IRR)',
+        value: roiResults.irr,
+        type: 'percentage',
+        tooltip: 'Rate at which NPV equals zero'
+      },
+      {
+        label: 'Profitability Index',
+        value: roiResults.profitabilityIndex,
+        type: 'number',
+        tooltip: 'Ratio of NPV to initial investment'
+      },
+      {
+        label: 'Total Revenue',
+        value: roiResults.totalRevenue,
+        type: 'currency',
+        tooltip: 'Total revenue over project duration'
+      },
+      {
+        label: 'Total Costs',
+        value: roiResults.totalCosts,
+        type: 'currency',
+        tooltip: 'Total costs over project duration'
+      },
+      {
+        label: 'Net Profit',
+        value: roiResults.netProfit,
+        type: 'currency',
+        tooltip: 'Total profit after all costs'
+      },
+      {
+        label: 'Tax Amount',
+        value: roiResults.taxAmount,
+        type: 'currency',
+        tooltip: 'Total tax payable on profits'
       }
+    ];
+  }, [roiResults, values.revenueType, currency.symbol]);
 
-      const secureResult = secureCalculation(
-        values,
-        (validatedInputs) => calculateROI(validatedInputs),
-        {
-          requiredFields: ['initialInvestment', 'projectDuration', 'monthlyRevenue', 'operatingCosts', 'maintenanceCosts', 'discountRate', 'taxRate'],
-          numericFields: ['initialInvestment', 'projectDuration', 'monthlyRevenue', 'oneTimeRevenue', 'operatingCosts', 'maintenanceCosts', 'salvageValue', 'discountRate', 'taxRate'],
-          minValues: {
-            initialInvestment: 1,
-            projectDuration: 1,
-            monthlyRevenue: 0,
-            oneTimeRevenue: 0,
-            operatingCosts: 0,
-            maintenanceCosts: 0,
-            salvageValue: 0,
-            discountRate: 0,
-            taxRate: 0
-          },
-          maxValues: {
-            projectDuration: 360,
-            discountRate: 100,
-            taxRate: 100
-          }
-        }
-      );
-
-      const result = secureResult.result;
-
-      if (!result) {
-        setError('Calculation failed. Please verify your inputs.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Return on Investment (ROI)',
-          value: result.roi,
-          type: 'percentage',
-          highlight: true,
-          tooltip: 'Total return on investment percentage'
-        },
-        {
-          label: 'ROI After Tax',
-          value: result.roiAfterTax,
-          type: 'percentage',
-          tooltip: 'ROI after considering tax implications'
-        },
-        {
-          label: 'Annualized ROI',
-          value: result.annualizedROI,
-          type: 'percentage',
-          tooltip: 'ROI expressed as an annual rate'
-        },
-        {
-          label: 'Payback Period',
-          value: result.paybackPeriod,
-          type: 'number',
-          tooltip: 'Months needed to recover initial investment'
-        },
-        {
-          label: 'Net Present Value (NPV)',
-          value: result.npv,
-          type: 'currency',
-          tooltip: 'Present value of all cash flows'
-        },
-        {
-          label: 'Internal Rate of Return (IRR)',
-          value: result.irr,
-          type: 'percentage',
-          tooltip: 'Rate at which NPV equals zero'
-        },
-        {
-          label: 'Profitability Index',
-          value: result.profitabilityIndex,
-          type: 'number',
-          tooltip: 'Ratio of NPV to initial investment'
-        },
-        {
-          label: 'Total Revenue',
-          value: result.totalRevenue,
-          type: 'currency',
-          tooltip: 'Total revenue over project duration'
-        },
-        {
-          label: 'Total Costs',
-          value: result.totalCosts,
-          type: 'currency',
-          tooltip: 'Total costs over project duration'
-        },
-        {
-          label: 'Net Profit',
-          value: result.netProfit,
-          type: 'currency',
-          tooltip: 'Total profit after all costs'
-        },
-        {
-          label: 'Tax Amount',
-          value: result.taxAmount,
-          type: 'currency',
-          tooltip: 'Total tax payable on profits'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('ROI calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: any) => {
     setValues(prev => ({ ...prev, [name]: value }));
-  };
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">ROI Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Higher ROI indicates a more profitable investment.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider both financial and non-financial returns.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">NPV and IRR provide deeper insights than simple ROI.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Return on Investment (ROI) Calculator"
+      description="Calculate ROI, payback period, NPV, and other key metrics to evaluate your investment or project."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Return on Investment (ROI) Calculator"
-        description="Calculate ROI, payback period, NPV, and other key metrics to evaluate your investment or project."
+        title="ROI Details"
+        description="Enter your investment or project details to calculate its return."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={roiResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

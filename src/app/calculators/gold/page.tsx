@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateGoldInvestment, GoldInputs } from '@/lib/calculations/savings';
 import { goldSchema } from '@/lib/validations/calculator';
 
@@ -12,9 +15,30 @@ const initialValues = {
 };
 
 export default function GoldCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<GoldInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const goldResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      const validation = goldSchema.safeParse(values);
+      if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
+        throw new Error(errorMessage);
+      }
+
+      const calculation = calculateGoldInvestment(values);
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Gold calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -22,6 +46,7 @@ export default function GoldCalculatorPage() {
       name: 'investmentAmount',
       type: 'number',
       placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 1000,
       max: 10000000,
       required: true,
@@ -32,6 +57,7 @@ export default function GoldCalculatorPage() {
       name: 'goldPricePerGram',
       type: 'number',
       placeholder: '6,000',
+      unit: currency.symbol,
       min: 1000,
       max: 50000,
       required: true,
@@ -60,82 +86,98 @@ export default function GoldCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      const validation = goldSchema.safeParse(values);
-      if (!validation.success) {
-        setError(validation.error.errors[0]?.message || 'Invalid input');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!goldResults) return [];
+
+    return [
+      {
+        label: 'Future Value',
+        value: goldResults.futureValue,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Expected value of your gold investment at maturity'
+      },
+      {
+        label: 'Gold Quantity',
+        value: goldResults.gramsOfGold.toFixed(2),
+        type: 'number',
+        tooltip: 'Grams of gold you can buy with your investment'
+      },
+      {
+        label: 'Future Gold Price',
+        value: goldResults.futureGoldPrice,
+        type: 'currency',
+        tooltip: 'Expected gold price per gram at maturity'
+      },
+      {
+        label: 'Total Returns',
+        value: goldResults.totalReturns,
+        type: 'currency',
+        tooltip: 'Profit from your gold investment'
+      },
+      {
+        label: 'Annualized Return',
+        value: goldResults.annualizedReturn,
+        type: 'percentage',
+        tooltip: 'Effective annual return rate'
       }
+    ];
+  }, [goldResults, currency.symbol]);
 
-      const calculation = calculateGoldInvestment(validation.data as GoldInputs);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Future Value',
-          value: calculation.futureValue,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Expected value of your gold investment at maturity'
-        },
-        {
-          label: 'Gold Quantity',
-          value: calculation.gramsOfGold.toFixed(2),
-          type: 'number',
-          tooltip: 'Grams of gold you can buy with your investment'
-        },
-        {
-          label: 'Future Gold Price',
-          value: calculation.futureGoldPrice,
-          type: 'currency',
-          tooltip: 'Expected gold price per gram at maturity'
-        },
-        {
-          label: 'Total Returns',
-          value: calculation.totalReturns,
-          type: 'currency',
-          tooltip: 'Profit from your gold investment'
-        },
-        {
-          label: 'Annualized Return',
-          value: calculation.annualizedReturn,
-          type: 'percentage',
-          tooltip: 'Effective annual return rate'
-        }
-      ];
-
-      return calculatorResults;
-    } catch {
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    const parsedValue = (name === 'investmentAmount' || name === 'goldPricePerGram' || name === 'expectedAnnualReturn' || name === 'years') ? parseFloat(value) : value;
-    setValues(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Gold Investment Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Gold is often considered a safe-haven asset.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Diversify your portfolio with a small allocation to gold.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider digital gold or gold ETFs for convenience.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Gold Investment Calculator"
+      description="Calculate the future value and returns from your gold investments."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Gold Investment Calculator"
-        description="Calculate the future value and returns from your gold investments."
+        title="Gold Investment Details"
+        description="Enter your gold investment details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={goldResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

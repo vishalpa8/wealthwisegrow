@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import {
   parseRobustNumber,
   safeDivide,
@@ -135,9 +138,41 @@ function calculateSavings(inputs: SavingsInputs) {
 }
 
 export default function SavingsCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<SavingsInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const savingsResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.savingsGoal <= 0) {
+        throw new Error('Savings goal must be greater than zero');
+      }
+
+      if (values.monthlyContribution <= 0) {
+        throw new Error('Monthly contribution must be greater than zero');
+      }
+
+      if (values.interestRate <= 0) {
+        throw new Error('Interest rate must be greater than zero');
+      }
+
+      if (values.timeHorizon <= 0) {
+        throw new Error('Time horizon must be greater than zero');
+      }
+
+      const calculation = calculateSavings(values);
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Savings calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -156,7 +191,8 @@ export default function SavingsCalculatorPage() {
       label: 'Savings Goal',
       name: 'savingsGoal',
       type: 'number',
-      placeholder: '10,00,000',
+      placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 10000,
       max: 100000000,
       required: true,
@@ -167,6 +203,7 @@ export default function SavingsCalculatorPage() {
       name: 'currentSavings',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 0,
       max: 50000000,
       required: true,
@@ -177,6 +214,7 @@ export default function SavingsCalculatorPage() {
       name: 'monthlyContribution',
       type: 'number',
       placeholder: '10,000',
+      unit: currency.symbol,
       min: 500,
       max: 500000,
       required: true,
@@ -228,183 +266,148 @@ export default function SavingsCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.savingsGoal <= 0) {
-        setError('Savings goal must be greater than zero');
-        return [];
-      }
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!savingsResults) return [];
 
-      if (values.monthlyContribution <= 0) {
-        setError('Monthly contribution must be greater than zero');
-        return [];
-      }
-
-      if (values.interestRate <= 0) {
-        setError('Interest rate must be greater than zero');
-        return [];
-      }
-
-      if (values.timeHorizon <= 0) {
-        setError('Time horizon must be greater than zero');
-        return [];
-      }
-
-      const calculation = calculateSavings(values);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Future Value',
-          value: calculation.totalFutureValue,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Total amount you will have at the end of the period'
-        },
-        {
-          label: 'Total Contributions',
-          value: calculation.totalContributions,
-          type: 'currency',
-          tooltip: 'Total amount you will contribute over the period'
-        },
-        {
-          label: 'Interest Earned',
-          value: calculation.totalInterestEarned,
-          type: 'currency',
-          tooltip: 'Total interest/returns earned on your savings'
-        },
-        {
-          label: 'After-Tax Value',
-          value: calculation.afterTaxValue,
-          type: 'currency',
-          tooltip: 'Value after paying taxes on returns'
-        },
-        {
-          label: 'Inflation-Adjusted Value',
-          value: calculation.inflationAdjustedValue,
-          type: 'currency',
-          tooltip: 'Real purchasing power of your savings'
-        },
-        {
-          label: 'Real Return Rate',
-          value: calculation.realReturnRate,
-          type: 'percentage',
-          tooltip: 'Return rate after adjusting for inflation'
-        }
-      ];
-
-      if (values.savingsType === 'goal-based') {
-        if (calculation.surplus > 0) {
-          calculatorResults.push({
-            label: 'Goal Surplus',
-            value: calculation.surplus,
-            type: 'currency',
-            tooltip: 'Amount by which you will exceed your goal'
-          });
-        } else if (calculation.shortfall > 0) {
-          calculatorResults.push(
-            {
-              label: 'Goal Shortfall',
-              value: calculation.shortfall,
-              type: 'currency',
-              tooltip: 'Amount by which you will fall short of your goal'
-            },
-            {
-              label: 'Required Monthly Contribution',
-              value: calculation.monthlyRequiredForGoal,
-              type: 'currency',
-              tooltip: 'Monthly amount needed to reach your goal'
-            }
-          );
-        }
-
-        if (calculation.goalAchievementTime > 0 && calculation.goalAchievementTime < 50) {
-          calculatorResults.push({
-            label: 'Goal Achievement Time',
-            value: calculation.goalAchievementTime,
-            type: 'number',
-            tooltip: 'Years needed to reach your goal with current contributions'
-          });
-        }
-      }
-
-      calculatorResults.push({
-        label: 'Effective Annual Return',
-        value: calculation.effectiveAnnualReturn,
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Future Value',
+        value: savingsResults.totalFutureValue,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Total amount you will have at the end of the period'
+      },
+      {
+        label: 'Total Contributions',
+        value: savingsResults.totalContributions,
+        type: 'currency',
+        tooltip: 'Total amount you will contribute over the period'
+      },
+      {
+        label: 'Interest Earned',
+        value: savingsResults.totalInterestEarned,
+        type: 'currency',
+        tooltip: 'Total interest/returns earned on your savings'
+      },
+      {
+        label: 'After-Tax Value',
+        value: savingsResults.afterTaxValue,
+        type: 'currency',
+        tooltip: 'Value after paying taxes on returns'
+      },
+      {
+        label: 'Inflation-Adjusted Value',
+        value: savingsResults.inflationAdjustedValue,
+        type: 'currency',
+        tooltip: 'Real purchasing power of your savings'
+      },
+      {
+        label: 'Real Return Rate',
+        value: savingsResults.realReturnRate,
         type: 'percentage',
-        tooltip: 'Effective annual return considering all contributions'
-      });
+        tooltip: 'Return rate after adjusting for inflation'
+      }
+    ];
 
-      return calculatorResults;
-    } catch (err) {
-      console.error('Savings calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
+    if (values.savingsType === 'goal-based') {
+      if (savingsResults.surplus > 0) {
+        calculatorResults.push({
+          label: 'Goal Surplus',
+          value: savingsResults.surplus,
+          type: 'currency',
+          tooltip: 'Amount by which you will exceed your goal'
+        });
+      } else if (savingsResults.shortfall > 0) {
+        calculatorResults.push(
+          {
+            label: 'Goal Shortfall',
+            value: savingsResults.shortfall,
+            type: 'currency',
+            tooltip: 'Amount by which you will fall short of your goal'
+          },
+          {
+            label: 'Required Monthly Contribution',
+            value: savingsResults.monthlyRequiredForGoal,
+            type: 'currency',
+            tooltip: 'Monthly amount needed to reach your goal'
+          }
+        );
+      }
+
+      if (savingsResults.goalAchievementTime > 0 && savingsResults.goalAchievementTime < 50) {
+        calculatorResults.push({
+          label: 'Goal Achievement Time',
+          value: savingsResults.goalAchievementTime,
+          type: 'number',
+          tooltip: 'Years needed to reach your goal with current contributions'
+        });
+      }
     }
-  }, [values]);
 
-  const handleChange = (name: string, value: any) => {
-    try {
-      // For select fields, we don't need to parse the value
-      if (name === 'savingsType') {
-        setValues(prev => ({ ...prev, [name]: value }));
-        if (error) setError('');
-        return;
-      }
-      
-      // Use parseRobustNumber for numeric fields
-      const numValue = parseRobustNumber(value);
-      
-      // Specific validation for required numeric fields
-      if ((name === 'savingsGoal' || name === 'monthlyContribution') && numValue <= 0) {
-        setError(`${name} must be greater than zero`);
-        return;
-      }
-      
-      if ((name === 'interestRate' || name === 'timeHorizon') && numValue < 0) {
-        setError(`${name} cannot be negative`);
-        return;
-      }
-      
-      if (name === 'timeHorizon' && numValue > 100) {
-        setError('Time horizon cannot exceed 100 years');
-        return;
-      }
+    calculatorResults.push({
+      label: 'Effective Annual Return',
+      value: savingsResults.effectiveAnnualReturn,
+      type: 'percentage',
+      tooltip: 'Effective annual return considering all contributions'
+    });
 
-      if (name === 'taxRate' && (numValue < 0 || numValue > 100)) {
-        setError('Tax rate must be between 0 and 100');
-        return;
-      }
+    return calculatorResults;
+  }, [savingsResults, values.savingsType, currency.symbol]);
 
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 600);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Savings Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Start saving early to maximize compound interest.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Regular contributions significantly boost your savings.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider inflation and taxes when planning long-term goals.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Savings Calculator"
+      description="Plan your savings strategy with goal-based calculations. See how your money will grow over time and plan for inflation and taxes."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Savings Calculator"
-        description="Plan your savings strategy with goal-based calculations. See how your money will grow over time and plan for inflation and taxes."
+        title="Savings Details"
+        description="Enter your savings details to see your financial projections."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={savingsResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

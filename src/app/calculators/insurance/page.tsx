@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 
 const initialValues = {
   insuranceType: 'life',
@@ -135,9 +138,37 @@ function calculateInsuranceNeeds(inputs: InsuranceInputs) {
 }
 
 export default function InsuranceCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<InsuranceInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const insuranceResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.age < 18 || values.age > 80) {
+        throw new Error('Age must be between 18 and 80 years');
+      }
+
+      if (values.annualIncome <= 0) {
+        throw new Error('Annual income must be greater than zero');
+      }
+
+      if (values.monthlyExpenses <= 0) {
+        throw new Error('Monthly expenses must be greater than zero');
+      }
+
+      const calculation = calculateInsuranceNeeds(values);
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Insurance calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -167,6 +198,7 @@ export default function InsuranceCalculatorPage() {
       name: 'annualIncome',
       type: 'number',
       placeholder: '10,00,000',
+      unit: currency.symbol,
       min: 100000,
       max: 100000000,
       required: true,
@@ -187,6 +219,7 @@ export default function InsuranceCalculatorPage() {
       name: 'existingCoverage',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       max: 100000000,
       tooltip: 'Current insurance coverage amount'
@@ -196,6 +229,7 @@ export default function InsuranceCalculatorPage() {
       name: 'outstandingLoans',
       type: 'number',
       placeholder: '5,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 50000000,
       tooltip: 'Total outstanding loan amounts'
@@ -205,6 +239,7 @@ export default function InsuranceCalculatorPage() {
       name: 'monthlyExpenses',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 10000,
       max: 1000000,
       required: true,
@@ -268,121 +303,115 @@ export default function InsuranceCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.age < 18 || values.age > 80) {
-        setError('Age must be between 18 and 80 years');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!insuranceResults) return [];
+
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Recommended Coverage',
+        value: insuranceResults.recommendedCoverage,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Recommended insurance coverage amount based on your profile'
+      },
+      {
+        label: 'Coverage Gap',
+        value: insuranceResults.coverageGap,
+        type: 'currency',
+        tooltip: 'Additional coverage needed beyond existing coverage'
+      },
+      {
+        label: 'Estimated Annual Premium',
+        value: insuranceResults.estimatedPremium,
+        type: 'currency',
+        tooltip: 'Estimated annual premium for recommended coverage'
+      },
+      {
+        label: 'Monthly Premium',
+        value: insuranceResults.monthlyPremium,
+        type: 'currency',
+        tooltip: 'Estimated monthly premium amount'
+      },
+      {
+        label: 'Premium as % of Income',
+        value: insuranceResults.premiumAsPercentOfIncome,
+        type: 'percentage',
+        tooltip: 'Premium as percentage of annual income'
+      },
+      {
+        label: 'Premium per Lakh Coverage',
+        value: insuranceResults.premiumPerLakh,
+        type: 'currency',
+        tooltip: 'Premium cost per lakh of coverage'
       }
+    ];
 
-      if (values.annualIncome <= 0) {
-        setError('Annual income must be greater than zero');
-        return [];
-      }
-
-      if (values.monthlyExpenses <= 0) {
-        setError('Monthly expenses must be greater than zero');
-        return [];
-      }
-
-      const calculation = calculateInsuranceNeeds(values);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Recommended Coverage',
-          value: calculation.recommendedCoverage,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Recommended insurance coverage amount based on your profile'
-        },
-        {
-          label: 'Coverage Gap',
-          value: calculation.coverageGap,
-          type: 'currency',
-          tooltip: 'Additional coverage needed beyond existing coverage'
-        },
-        {
-          label: 'Estimated Annual Premium',
-          value: calculation.estimatedPremium,
-          type: 'currency',
-          tooltip: 'Estimated annual premium for recommended coverage'
-        },
-        {
-          label: 'Monthly Premium',
-          value: calculation.monthlyPremium,
-          type: 'currency',
-          tooltip: 'Estimated monthly premium amount'
-        },
-        {
-          label: 'Premium as % of Income',
-          value: calculation.premiumAsPercentOfIncome,
-          type: 'percentage',
-          tooltip: 'Premium as percentage of annual income'
-        },
-        {
-          label: 'Premium per Lakh Coverage',
-          value: calculation.premiumPerLakh,
-          type: 'currency',
-          tooltip: 'Premium cost per lakh of coverage'
-        }
-      ];
-
-      if (values.existingCoverage > 0) {
-        calculatorResults.push({
-          label: 'Total Protection',
-          value: calculation.totalProtection,
-          type: 'currency',
-          tooltip: 'Total coverage including existing and recommended'
-        });
-      }
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Insurance calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
+    if (values.existingCoverage > 0) {
+      calculatorResults.push({
+        label: 'Total Protection',
+        value: insuranceResults.totalProtection,
+        type: 'currency',
+        tooltip: 'Total coverage including existing and recommended'
+      });
     }
-  }, [values]);
 
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      if ((name === 'age' || name === 'annualIncome' || name === 'monthlyExpenses') && numValue < 0) {
-        setError(`${name} cannot be negative`);
-        return;
-      }
+    return calculatorResults;
+  }, [insuranceResults, values.existingCoverage, currency.symbol]);
 
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 700);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Insurance Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Review your insurance needs regularly.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Compare quotes from multiple providers.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand policy terms and conditions before buying.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Insurance Calculator"
+      description="Calculate your insurance needs for life, health, and vehicle insurance. Get personalized coverage recommendations and premium estimates."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Insurance Calculator"
-        description="Calculate your insurance needs for life, health, and vehicle insurance. Get personalized coverage recommendations and premium estimates."
+        title="Insurance Details"
+        description="Enter your insurance details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={insuranceResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

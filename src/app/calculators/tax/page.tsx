@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 
 const initialValues = {
   taxType: 'income',
@@ -187,9 +190,33 @@ function calculateMarginalRate(taxableIncome: number, regime: string): number {
 }
 
 export default function TaxCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<TaxInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const taxResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.annualIncome < 0) {
+        setCalculationError('Annual income cannot be negative');
+        return null;
+      }
+
+      if (values.age < 18 || values.age > 100) {
+        setCalculationError('Age must be between 18 and 100');
+        return null;
+      }
+
+      return calculateTax(values);
+    } catch (err: any) {
+      console.error('Tax calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -209,6 +236,7 @@ export default function TaxCalculatorPage() {
       name: 'annualIncome',
       type: 'number',
       placeholder: '10,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 100000000,
       required: true,
@@ -240,6 +268,7 @@ export default function TaxCalculatorPage() {
       name: 'deductions80C',
       type: 'number',
       placeholder: '1,50,000',
+      unit: currency.symbol,
       min: 0,
       max: 150000,
       tooltip: 'Investments in PPF, ELSS, life insurance, etc.'
@@ -249,6 +278,7 @@ export default function TaxCalculatorPage() {
       name: 'deductions80D',
       type: 'number',
       placeholder: '25,000',
+      unit: currency.symbol,
       min: 0,
       max: 100000,
       tooltip: 'Health insurance premiums'
@@ -258,6 +288,7 @@ export default function TaxCalculatorPage() {
       name: 'hraReceived',
       type: 'number',
       placeholder: '2,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 5000000,
       tooltip: 'House Rent Allowance received from employer'
@@ -267,6 +298,7 @@ export default function TaxCalculatorPage() {
       name: 'hraExemption',
       type: 'number',
       placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 5000000,
       tooltip: 'Eligible HRA exemption amount'
@@ -276,6 +308,7 @@ export default function TaxCalculatorPage() {
       name: 'otherDeductions',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 0,
       max: 1000000,
       tooltip: 'Other eligible deductions (80E, 80G, etc.)'
@@ -285,6 +318,7 @@ export default function TaxCalculatorPage() {
       name: 'capitalGains',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       max: 50000000,
       tooltip: 'Capital gains from investments'
@@ -304,6 +338,7 @@ export default function TaxCalculatorPage() {
       name: 'businessIncome',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       max: 50000000,
       tooltip: 'Income from business or profession'
@@ -313,6 +348,7 @@ export default function TaxCalculatorPage() {
       name: 'professionalTax',
       type: 'number',
       placeholder: '2,400',
+      unit: currency.symbol,
       min: 0,
       max: 30000,
       tooltip: 'Professional tax paid during the year'
@@ -322,154 +358,155 @@ export default function TaxCalculatorPage() {
       name: 'tdsDeducted',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 0,
       max: 5000000,
       tooltip: 'Tax deducted at source by employer/others'
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.annualIncome < 0) {
-        setError('Annual income cannot be negative');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!taxResults) return [];
+
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Total Tax Payable',
+        value: taxResults.totalTax,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Total income tax including cess'
+      },
+      {
+        label: 'Gross Income',
+        value: taxResults.grossIncome,
+        type: 'currency',
+        tooltip: 'Total income before deductions'
+      },
+      {
+        label: 'Total Deductions',
+        value: taxResults.totalDeductions,
+        type: 'currency',
+        tooltip: 'Total eligible deductions claimed'
+      },
+      {
+        label: 'Taxable Income',
+        value: taxResults.taxableIncome,
+        type: 'currency',
+        tooltip: 'Income after deductions and exemptions'
+      },
+      {
+        label: 'Income Tax',
+        value: taxResults.incomeTax,
+        type: 'currency',
+        tooltip: 'Tax before adding cess'
+      },
+      {
+        label: 'Health & Education Cess',
+        value: taxResults.cess,
+        type: 'currency',
+        tooltip: '4% cess on income tax'
+      },
+      {
+        label: 'Effective Tax Rate',
+        value: taxResults.effectiveTaxRate,
+        type: 'percentage',
+        tooltip: 'Tax as percentage of gross income'
+      },
+      {
+        label: 'Marginal Tax Rate',
+        value: taxResults.marginalTaxRate,
+        type: 'percentage',
+        tooltip: 'Tax rate on next rupee of income'
+      },
+      {
+        label: 'Net Income',
+        value: taxResults.netIncome,
+        type: 'currency',
+        tooltip: 'Income after paying taxes'
+      },
+      {
+        label: 'Monthly Take-home',
+        value: taxResults.monthlyTakeHome,
+        type: 'currency',
+        tooltip: 'Average monthly income after tax'
       }
+    ];
 
-      if (values.age < 18 || values.age > 100) {
-        setError('Age must be between 18 and 100');
-        return [];
-      }
-
-      const calculation = calculateTax(values);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Total Tax Payable',
-          value: calculation.totalTax,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Total income tax including cess'
-        },
-        {
-          label: 'Gross Income',
-          value: calculation.grossIncome,
-          type: 'currency',
-          tooltip: 'Total income before deductions'
-        },
-        {
-          label: 'Total Deductions',
-          value: calculation.totalDeductions,
-          type: 'currency',
-          tooltip: 'Total eligible deductions claimed'
-        },
-        {
-          label: 'Taxable Income',
-          value: calculation.taxableIncome,
-          type: 'currency',
-          tooltip: 'Income after deductions and exemptions'
-        },
-        {
-          label: 'Income Tax',
-          value: calculation.incomeTax,
-          type: 'currency',
-          tooltip: 'Tax before adding cess'
-        },
-        {
-          label: 'Health & Education Cess',
-          value: calculation.cess,
-          type: 'currency',
-          tooltip: '4% cess on income tax'
-        },
-        {
-          label: 'Effective Tax Rate',
-          value: calculation.effectiveTaxRate,
-          type: 'percentage',
-          tooltip: 'Tax as percentage of gross income'
-        },
-        {
-          label: 'Marginal Tax Rate',
-          value: calculation.marginalTaxRate,
-          type: 'percentage',
-          tooltip: 'Tax rate on next rupee of income'
-        },
-        {
-          label: 'Net Income',
-          value: calculation.netIncome,
-          type: 'currency',
-          tooltip: 'Income after paying taxes'
-        },
-        {
-          label: 'Monthly Take-home',
-          value: calculation.monthlyTakeHome,
-          type: 'currency',
-          tooltip: 'Average monthly income after tax'
-        }
-      ];
-
-      // Add refund/additional tax information
-      if (calculation.refundAmount > 0) {
-        calculatorResults.push({
-          label: 'Tax Refund',
-          value: calculation.refundAmount,
-          type: 'currency',
-          tooltip: 'Refund due from excess TDS/advance tax'
-        });
-      } else if (calculation.additionalTaxDue > 0) {
-        calculatorResults.push({
-          label: 'Additional Tax Due',
-          value: calculation.additionalTaxDue,
-          type: 'currency',
-          tooltip: 'Additional tax to be paid'
-        });
-      }
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Tax calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
+    // Add refund/additional tax information
+    if (taxResults.refundAmount > 0) {
+      calculatorResults.push({
+        label: 'Tax Refund',
+        value: taxResults.refundAmount,
+        type: 'currency',
+        tooltip: 'Refund due from excess TDS/advance tax'
+      });
+    } else if (taxResults.additionalTaxDue > 0) {
+      calculatorResults.push({
+        label: 'Additional Tax Due',
+        value: taxResults.additionalTaxDue,
+        type: 'currency',
+        tooltip: 'Additional tax to be paid'
+      });
     }
-  }, [values]);
 
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      if ((name === 'annualIncome' || name === 'age') && numValue < 0) {
-        setError(`${name} cannot be negative`);
-        return;
-      }
+    return calculatorResults;
+  }, [taxResults, currency.symbol]);
 
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
+    // Add any specific validation for TaxCalculator here if needed
     setTimeout(() => setLoading(false), 700);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand both tax regimes before choosing.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Maximize eligible deductions like 80C and 80D.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Keep track of all income sources and TDS.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Tax Calculator"
+      description="Calculate your income tax liability under both old and new tax regimes. Get detailed breakdown of taxes, deductions, and take-home income."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Tax Calculator"
-        description="Calculate your income tax liability under both old and new tax regimes. Get detailed breakdown of taxes, deductions, and take-home income."
+        title="Tax Details"
+        description="Enter your financial details to calculate your tax."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={taxResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false} // Tax calculation typically doesn't involve direct comparison scenarios
       />
-    </div>
+    </CalculatorLayout>
   );
 }

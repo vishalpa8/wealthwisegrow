@@ -1,102 +1,168 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+
+const initialValues = {
+  fixedCost: 100000,
+  variableCostPerUnit: 50,
+  sellingPricePerUnit: 150,
+};
+
+interface BreakEvenInputs {
+  fixedCost: number;
+  variableCostPerUnit: number;
+  sellingPricePerUnit: number;
+}
+
+function calculateBreakEven(inputs: BreakEvenInputs) {
+  const { fixedCost, variableCostPerUnit, sellingPricePerUnit } = inputs;
+
+  if (sellingPricePerUnit <= variableCostPerUnit) {
+    throw new Error('Selling price must be greater than variable cost per unit');
+  }
+  if (fixedCost < 0 || variableCostPerUnit < 0 || sellingPricePerUnit < 0) {
+    throw new Error('Costs and prices cannot be negative.');
+  }
+
+  const contributionMargin = sellingPricePerUnit - variableCostPerUnit;
+  const breakEvenUnits = fixedCost / contributionMargin;
+  const breakEvenRevenue = breakEvenUnits * sellingPricePerUnit;
+
+  return {
+    breakEvenUnits: Math.round(breakEvenUnits * 100) / 100,
+    breakEvenRevenue: Math.round(breakEvenRevenue * 100) / 100,
+  };
+}
 
 export default function BreakEvenCalculator() {
-  const [fixedCost, setFixedCost] = useState(0);
-  const [variableCostPerUnit, setVariableCostPerUnit] = useState(0);
-  const [sellingPricePerUnit, setSellingPricePerUnit] = useState(0);
-  const [breakEvenUnits, setBreakEvenUnits] = useState(0);
-  const [breakEvenRevenue, setBreakEvenRevenue] = useState(0);
+  const [values, setValues] = useState<BreakEvenInputs>(initialValues);
+  const [loading, setLoading] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
-  const calculateBreakEven = () => {
-    if (sellingPricePerUnit <= variableCostPerUnit) {
-      alert('Selling price must be greater than variable cost per unit');
-      return;
+  const { currency } = useCurrency();
+
+  const breakEvenResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      return calculateBreakEven(values);
+    } catch (err: any) {
+      console.error('Break-even calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
     }
+  }, [values]);
 
-    const units = fixedCost / (sellingPricePerUnit - variableCostPerUnit);
-    const revenue = units * sellingPricePerUnit;
-    
-    setBreakEvenUnits(Math.round(units * 100) / 100);
-    setBreakEvenRevenue(Math.round(revenue * 100) / 100);
+  const fields: EnhancedCalculatorField[] = [
+    {
+      label: 'Fixed Costs',
+      name: 'fixedCost',
+      type: 'number',
+      placeholder: '100,000',
+      unit: currency.symbol,
+      min: 0,
+      required: true,
+      tooltip: 'Costs that do not change with the level of output (e.g., rent, salaries)'
+    },
+    {
+      label: 'Variable Cost Per Unit',
+      name: 'variableCostPerUnit',
+      type: 'number',
+      placeholder: '50',
+      unit: currency.symbol,
+      min: 0,
+      required: true,
+      tooltip: 'Cost incurred per unit of production (e.g., raw materials)'
+    },
+    {
+      label: 'Selling Price Per Unit',
+      name: 'sellingPricePerUnit',
+      type: 'number',
+      placeholder: '150',
+      unit: currency.symbol,
+      min: 0,
+      required: true,
+      tooltip: 'Price at which each unit is sold'
+    }
+  ];
+
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!breakEvenResults) return [];
+
+    return [
+      {
+        label: 'Break-even Point (Units)',
+        value: breakEvenResults.breakEvenUnits,
+        type: 'number',
+        highlight: true,
+        tooltip: 'Number of units that must be sold to cover all costs'
+      },
+      {
+        label: 'Break-even Revenue',
+        value: breakEvenResults.breakEvenRevenue,
+        type: 'currency',
+        tooltip: 'Total revenue needed to cover all costs'
+      },
+    ];
+  }, [breakEvenResults, currency.symbol]);
+
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
+
+  const handleCalculate = () => {
+    setLoading(true);
+    setCalculationError(undefined);
+    setTimeout(() => setLoading(false), 500);
   };
 
-  return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold text-center mb-8">Break-even Point Calculator</h1>
-        
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fixed Costs ($)
-              </label>
-              <input
-                type="number"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={fixedCost}
-                onChange={(e) => setFixedCost(Number(e.target.value))}
-                min="0"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Variable Cost Per Unit ($)
-              </label>
-              <input
-                type="number"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={variableCostPerUnit}
-                onChange={(e) => setVariableCostPerUnit(Number(e.target.value))}
-                min="0"
-              />
-            </div>
-            
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Selling Price Per Unit ($)
-              </label>
-              <input
-                type="number"
-                className="w-full p-2 border border-gray-300 rounded"
-                value={sellingPricePerUnit}
-                onChange={(e) => setSellingPricePerUnit(Number(e.target.value))}
-                min="0"
-              />
-            </div>
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Break-even Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand your fixed and variable costs.</p>
           </div>
-          
-          <div className="mt-6">
-            <button
-              onClick={calculateBreakEven}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
-            >
-              Calculate Break-even Point
-            </button>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Lowering fixed costs reduces the break-even point.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Increasing selling price or reducing variable costs helps.</p>
           </div>
         </div>
-        
-        {breakEvenUnits > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold mb-4">Results</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-50 p-4 rounded">
-                <h3 className="text-lg font-medium mb-2">Break-even Point (Units)</h3>
-                <p className="text-2xl font-bold text-blue-600">{breakEvenUnits.toLocaleString()}</p>
-              </div>
-              
-              <div className="bg-gray-50 p-4 rounded">
-                <h3 className="text-lg font-medium mb-2">Break-even Revenue ($)</h3>
-                <p className="text-2xl font-bold text-blue-600">${breakEvenRevenue.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
+  );
+
+  return (
+    <CalculatorLayout
+      title="Break-even Point Calculator"
+      description="Determine the sales volume (units or revenue) needed to cover all your costs and start making a profit."
+      sidebar={sidebar}
+    >
+      <EnhancedCalculatorForm
+        title="Break-even Details"
+        description="Enter your cost and pricing information."
+        fields={fields}
+        values={values}
+        onChange={handleChange}
+        onCalculate={handleCalculate}
+        results={breakEvenResults ? results : []}
+        loading={loading}
+        error={calculationError}
+        showComparison={false}
+      />
+    </CalculatorLayout>
   );
 }

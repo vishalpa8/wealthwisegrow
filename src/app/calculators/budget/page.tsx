@@ -1,81 +1,151 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
-import { v4 as uuidv4 } from "uuid";
+import { useState, useMemo, useCallback } from "react";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
-import { CalculatorForm, CalculatorFormField } from "@/components/ui/calculator-form";
+import { CalculatorLayout } from "@/components/layout/calculator-layout";
+import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
+import { useCurrency } from "@/contexts/currency-context";
 
-export default function BudgetCalculator() {
-  const [income, setIncome] = useState(5000);
-  const [expenses, setExpenses] = useState(3500);
+interface BudgetInputs {
+  monthlyIncome: number;
+  monthlyExpenses: number;
+}
 
-  const savings = income - expenses;
+const initialValues: BudgetInputs = {
+  monthlyIncome: 5000,
+  monthlyExpenses: 3500,
+};
 
-  const { addHistory } = useIndexedDBHistory();
+function calculateBudget(inputs: BudgetInputs) {
+  const { monthlyIncome, monthlyExpenses } = inputs;
 
-  // Save to history when calculation changes
-  useEffect(() => {
-    if (income > 0 && expenses >= 0 && savings !== undefined) {
-      addHistory({
-        id: uuidv4(),
-        type: "budget",
-        inputs: { income, expenses },
-        results: { savings },
-        timestamp: new Date(),
-        title: "",
-        notes: "",
-      });
+  if (monthlyIncome < 0 || monthlyExpenses < 0) {
+    throw new Error("Income and expenses cannot be negative.");
+  }
+
+  const monthlySavings = monthlyIncome - monthlyExpenses;
+  const savingsRate = monthlyIncome > 0 ? (monthlySavings / monthlyIncome) * 100 : 0;
+
+  return {
+    monthlySavings,
+    savingsRate,
+  };
+}
+
+export default function BudgetCalculatorPage() {
+  const [values, setValues] = useState<BudgetInputs>(initialValues);
+  const [loading, setLoading] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const budgetResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      return calculateBudget(values);
+    } catch (err: any) {
+      console.error("Budget calculation error:", err);
+      setCalculationError(err.message || "An error occurred during calculation.");
+      return null;
     }
-  }, [income, expenses, savings]);
+  }, [values]);
 
-  const fields: CalculatorFormField[] = [
+  const fields: EnhancedCalculatorField[] = [
     {
-      label: "Monthly Income ($)",
-      name: "income",
+      label: "Monthly Income",
+      name: "monthlyIncome",
       type: "number",
-      placeholder: "Enter monthly income",
+      placeholder: "5,000",
+      unit: currency.symbol,
       min: 0,
       required: true,
+      tooltip: "Your total income after taxes each month."
     },
     {
-      label: "Monthly Expenses ($)",
-      name: "expenses",
+      label: "Monthly Expenses",
+      name: "monthlyExpenses",
       type: "number",
-      placeholder: "Enter monthly expenses",
+      placeholder: "3,500",
+      unit: currency.symbol,
       min: 0,
       required: true,
+      tooltip: "Your total expenses each month (rent, food, bills, etc.)."
     },
   ];
 
-  const values = { income, expenses };
-  const handleChange = (name: string, value: any) => {
-    if (name === "income") setIncome(Number(value));
-    if (name === "expenses") setExpenses(Number(value));
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!budgetResults) return [];
+
+    return [
+      {
+        label: "Monthly Savings",
+        value: budgetResults.monthlySavings,
+        type: "currency",
+        highlight: true,
+        tooltip: "The amount of money you save each month.",
+      },
+      {
+        label: "Savings Rate",
+        value: budgetResults.savingsRate,
+        type: "percentage",
+        tooltip: "The percentage of your income that you save.",
+      },
+    ];
+  }, [budgetResults, currency.symbol]);
+
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
+
+  const handleCalculate = () => {
+    setLoading(true);
+    setCalculationError(undefined);
+    setTimeout(() => setLoading(false), 400);
   };
 
-  return (
-    <section className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 w-full">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">Budget Calculator</h1>
-      <CalculatorForm fields={fields} values={values} onChange={handleChange} />
-      <AdsPlaceholder position="in-content" size="728x90" />
-      <div className="bg-pink-50 rounded-xl p-6 text-center shadow-inner border border-pink-100 animate-fade-in">
-        <div className="text-lg font-semibold text-pink-700 mb-1">Monthly Savings</div>
-        <div className="text-4xl font-extrabold text-pink-700 mb-2">${savings ? savings.toLocaleString(undefined, {maximumFractionDigits: 2}) : "0.00"}</div>
-        <div className="text-sm text-gray-500">Based on your inputs above</div>
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
       </div>
-      <AdsPlaceholder position="below-results" size="336x280" />
-      <div className="mt-8 text-base text-gray-600">
-        <p>This calculator helps you estimate your monthly savings based on your income and expenses.</p>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Budgeting Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Track all your income and expenses diligently.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Aim for a 50/30/20 budget rule (Needs/Wants/Savings).</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Automate your savings to stay consistent.</p>
+          </div>
+        </div>
       </div>
-      <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: none; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.7s cubic-bezier(.4,0,.2,1);
-        }
-      `}</style>
-    </section>
+    </div>
   );
-} 
+
+  return (
+    <CalculatorLayout
+      title="Budget Calculator"
+      description="Easily track your monthly income and expenses to understand your savings potential and manage your finances effectively."
+      sidebar={sidebar}
+    >
+      <EnhancedCalculatorForm
+        title="Budget Details"
+        description="Enter your monthly income and expenses."
+        fields={fields}
+        values={values}
+        onChange={handleChange}
+        onCalculate={handleCalculate}
+        results={budgetResults ? results : []}
+        loading={loading}
+        error={calculationError}
+        showComparison={false}
+      />
+    </CalculatorLayout>
+  );
+}

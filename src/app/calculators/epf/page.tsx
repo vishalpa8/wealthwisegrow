@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateEPF, EPFInputs } from '@/lib/calculations/savings';
 import { epfSchema } from '@/lib/validations/calculator';
 
@@ -12,9 +15,30 @@ const initialValues = {
 };
 
 export default function EPFCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<EPFInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const epfResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      const validation = epfSchema.safeParse(values);
+      if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
+        throw new Error(errorMessage);
+      }
+
+      const calculation = calculateEPF(values);
+
+      return calculation;
+    } catch (err: any) {
+      console.error('EPF calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -22,6 +46,7 @@ export default function EPFCalculatorPage() {
       name: 'basicSalary',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 1000,
       max: 500000,
       required: true,
@@ -60,76 +85,92 @@ export default function EPFCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      const validation = epfSchema.safeParse(values);
-      if (!validation.success) {
-        setError(validation.error.errors[0]?.message || 'Invalid input');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!epfResults) return [];
+
+    return [
+      {
+        label: 'Maturity Amount',
+        value: epfResults.maturityAmount,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Total EPF corpus at retirement'
+      },
+      {
+        label: 'Employee Contribution',
+        value: epfResults.totalEmployeeContribution,
+        type: 'currency',
+        tooltip: 'Total amount contributed by employee'
+      },
+      {
+        label: 'Employer Contribution',
+        value: epfResults.totalEmployerContribution,
+        type: 'currency',
+        tooltip: 'Total amount contributed by employer'
+      },
+      {
+        label: 'Interest Earned',
+        value: epfResults.totalInterest,
+        type: 'currency',
+        tooltip: 'Interest earned on EPF corpus'
       }
+    ];
+  }, [epfResults, currency.symbol]);
 
-      const calculation = calculateEPF(validation.data as EPFInputs);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Maturity Amount',
-          value: calculation.maturityAmount,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Total EPF corpus at retirement'
-        },
-        {
-          label: 'Employee Contribution',
-          value: calculation.totalEmployeeContribution,
-          type: 'currency',
-          tooltip: 'Total amount contributed by employee'
-        },
-        {
-          label: 'Employer Contribution',
-          value: calculation.totalEmployerContribution,
-          type: 'currency',
-          tooltip: 'Total amount contributed by employer'
-        },
-        {
-          label: 'Interest Earned',
-          value: calculation.totalInterest,
-          type: 'currency',
-          tooltip: 'Interest earned on EPF corpus'
-        }
-      ];
-
-      return calculatorResults;
-    } catch {
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    const parsedValue = (name === 'basicSalary' || name === 'years') ? parseInt(value, 10) : parseFloat(value);
-    setValues(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">EPF Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">EPF is a mandatory savings scheme for salaried employees.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">It provides tax benefits under Section 80C.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Interest earned on EPF is tax-exempt on maturity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="EPF Calculator"
+      description="Calculate your Employee Provident Fund corpus and plan your retirement savings."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="EPF Calculator"
-        description="Calculate your Employee Provident Fund corpus and plan your retirement savings."
+        title="EPF Details"
+        description="Enter your EPF details to estimate your maturity amount."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={epfResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

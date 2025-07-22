@@ -1,6 +1,6 @@
 'use client';
 
-import { Component, ReactNode, ErrorInfo } from 'react';
+import { Component, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 
 interface ErrorBoundaryProps {
@@ -22,7 +22,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return { hasError: true, error };
   }
 
-  override componentDidCatch(_error: Error, _errorInfo: ErrorInfo) {
+  override componentDidCatch() {
     // Log error to monitoring service
     // console.error('Error caught by boundary:', error, errorInfo);
   }

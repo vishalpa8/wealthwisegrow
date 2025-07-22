@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { secureCalculation } from '@/lib/security';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+
 
 const initialValues = {
   investmentType: 'lumpsum',
@@ -17,7 +20,20 @@ const initialValues = {
   taxBracket: 'none'
 };
 
-function calculateReturns(inputs: typeof initialValues) {
+interface MutualFundInputs {
+  investmentType: string;
+  initialInvestment: number;
+  monthlyInvestment: number;
+  startDate: string;
+  endDate: string;
+  purchaseNav: number;
+  currentNav: number;
+  entryLoad: number;
+  exitLoad: number;
+  taxBracket: string;
+}
+
+function calculateReturns(inputs: MutualFundInputs) {
   const {
     investmentType,
     initialInvestment,
@@ -81,9 +97,40 @@ function calculateReturns(inputs: typeof initialValues) {
 }
 
 export default function MutualFundCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<MutualFundInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const mutualFundResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Basic validation
+      if (!values.startDate || new Date(values.startDate).toString() === 'Invalid Date') {
+        // Don't throw an error, just return null to indicate no valid calculation yet
+        return null;
+      }
+      if (values.investmentType === 'lumpsum' && values.initialInvestment <= 0) {
+        throw new Error('Initial investment must be greater than zero');
+      }
+      if (values.investmentType === 'sip' && values.monthlyInvestment <= 0) {
+        throw new Error('Monthly investment must be greater than zero');
+      }
+      if (values.purchaseNav <= 0 || values.currentNav <= 0) {
+        throw new Error('NAV values must be greater than zero');
+      }
+      if (values.entryLoad < 0 || values.exitLoad < 0) {
+        throw new Error('Loads cannot be negative');
+      }
+
+      return calculateReturns(values);
+    } catch (err: any) {
+      console.error('Mutual fund calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -115,6 +162,7 @@ export default function MutualFundCalculatorPage() {
       name: values.investmentType === 'lumpsum' ? 'initialInvestment' : 'monthlyInvestment',
       type: 'number',
       placeholder: values.investmentType === 'lumpsum' ? '1,00,000' : '10,000',
+      unit: currency.symbol,
       min: 100,
       max: 10000000,
       required: true,
@@ -125,6 +173,7 @@ export default function MutualFundCalculatorPage() {
       name: 'purchaseNav',
       type: 'number',
       placeholder: '10.00',
+      unit: currency.symbol,
       min: 0.01,
       step: 0.01,
       required: true,
@@ -135,6 +184,7 @@ export default function MutualFundCalculatorPage() {
       name: 'currentNav',
       type: 'number',
       placeholder: '12.00',
+      unit: currency.symbol,
       min: 0.01,
       step: 0.01,
       required: true,
@@ -174,133 +224,123 @@ export default function MutualFundCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!mutualFundResults) return [];
 
-      if (!values.startDate) {
-        setError('Please select investment start date');
-        return [];
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Current Value',
+        value: mutualFundResults.currentValue,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Current value of your investment'
+      },
+      {
+        label: 'Total Investment',
+        value: mutualFundResults.totalInvestment,
+        type: 'currency',
+        tooltip: 'Total amount invested'
+      },
+      {
+        label: 'Total Units',
+        value: mutualFundResults.units,
+        type: 'number',
+        tooltip: 'Number of units held'
+      },
+      {
+        label: 'Absolute Returns',
+        value: mutualFundResults.absoluteReturns,
+        type: 'percentage',
+        tooltip: 'Total returns without considering time period'
+      },
+      {
+        label: 'CAGR',
+        value: mutualFundResults.cagr,
+        type: 'percentage',
+        tooltip: 'Compounded Annual Growth Rate'
+      },
+      {
+        label: 'Total Gains',
+        value: mutualFundResults.gains,
+        type: 'currency',
+        tooltip: 'Profit earned on investment'
       }
+    ];
 
-      const secureResult = secureCalculation(
-        values,
-        (validatedInputs) => calculateReturns(validatedInputs),
+    if (values.taxBracket !== 'none') {
+      calculatorResults.push(
         {
-          requiredFields: ['investmentType', 'startDate', 'initialInvestment', 'purchaseNav', 'currentNav'],
-          numericFields: ['initialInvestment', 'monthlyInvestment', 'purchaseNav', 'currentNav', 'entryLoad', 'exitLoad'],
-          minValues: {
-            initialInvestment: 100,
-            monthlyInvestment: 100,
-            purchaseNav: 0.01,
-            currentNav: 0.01,
-            entryLoad: 0,
-            exitLoad: 0
-          },
-          maxValues: {
-            initialInvestment: 10000000,
-            monthlyInvestment: 10000000,
-            entryLoad: 5,
-            exitLoad: 5
-          }
+          label: 'Tax Amount',
+          value: mutualFundResults.taxAmount,
+          type: 'currency',
+          tooltip: 'Tax payable on gains'
+        },
+        {
+          label: 'Post-tax Value',
+          value: mutualFundResults.postTaxValue,
+          type: 'currency',
+          tooltip: 'Investment value after tax'
         }
       );
-
-      const result = secureResult.result;
-
-      if (!result) {
-        setError('Calculation failed. Please verify your inputs.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Current Value',
-          value: result.currentValue,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Current value of your investment'
-        },
-        {
-          label: 'Total Investment',
-          value: result.totalInvestment,
-          type: 'currency',
-          tooltip: 'Total amount invested'
-        },
-        {
-          label: 'Total Units',
-          value: result.units,
-          type: 'number',
-          tooltip: 'Number of units held'
-        },
-        {
-          label: 'Absolute Returns',
-          value: result.absoluteReturns,
-          type: 'percentage',
-          tooltip: 'Total returns without considering time period'
-        },
-        {
-          label: 'CAGR',
-          value: result.cagr,
-          type: 'percentage',
-          tooltip: 'Compounded Annual Growth Rate'
-        },
-        {
-          label: 'Total Gains',
-          value: result.gains,
-          type: 'currency',
-          tooltip: 'Profit earned on investment'
-        }
-      ];
-
-      if (values.taxBracket !== 'none') {
-        calculatorResults.push(
-          {
-            label: 'Tax Amount',
-            value: result.taxAmount,
-            type: 'currency',
-            tooltip: 'Tax payable on gains'
-          },
-          {
-            label: 'Post-tax Value',
-            value: result.postTaxValue,
-            type: 'currency',
-            tooltip: 'Investment value after tax'
-          }
-        );
-      }
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Mutual fund calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
     }
-  }, [values]);
 
-  const handleChange = (name: string, value: any) => {
+    return calculatorResults;
+  }, [mutualFundResults, values.taxBracket, currency.symbol]);
+
+  const handleChange = useCallback((name: string, value: any) => {
     setValues(prev => ({ ...prev, [name]: value }));
-  };
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Mutual Fund Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand NAV and its impact on returns.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider expense ratios and loads before investing.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">SIPs help in rupee cost averaging.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Mutual Fund Returns Calculator"
+      description="Calculate your mutual fund returns including CAGR, absolute returns, and tax implications."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Mutual Fund Returns Calculator"
-        description="Calculate your mutual fund returns including CAGR, absolute returns, and tax implications."
+        title="Mutual Fund Details"
+        description="Enter your mutual fund investment details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={mutualFundResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

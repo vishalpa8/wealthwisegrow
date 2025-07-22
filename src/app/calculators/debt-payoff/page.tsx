@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 
 const initialValues = {
   totalDebt: 100000,
@@ -88,9 +91,47 @@ function calculateDebtPayoff(inputs: DebtPayoffInputs) {
 }
 
 export default function DebtPayoffCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<DebtPayoffInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const debtPayoffResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.totalDebt <= 0) {
+        throw new Error('Debt amount must be greater than zero');
+      }
+
+      if (values.interestRate <= 0) {
+        throw new Error('Interest rate must be greater than zero');
+      }
+
+      if (values.minimumPayment <= 0) {
+        throw new Error('Minimum payment must be greater than zero');
+      }
+
+      // Check if minimum payment can cover interest
+      const monthlyInterest = (values.totalDebt * values.interestRate / 12 / 100);
+      if (values.minimumPayment <= monthlyInterest) {
+        throw new Error('Minimum payment must be higher than monthly interest to pay off debt');
+      }
+
+      const calculation = calculateDebtPayoff(values);
+
+      if (calculation.months >= 600) {
+        throw new Error('Debt cannot be paid off with current payment amount');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Debt payoff calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -98,6 +139,7 @@ export default function DebtPayoffCalculatorPage() {
       name: 'totalDebt',
       type: 'number',
       placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 1000,
       max: 10000000,
       required: true,
@@ -119,6 +161,7 @@ export default function DebtPayoffCalculatorPage() {
       name: 'minimumPayment',
       type: 'number',
       placeholder: '3,000',
+      unit: currency.symbol,
       min: 100,
       max: 100000,
       required: true,
@@ -129,6 +172,7 @@ export default function DebtPayoffCalculatorPage() {
       name: 'extraPayment',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       max: 100000,
       tooltip: 'Additional amount you can pay monthly'
@@ -147,140 +191,112 @@ export default function DebtPayoffCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.totalDebt <= 0) {
-        setError('Debt amount must be greater than zero');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!debtPayoffResults) return [];
+
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Payoff Time',
+        value: `${debtPayoffResults.years} years${debtPayoffResults.remainingMonths ? ` and ${debtPayoffResults.remainingMonths} months` : ''}`,
+        type: 'number',
+        highlight: true,
+        tooltip: 'Time needed to completely pay off the debt'
+      },
+      {
+        label: 'Total Interest Paid',
+        value: debtPayoffResults.totalInterestPaid,
+        type: 'currency',
+        tooltip: 'Total interest you will pay over the life of the debt'
+      },
+      {
+        label: 'Total Amount Paid',
+        value: debtPayoffResults.totalPayment,
+        type: 'currency',
+        tooltip: 'Total amount including principal and interest'
+      },
+      {
+        label: 'Monthly Payment',
+        value: values.minimumPayment + values.extraPayment,
+        type: 'currency',
+        tooltip: 'Your total monthly payment amount'
       }
+    ];
 
-      if (values.interestRate <= 0) {
-        setError('Interest rate must be greater than zero');
-        return [];
-      }
-
-      if (values.minimumPayment <= 0) {
-        setError('Minimum payment must be greater than zero');
-        return [];
-      }
-
-      // Check if minimum payment can cover interest
-      const monthlyInterest = (values.totalDebt * values.interestRate / 12 / 100);
-      if (values.minimumPayment <= monthlyInterest) {
-        setError('Minimum payment must be higher than monthly interest to pay off debt');
-        return [];
-      }
-
-      const calculation = calculateDebtPayoff(values);
-
-      if (calculation.months >= 600) {
-        setError('Debt cannot be paid off with current payment amount');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
+    // Add comparison with minimum payment only
+    if (values.extraPayment > 0) {
+      calculatorResults.push(
         {
-          label: 'Payoff Time',
-          value: `${calculation.years} years${calculation.remainingMonths ? ` and ${calculation.remainingMonths} months` : ''}`,
+          label: 'Interest Saved',
+          value: debtPayoffResults.interestSaved,
+          type: 'currency',
+          tooltip: 'Interest saved by paying extra amount'
+        },
+        {
+          label: 'Time Saved',
+          value: Math.round(debtPayoffResults.timeSaved / 12),
           type: 'number',
-          highlight: true,
-          tooltip: 'Time needed to completely pay off the debt'
-        },
-        {
-          label: 'Total Interest Paid',
-          value: calculation.totalInterestPaid,
-          type: 'currency',
-          tooltip: 'Total interest you will pay over the life of the debt'
-        },
-        {
-          label: 'Total Amount Paid',
-          value: calculation.totalPayment,
-          type: 'currency',
-          tooltip: 'Total amount including principal and interest'
-        },
-        {
-          label: 'Monthly Payment',
-          value: values.minimumPayment + values.extraPayment,
-          type: 'currency',
-          tooltip: 'Your total monthly payment amount'
+          tooltip: 'Years saved by paying extra amount'
         }
-      ];
-
-      // Add comparison with minimum payment only
-      if (values.extraPayment > 0) {
-        calculatorResults.push(
-          {
-            label: 'Interest Saved',
-            value: calculation.interestSaved,
-            type: 'currency',
-            tooltip: 'Interest saved by paying extra amount'
-          },
-          {
-            label: 'Time Saved',
-            value: Math.round(calculation.timeSaved / 12),
-            type: 'number',
-            tooltip: 'Years saved by paying extra amount'
-          }
-        );
-      }
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Debt payoff calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
+      );
     }
-  }, [values]);
 
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      if (name === 'totalDebt' && numValue < 0) {
-        setError('Debt amount cannot be negative');
-        return;
-      }
-      
-      if (name === 'interestRate' && numValue < 0) {
-        setError('Interest rate cannot be negative');
-        return;
-      }
-      
-      if (name === 'minimumPayment' && numValue < 0) {
-        setError('Payment amount cannot be negative');
-        return;
-      }
+    return calculatorResults;
+  }, [debtPayoffResults, values.extraPayment, values.minimumPayment, currency.symbol]);
 
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 600);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Debt Payoff Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Prioritize high-interest debts first (Avalanche method).</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Even small extra payments can save significant interest.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider debt consolidation for lower rates.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Debt Payoff Calculator"
+      description="Calculate how long it will take to pay off your debt and how much interest you'll pay. See the impact of extra payments on your debt freedom journey."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Debt Payoff Calculator"
-        description="Calculate how long it will take to pay off your debt and how much interest you'll pay. See the impact of extra payments on your debt freedom journey."
+        title="Debt Details"
+        description="Enter your debt details to plan your payoff strategy."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={debtPayoffResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

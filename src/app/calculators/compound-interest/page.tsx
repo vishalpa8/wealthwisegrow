@@ -1,7 +1,19 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { SafeMath, isSafeNumber, roundToPrecision } from '@/lib/utils/currency';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+import {
+  parseRobustNumber,
+  safeDivide,
+  safeMultiply,
+  safePower,
+  safeAdd,
+  safeSubtract,
+  isEffectivelyZero,
+  roundToPrecision
+} from '@/lib/utils/number';
 
 const initialValues = {
   principal: 100000,
@@ -16,6 +28,7 @@ interface CompoundInterestInputs {
   rate: number;
   time: number;
   compoundingFrequency: string;
+  calculationType: string;
 }
 
 interface SimpleInterestInputs {
@@ -25,47 +38,37 @@ interface SimpleInterestInputs {
 }
 
 function calculateSimpleInterest(inputs: SimpleInterestInputs) {
-  const { principal, rate, time } = inputs;
-
-  // Validate inputs
-  if (!isSafeNumber(principal) || !isSafeNumber(rate) || !isSafeNumber(time)) {
-    throw new Error('Invalid input values');
-  }
+  const principal = parseRobustNumber(inputs.principal);
+  const rate = parseRobustNumber(inputs.rate);
+  const time = parseRobustNumber(inputs.time);
 
   if (principal <= 0) throw new Error('Principal must be positive');
   if (rate < 0) throw Error('Interest rate cannot be negative');
   if (time <= 0) throw new Error('Time period must be positive');
 
-  // Simple Interest formula: SI = P * R * T / 100
-  const simpleInterest = SafeMath.divide(
-    SafeMath.multiply(SafeMath.multiply(principal, rate), time),
+  const simpleInterest = safeDivide(
+    safeMultiply(safeMultiply(principal, rate), time),
     100
   );
 
-  const totalAmount = SafeMath.add(principal, simpleInterest);
+  const totalAmount = safeAdd(principal, simpleInterest);
 
   return {
     principal: roundToPrecision(principal),
     simpleInterest: roundToPrecision(simpleInterest),
     totalAmount: roundToPrecision(totalAmount),
-    effectiveRate: roundToPrecision(SafeMath.divide(SafeMath.multiply(simpleInterest, 100), principal)),
-    monthlyInterest: roundToPrecision(SafeMath.divide(simpleInterest, SafeMath.multiply(time, 12)))
+    effectiveRate: roundToPrecision(safeDivide(safeMultiply(simpleInterest, 100), principal)),
+    monthlyInterest: roundToPrecision(safeDivide(simpleInterest, safeMultiply(time, 12)))
   };
 }
 
 function calculateCompoundInterest(inputs: CompoundInterestInputs) {
   const { principal, rate, time, compoundingFrequency } = inputs;
 
-  // Validate inputs
-  if (!isSafeNumber(principal) || !isSafeNumber(rate) || !isSafeNumber(time)) {
-    throw new Error('Invalid input values');
-  }
-
   if (principal <= 0) throw new Error('Principal must be positive');
   if (rate < 0) throw new Error('Interest rate cannot be negative');
   if (time <= 0) throw new Error('Time period must be positive');
 
-  // Get compounding frequency
   const frequencies: Record<string, number> = {
     'yearly': 1,
     'half-yearly': 2,
@@ -75,35 +78,32 @@ function calculateCompoundInterest(inputs: CompoundInterestInputs) {
   };
 
   const n = frequencies[compoundingFrequency] || 1;
-  const r = SafeMath.divide(rate, 100);
+  const r = safeDivide(rate, 100);
 
-  // Compound Interest formula: A = P(1 + r/n)^(nt)
-  const ratePerPeriod = SafeMath.divide(r, n);
-  const periodsTotal = SafeMath.multiply(n, time);
+  const ratePerPeriod = safeDivide(r, n);
+  const periodsTotal = safeMultiply(n, time);
 
-  // Check for potential overflow
   if (periodsTotal > 1000) {
     throw new Error('Calculation period too long - risk of overflow');
   }
 
-  const compoundFactor = SafeMath.power(SafeMath.add(1, ratePerPeriod), periodsTotal);
+  const compoundFactor = safePower(safeAdd(1, ratePerPeriod), periodsTotal);
   
-  if (!isSafeNumber(compoundFactor) || compoundFactor === 0) {
+  if (!isFinite(compoundFactor) || compoundFactor === 0) {
     throw new Error('Calculation overflow or underflow');
   }
 
-  const totalAmount = SafeMath.multiply(principal, compoundFactor);
-  const compoundInterest = SafeMath.subtract(totalAmount, principal);
+  const totalAmount = safeMultiply(principal, compoundFactor);
+  const compoundInterest = safeSubtract(totalAmount, principal);
 
-  // Calculate simple interest for comparison
-  const simpleInterest = SafeMath.divide(
-    SafeMath.multiply(SafeMath.multiply(principal, rate), time),
+  const simpleInterest = safeDivide(
+    safeMultiply(safeMultiply(principal, rate), time),
     100
   );
 
-  const additionalEarnings = SafeMath.subtract(compoundInterest, simpleInterest);
-  const effectiveAnnualRate = SafeMath.multiply(
-    SafeMath.subtract(SafeMath.power(compoundFactor, SafeMath.divide(1, time)), 1),
+  const additionalEarnings = safeSubtract(compoundInterest, simpleInterest);
+  const effectiveAnnualRate = safeMultiply(
+    safeSubtract(safePower(compoundFactor, safeDivide(1, time)), 1),
     100
   );
 
@@ -119,9 +119,54 @@ function calculateCompoundInterest(inputs: CompoundInterestInputs) {
 }
 
 export default function CompoundInterestCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<CompoundInterestInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const compoundInterestResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Basic validation
+      if (values.principal <= 0) {
+        throw new Error('Principal amount must be greater than zero');
+      }
+      if (values.rate < 0) {
+        throw new Error('Interest rate cannot be negative');
+      }
+      if (values.time <= 0) {
+        throw new Error('Time period must be greater than zero');
+      }
+
+      if (values.calculationType === 'compound') {
+        // Additional validation for compound interest
+        if (values.rate > 25 && values.time > 20) {
+          throw new Error('High interest rate with long time period may cause calculation overflow');
+        }
+
+        const calculation = calculateCompoundInterest(values);
+
+        if (!isFinite(calculation.totalAmount) || !isFinite(calculation.compoundInterest)) {
+          throw new Error('Calculation overflow. Please use smaller values.');
+        }
+
+        return calculation;
+      } else {
+        const calculation = calculateSimpleInterest(values);
+
+        if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
+          throw new Error('Calculation overflow. Please use smaller values.');
+        }
+
+        return calculation;
+      }
+    } catch (err: any) {
+      console.error('Interest calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -129,6 +174,7 @@ export default function CompoundInterestCalculatorPage() {
       name: 'principal',
       type: 'number',
       placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 100,
       max: 100000000,
       required: true,
@@ -184,228 +230,142 @@ export default function CompoundInterestCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (!values.principal || !values.rate || !values.time) {
-        setError('Please fill in all required fields');
-        return [];
-      }
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!compoundInterestResults) return [];
 
-      if (values.principal <= 0) {
-        setError('Principal amount must be greater than zero');
-        return [];
-      }
-
-      if (values.rate < 0) {
-        setError('Interest rate cannot be negative');
-        return [];
-      }
-
-      if (values.time <= 0) {
-        setError('Time period must be greater than zero');
-        return [];
-      }
-
-      if (values.principal > 100000000) {
-        setError('Principal amount is too large');
-        return [];
-      }
-
-      if (values.rate > 50) {
-        setError('Interest rate seems unreasonably high');
-        return [];
-      }
-
-      if (values.time > 50) {
-        setError('Time period is too long');
-        return [];
-      }
-
-      if (values.calculationType === 'compound') {
-        // Additional validation for compound interest
-        if (values.rate > 25 && values.time > 20) {
-          setError('High interest rate with long time period may cause calculation overflow');
-          return [];
+    if (values.calculationType === 'compound') {
+      const compoundResults = compoundInterestResults as ReturnType<typeof calculateCompoundInterest>;
+      return [
+        {
+          label: 'Final Amount',
+          value: compoundResults.totalAmount,
+          type: 'currency',
+          highlight: true,
+          tooltip: 'Principal + Compound Interest'
+        },
+        {
+          label: 'Principal Amount',
+          value: compoundResults.principal,
+          type: 'currency',
+          tooltip: 'Initial investment amount'
+        },
+        {
+          label: 'Compound Interest',
+          value: compoundResults.compoundInterest,
+          type: 'currency',
+          tooltip: 'Interest earned with compounding'
+        },
+        {
+          label: 'Simple Interest (comparison)',
+          value: compoundResults.simpleInterest,
+          type: 'currency',
+          tooltip: 'Interest without compounding for comparison'
+        },
+        {
+          label: 'Additional Earnings (Compounding)',
+          value: compoundResults.additionalEarnings,
+          type: 'currency',
+          tooltip: 'Extra money earned due to compounding effect'
+        },
+        {
+          label: 'Effective Annual Rate',
+          value: compoundResults.effectiveAnnualRate,
+          type: 'percentage',
+          tooltip: 'Effective annual return rate considering compounding'
         }
-
-        const calculation = calculateCompoundInterest(values);
-
-        // Validate calculation results
-        if (!isSafeNumber(calculation.totalAmount) || !isSafeNumber(calculation.compoundInterest)) {
-          setError('Calculation overflow. Please use smaller values.');
-          return [];
+      ];
+    } else {
+      const simpleResults = compoundInterestResults as ReturnType<typeof calculateSimpleInterest>;
+      return [
+        {
+          label: 'Total Amount',
+          value: simpleResults.totalAmount,
+          type: 'currency',
+          highlight: true,
+          tooltip: 'Principal + Simple Interest'
+        },
+        {
+          label: 'Principal Amount',
+          value: simpleResults.principal,
+          type: 'currency',
+          tooltip: 'Initial investment amount'
+        },
+        {
+          label: 'Simple Interest',
+          value: simpleResults.simpleInterest,
+          type: 'currency',
+          tooltip: 'Interest earned using simple interest formula'
+        },
+        {
+          label: 'Effective Return Rate',
+          value: simpleResults.effectiveRate,
+          type: 'percentage',
+          tooltip: 'Total return as percentage of principal'
+        },
+        {
+          label: 'Monthly Interest',
+          value: simpleResults.monthlyInterest,
+          type: 'currency',
+          tooltip: 'Average interest earned per month'
         }
-
-        const calculatorResults: CalculatorResult[] = [
-          {
-            label: 'Final Amount',
-            value: calculation.totalAmount,
-            type: 'currency',
-            highlight: true,
-            tooltip: 'Principal + Compound Interest'
-          },
-          {
-            label: 'Principal Amount',
-            value: calculation.principal,
-            type: 'currency',
-            tooltip: 'Initial investment amount'
-          },
-          {
-            label: 'Compound Interest',
-            value: calculation.compoundInterest,
-            type: 'currency',
-            tooltip: 'Interest earned with compounding'
-          },
-          {
-            label: 'Simple Interest (comparison)',
-            value: calculation.simpleInterest,
-            type: 'currency',
-            tooltip: 'Interest without compounding for comparison'
-          },
-          {
-            label: 'Additional Earnings (Compounding)',
-            value: calculation.additionalEarnings,
-            type: 'currency',
-            tooltip: 'Extra money earned due to compounding effect'
-          },
-          {
-            label: 'Effective Annual Rate',
-            value: calculation.effectiveAnnualRate,
-            type: 'percentage',
-            tooltip: 'Effective annual return rate considering compounding'
-          }
-        ];
-
-        return calculatorResults;
-      } else {
-        const calculation = calculateSimpleInterest(values);
-
-        // Validate calculation results
-        if (!isSafeNumber(calculation.simpleInterest) || !isSafeNumber(calculation.totalAmount)) {
-          setError('Calculation overflow. Please use smaller values.');
-          return [];
-        }
-
-        const calculatorResults: CalculatorResult[] = [
-          {
-            label: 'Total Amount',
-            value: calculation.totalAmount,
-            type: 'currency',
-            highlight: true,
-            tooltip: 'Principal + Simple Interest'
-          },
-          {
-            label: 'Principal Amount',
-            value: calculation.principal,
-            type: 'currency',
-            tooltip: 'Initial investment amount'
-          },
-          {
-            label: 'Simple Interest',
-            value: calculation.simpleInterest,
-            type: 'currency',
-            tooltip: 'Interest earned using simple interest formula'
-          },
-          {
-            label: 'Effective Return Rate',
-            value: calculation.effectiveRate,
-            type: 'percentage',
-            tooltip: 'Total return as percentage of principal'
-          },
-          {
-            label: 'Monthly Interest',
-            value: calculation.monthlyInterest,
-            type: 'currency',
-            tooltip: 'Average interest earned per month'
-          }
-        ];
-
-        return calculatorResults;
-      }
-    } catch (err) {
-      console.error('Interest calculation error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Calculation failed. Please check your inputs.');
-      }
-      return [];
+      ];
     }
-  }, [values]);
+  }, [compoundInterestResults, values.calculationType, currency.symbol]);
 
-  const handleChange = (name: string, value: any) => {
-    try {
-      if (name === 'compoundingFrequency') {
-        setValues(prev => ({ ...prev, [name]: value }));
-        if (error) setError('');
-        return;
-      }
-
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      // Input validation
-      if (name === 'principal' && numValue < 0) {
-        setError('Principal cannot be negative');
-        return;
-      }
-      
-      if (name === 'rate' && numValue < 0) {
-        setError('Interest rate cannot be negative');
-        return;
-      }
-      
-      if (name === 'time' && numValue < 0) {
-        setError('Time period cannot be negative');
-        return;
-      }
-
-      // Check for extremely large values
-      if (numValue > Number.MAX_SAFE_INTEGER / 1000) {
-        setError('Value is too large');
-        return;
-      }
-
-      // Specific warnings for compound interest
-      if (name === 'rate' && numValue > 30) {
-        setError('Very high interest rates may cause calculation issues');
-        return;
-      }
-
-      if (name === 'time' && numValue > 30 && values.rate > 15) {
-        setError('Long time period with high interest rate may cause overflow');
-        return;
-      }
-
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Compound Interest Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Compounding works best over longer periods.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Higher compounding frequency leads to more interest.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Even small regular investments can grow significantly.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Compound Interest Calculator"
+      description="Calculate compound interest with different compounding frequencies and compare with simple interest."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Compound Interest Calculator"
-        description="Calculate compound interest with different compounding frequencies and compare with simple interest."
+        title="Interest Details"
+        description="Enter your investment or loan details to calculate interest."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={compoundInterestResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

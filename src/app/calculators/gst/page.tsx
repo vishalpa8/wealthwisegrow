@@ -1,19 +1,43 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateGST, GSTInputs } from '@/lib/calculations/tax';
 import { gstSchema } from '@/lib/validations/calculator';
 
 const initialValues = {
   amount: 10000,
   gstRate: 18,
-  type: 'exclusive'
+  type: 'exclusive' as const,
 };
 
 export default function GSTCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<GSTInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const gstResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      const validation = gstSchema.safeParse(values);
+      if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
+        throw new Error(errorMessage);
+      }
+
+      const calculation = calculateGST(values);
+
+      return calculation;
+    } catch (err: any) {
+      console.error('GST calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -21,6 +45,7 @@ export default function GSTCalculatorPage() {
       name: 'amount',
       type: 'number',
       placeholder: '10,000',
+      unit: currency.symbol,
       min: 1,
       max: 100000000,
       required: true,
@@ -50,89 +75,104 @@ export default function GSTCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      const validation = gstSchema.safeParse(values);
-      if (!validation.success) {
-        setError(validation.error.errors[0]?.message || 'Invalid input');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!gstResults) return [];
+
+    return [
+      {
+        label: 'Total Amount',
+        value: gstResults.totalAmount,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Total amount including GST'
+      },
+      {
+        label: 'Original Amount',
+        value: gstResults.originalAmount,
+        type: 'currency',
+        tooltip: 'Amount before GST'
+      },
+      {
+        label: 'GST Amount',
+        value: gstResults.gstAmount,
+        type: 'currency',
+        tooltip: 'Total GST amount'
+      },
+      {
+        label: 'CGST',
+        value: gstResults.cgst,
+        type: 'currency',
+        tooltip: 'Central GST (for intra-state transactions)'
+      },
+      {
+        label: 'SGST',
+        value: gstResults.sgst,
+        type: 'currency',
+        tooltip: 'State GST (for intra-state transactions)'
+      },
+      {
+        label: 'IGST',
+        value: gstResults.igst,
+        type: 'currency',
+        tooltip: 'Integrated GST (for inter-state transactions)'
       }
+    ];
+  }, [gstResults, currency.symbol]);
 
-      const calculation = calculateGST(validation.data as GSTInputs);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Total Amount',
-          value: calculation.totalAmount,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Total amount including GST'
-        },
-        {
-          label: 'Original Amount',
-          value: calculation.originalAmount,
-          type: 'currency',
-          tooltip: 'Amount before GST'
-        },
-        {
-          label: 'GST Amount',
-          value: calculation.gstAmount,
-          type: 'currency',
-          tooltip: 'Total GST amount'
-        },
-        {
-          label: 'CGST',
-          value: calculation.cgst,
-          type: 'currency',
-          tooltip: 'Central GST (for intra-state transactions)'
-        },
-        {
-          label: 'SGST',
-          value: calculation.sgst,
-          type: 'currency',
-          tooltip: 'State GST (for intra-state transactions)'
-        },
-        {
-          label: 'IGST',
-          value: calculation.igst,
-          type: 'currency',
-          tooltip: 'Integrated GST (for inter-state transactions)'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('GST calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    const parsedValue = (name === 'amount' || name === 'gstRate') ? parseFloat(value) : value;
-    setValues(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">GST Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand the different GST rates for goods and services.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">File your GST returns on time to avoid penalties.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Maintain proper records for GST compliance.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="GST Calculator"
+      description="Calculate GST amount, CGST, SGST, and IGST for your business transactions."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="GST Calculator"
-        description="Calculate GST amount, CGST, SGST, and IGST for your business transactions."
+        title="GST Details"
+        description="Enter amount and GST rate to calculate."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={gstResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

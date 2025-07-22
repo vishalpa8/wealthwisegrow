@@ -1,8 +1,11 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { secureCalculation } from '@/lib/security';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const courseTypes = {
   engineering: {
@@ -49,7 +52,19 @@ const initialValues = {
   riskProfile: 'moderate'
 };
 
-function calculateEducationPlan(inputs: typeof initialValues) {
+interface EducationGoalInputs {
+  childAge: number;
+  courseType: string;
+  courseDuration: number;
+  startingAge: number;
+  currentCost: number;
+  expectedInflation: number;
+  existingSavings: number;
+  expectedReturn: number;
+  riskProfile: string;
+}
+
+function calculateEducationPlan(inputs: EducationGoalInputs) {
   const {
     childAge,
     courseDuration,
@@ -79,9 +94,16 @@ function calculateEducationPlan(inputs: typeof initialValues) {
   const monthlyRate = expectedReturn / 12 / 100;
   const totalMonths = yearsToStart * 12;
   
-  const monthlyInvestment = requiredCorpus / 
-    ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * 
-    (1 + monthlyRate);
+  let monthlyInvestment = 0;
+  if (requiredCorpus > 0) {
+    if (monthlyRate === 0) {
+      monthlyInvestment = requiredCorpus / totalMonths;
+    } else {
+      monthlyInvestment = requiredCorpus / 
+        ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * 
+        (1 + monthlyRate);
+    }
+  }
 
   return {
     yearsToStart,
@@ -96,9 +118,50 @@ function calculateEducationPlan(inputs: typeof initialValues) {
 }
 
 export default function EducationPlanningCalculatorClient() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<EducationGoalInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const educationResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.startingAge <= values.childAge) {
+        throw new Error('Starting age must be greater than current age');
+      }
+      if (values.currentCost <= 0) {
+        throw new Error('Current cost must be greater than zero');
+      }
+      if (values.courseDuration <= 0) {
+        throw new Error('Course duration must be greater than zero');
+      }
+      if (values.expectedInflation < 0) {
+        throw new Error('Expected inflation cannot be negative');
+      }
+      if (values.expectedReturn < 0) {
+        throw new Error('Expected return cannot be negative');
+      }
+
+      return calculateEducationPlan(values);
+    } catch (err: any) {
+      console.error('Education planning calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
+
+  const handleCourseTypeChange = useCallback((value: string) => {
+    const course = courseTypes[value as keyof typeof courseTypes];
+    setValues(prev => ({
+      ...prev,
+      courseType: value,
+      currentCost: course.baseAmount,
+      expectedInflation: course.inflation
+    }));
+    setCalculationError(undefined);
+  }, []);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -127,6 +190,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'currentCost',
       type: 'number',
       placeholder: '1,50,000',
+      unit: currency.symbol,
       min: 10000,
       max: 10000000,
       required: true,
@@ -157,7 +221,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'expectedInflation',
       type: 'percentage',
       placeholder: '10',
-      min: 5,
+      min: 0,
       max: 20,
       step: 0.1,
       required: true,
@@ -168,6 +232,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'existingSavings',
       type: 'number',
       placeholder: '0',
+      unit: currency.symbol,
       min: 0,
       required: true,
       tooltip: 'Amount already saved for education'
@@ -177,7 +242,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'expectedReturn',
       type: 'percentage',
       placeholder: '12',
-      min: 6,
+      min: 0,
       max: 18,
       step: 0.1,
       required: true,
@@ -196,141 +261,120 @@ export default function EducationPlanningCalculatorClient() {
     }
   ];
 
-  // Handle course type change
-  const handleCourseTypeChange = (value: string) => {
-    const course = courseTypes[value as keyof typeof courseTypes];
-    setValues(prev => ({
-      ...prev,
-      courseType: value,
-      currentCost: course.baseAmount,
-      expectedInflation: course.inflation
-    }));
-  };
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!educationResults) return [];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-
-      // Validate inputs
-      if (values.startingAge <= values.childAge) {
-        setError('Starting age must be greater than current age');
-        return [];
+    return [
+      {
+        label: 'Required Monthly Investment',
+        value: educationResults.monthlyInvestment,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Monthly investment needed to reach your education goal'
+      },
+      {
+        label: 'Total Future Cost',
+        value: educationResults.totalFutureCost,
+        type: 'currency',
+        tooltip: 'Estimated total cost of education in future'
+      },
+      {
+        label: 'Years Until Education',
+        value: educationResults.yearsToStart,
+        type: 'number',
+        tooltip: 'Years remaining until education starts'
+      },
+      {
+        label: 'Future Value of Current Savings',
+        value: educationResults.futureSavings,
+        type: 'currency',
+        tooltip: 'How much your existing savings will grow to'
+      },
+      {
+        label: 'Additional Corpus Required',
+        value: educationResults.requiredCorpus,
+        type: 'currency',
+        tooltip: 'Additional amount needed after considering existing savings'
+      },
+      {
+        label: 'Impact of Inflation',
+        value: educationResults.inflationImpact,
+        type: 'currency',
+        tooltip: 'Increase in cost due to inflation'
+      },
+      {
+        label: 'Annual Investment Required',
+        value: educationResults.yearlyInvestment,
+        type: 'currency',
+        tooltip: 'Yearly investment needed'
       }
+    ];
+  }, [educationResults, currency.symbol]);
 
-      const secureResult = secureCalculation(
-        values,
-        (validatedInputs) => calculateEducationPlan(validatedInputs),
-        {
-          requiredFields: ['childAge', 'courseType', 'currentCost', 'courseDuration', 'startingAge', 'expectedInflation', 'existingSavings', 'expectedReturn'],
-          numericFields: ['childAge', 'currentCost', 'courseDuration', 'startingAge', 'expectedInflation', 'existingSavings', 'expectedReturn'],
-          minValues: {
-            childAge: 0,
-            currentCost: 10000,
-            courseDuration: 1,
-            startingAge: 15,
-            expectedInflation: 5,
-            existingSavings: 0,
-            expectedReturn: 6
-          },
-          maxValues: {
-            childAge: 20,
-            currentCost: 10000000,
-            courseDuration: 10,
-            startingAge: 25,
-            expectedInflation: 20,
-            expectedReturn: 18
-          }
-        }
-      );
-
-      const result = secureResult.result;
-
-      if (!result) {
-        setError('Calculation failed. Please verify your inputs.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Required Monthly Investment',
-          value: result.monthlyInvestment,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Monthly investment needed to reach your education goal'
-        },
-        {
-          label: 'Total Future Cost',
-          value: result.totalFutureCost,
-          type: 'currency',
-          tooltip: 'Estimated total cost of education in future'
-        },
-        {
-          label: 'Years Until Education',
-          value: result.yearsToStart,
-          type: 'number',
-          tooltip: 'Years remaining until education starts'
-        },
-        {
-          label: 'Future Value of Current Savings',
-          value: result.futureSavings,
-          type: 'currency',
-          tooltip: 'How much your existing savings will grow to'
-        },
-        {
-          label: 'Additional Corpus Required',
-          value: result.requiredCorpus,
-          type: 'currency',
-          tooltip: 'Additional amount needed after considering existing savings'
-        },
-        {
-          label: 'Impact of Inflation',
-          value: result.inflationImpact,
-          type: 'currency',
-          tooltip: 'Increase in cost due to inflation'
-        },
-        {
-          label: 'Annual Investment Required',
-          value: result.yearlyInvestment,
-          type: 'currency',
-          tooltip: 'Yearly investment needed'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Education planning calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: any) => {
     if (name === 'courseType') {
-      handleCourseTypeChange(value);
+      const course = courseTypes[value as keyof typeof courseTypes];
+      setValues(prev => ({
+        ...prev,
+        courseType: value,
+        currentCost: course.baseAmount,
+        expectedInflation: course.inflation
+      }));
     } else {
       setValues(prev => ({ ...prev, [name]: value }));
     }
-  };
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Education Planning Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Start early to benefit from compounding.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Factor in inflation to estimate future costs accurately.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider education loans as a last resort.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Education Planning Calculator"
+      description="Plan for your children's education by calculating future costs and required monthly savings."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Education Planning Calculator"
-        description="Plan for your children's education by calculating future costs and required monthly savings."
+        title="Education Details"
+        description="Enter details about your child's education goals."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={educationResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

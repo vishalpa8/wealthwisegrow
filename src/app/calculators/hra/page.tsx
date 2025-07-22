@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { secureCalculation } from '@/lib/security';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 
 const initialValues = {
   basicSalary: 50000,
@@ -12,7 +14,15 @@ const initialValues = {
   monthsRented: 12
 };
 
-function calculateHRAExemption(inputs: typeof initialValues) {
+interface HRAInputs {
+  basicSalary: number;
+  hraReceived: number;
+  rentPaid: number;
+  cityType: string;
+  monthsRented: number;
+}
+
+function calculateHRAExemption(inputs: HRAInputs) {
   const {
     basicSalary,
     hraReceived,
@@ -56,9 +66,39 @@ function calculateHRAExemption(inputs: typeof initialValues) {
 }
 
 export default function HRACalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<HRAInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const hraResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.rentPaid > values.basicSalary) {
+        throw new Error('Rent paid seems unusually high compared to basic salary');
+      }
+      if (values.basicSalary <= 0) {
+        throw new Error('Basic salary must be greater than zero');
+      }
+      if (values.hraReceived < 0) {
+        throw new Error('HRA received cannot be negative');
+      }
+      if (values.rentPaid < 0) {
+        throw new Error('Rent paid cannot be negative');
+      }
+      if (values.monthsRented <= 0 || values.monthsRented > 12) {
+        throw new Error('Months rented must be between 1 and 12');
+      }
+
+      return calculateHRAExemption(values);
+    } catch (err: any) {
+      console.error('HRA calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -66,6 +106,7 @@ export default function HRACalculatorPage() {
       name: 'basicSalary',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 1000,
       max: 1000000,
       required: true,
@@ -76,6 +117,7 @@ export default function HRACalculatorPage() {
       name: 'hraReceived',
       type: 'number',
       placeholder: '20,000',
+      unit: currency.symbol,
       min: 0,
       max: 500000,
       required: true,
@@ -86,6 +128,7 @@ export default function HRACalculatorPage() {
       name: 'rentPaid',
       type: 'number',
       placeholder: '15,000',
+      unit: currency.symbol,
       min: 0,
       max: 500000,
       required: true,
@@ -114,125 +157,116 @@ export default function HRACalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!hraResults) return [];
 
-      // Validate inputs
-      if (values.rentPaid > values.basicSalary) {
-        setError('Rent paid seems unusually high compared to basic salary');
-        return [];
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Annual HRA Exemption',
+        value: hraResults.exemption,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Total HRA exemption for the year'
+      },
+      {
+        label: 'Monthly HRA Exemption',
+        value: hraResults.monthlyExemption,
+        type: 'currency',
+        tooltip: 'Monthly HRA exemption amount'
+      },
+      {
+        label: 'Annual Taxable HRA',
+        value: hraResults.taxableHRA,
+        type: 'currency',
+        tooltip: 'HRA amount that is taxable'
+      },
+      {
+        label: 'Monthly Taxable HRA',
+        value: hraResults.monthlyTaxableHRA,
+        type: 'currency',
+        tooltip: 'Monthly taxable HRA amount'
       }
+    ];
 
-      const secureResult = secureCalculation(
-        values,
-        (validatedInputs) => calculateHRAExemption(validatedInputs),
-        {
-          requiredFields: ['basicSalary', 'hraReceived', 'rentPaid', 'cityType', 'monthsRented'],
-          numericFields: ['basicSalary', 'hraReceived', 'rentPaid', 'monthsRented'],
-          minValues: {
-            basicSalary: 1000,
-            hraReceived: 0,
-            rentPaid: 0,
-            monthsRented: 1
-          },
-          maxValues: {
-            basicSalary: 1000000,
-            hraReceived: 500000,
-            rentPaid: 500000,
-            monthsRented: 12
-          }
-        }
-      );
-
-      const result = secureResult.result;
-
-      if (!result) {
-        setError('Calculation failed. Please verify your inputs.');
-        return [];
+    // Add details of calculation
+    calculatorResults.push(
+      {
+        label: 'Actual HRA Received',
+        value: hraResults.actualHRA,
+        type: 'currency',
+        tooltip: 'Total HRA received for the year'
+      },
+      {
+        label: `${values.cityType === 'metro' ? '50%' : '40%'} of Basic`,
+        value: hraResults.basicPercent,
+        type: 'currency',
+        tooltip: `${values.cityType === 'metro' ? '50%' : '40%'} of annual basic salary`
+      },
+      {
+        label: 'Rent - 10% of Basic',
+        value: hraResults.rentMinusBasic,
+        type: 'currency',
+        tooltip: 'Rent paid minus 10% of basic salary'
       }
+    );
 
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Annual HRA Exemption',
-          value: result.exemption,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Total HRA exemption for the year'
-        },
-        {
-          label: 'Monthly HRA Exemption',
-          value: result.monthlyExemption,
-          type: 'currency',
-          tooltip: 'Monthly HRA exemption amount'
-        },
-        {
-          label: 'Annual Taxable HRA',
-          value: result.taxableHRA,
-          type: 'currency',
-          tooltip: 'HRA amount that is taxable'
-        },
-        {
-          label: 'Monthly Taxable HRA',
-          value: result.monthlyTaxableHRA,
-          type: 'currency',
-          tooltip: 'Monthly taxable HRA amount'
-        }
-      ];
+    return calculatorResults;
+  }, [hraResults, values.cityType, currency.symbol]);
 
-      // Add details of calculation
-      calculatorResults.push(
-        {
-          label: 'Actual HRA Received',
-          value: result.actualHRA,
-          type: 'currency',
-          tooltip: 'Total HRA received for the year'
-        },
-        {
-          label: `${values.cityType === 'metro' ? '50%' : '40%'} of Basic`,
-          value: result.basicPercent,
-          type: 'currency',
-          tooltip: `${values.cityType === 'metro' ? '50%' : '40%'} of annual basic salary`
-        },
-        {
-          label: 'Rent - 10% of Basic',
-          value: result.rentMinusBasic,
-          type: 'currency',
-          tooltip: 'Rent paid minus 10% of basic salary'
-        }
-      );
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('HRA calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: any) => {
     setValues(prev => ({ ...prev, [name]: value }));
-  };
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">HRA Exemption Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Keep rent receipts as proof for HRA claims.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">HRA exemption is part of your salary structure.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">If you own a house, you cannot claim HRA.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="HRA Exemption Calculator"
+      description="Calculate your House Rent Allowance (HRA) exemption and determine the taxable portion of your HRA."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="HRA Exemption Calculator"
-        description="Calculate your House Rent Allowance (HRA) exemption and determine the taxable portion of your HRA."
+        title="HRA Details"
+        description="Enter your HRA and rent details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={hraResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

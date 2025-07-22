@@ -1,129 +1,234 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
-import { v4 as uuidv4 } from "uuid";
-import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
+import React, { useState, useMemo, useCallback } from "react";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
-import { CalculatorForm, CalculatorFormField } from "@/components/ui/calculator-form";
+import { CalculatorLayout } from "@/components/layout/calculator-layout";
+import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
+import { useCurrency } from "@/contexts/currency-context";
+import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
 
-export default function RetirementCalculator() {
-  const [currentAge, setCurrentAge] = useState(30);
-  const [retirementAge, setRetirementAge] = useState(65);
-  const [currentSavings, setCurrentSavings] = useState(20000);
-  const [monthly, setMonthly] = useState(500);
-  const [rate, setRate] = useState(7);
-  const years = retirementAge - currentAge;
-  const n = years * 12;
-  const r = rate / 100 / 12;
-  // Future value of a series formula
-  const fv = currentSavings * Math.pow(1 + r, n) +
-    (monthly * (Math.pow(1 + r, n) - 1)) / r;
-  const [goal, setGoal] = useState(fv);
+interface RetirementInputs {
+  currentAge: number;
+  retirementAge: number;
+  currentSavings: number;
+  monthlyContribution: number;
+  annualReturnRate: number;
+  retirementGoal: number;
+}
 
-  const { addHistory } = useIndexedDBHistory();
+const initialValues: RetirementInputs = {
+  currentAge: 30,
+  retirementAge: 65,
+  currentSavings: 20000,
+  monthlyContribution: 500,
+  annualReturnRate: 7,
+  retirementGoal: 0, // Will be dynamically set or user-defined
+};
 
-  // Save to history when calculation changes
-  useEffect(() => {
-    if (currentAge > 0 && retirementAge > currentAge && currentSavings >= 0 && monthly >= 0 && rate > 0 && fv > 0) {
-      addHistory({
-        id: uuidv4(),
-        type: "retirement",
-        inputs: { currentAge, retirementAge, currentSavings, monthly, rate },
-        results: { fv },
-        timestamp: new Date(),
-        title: "",
-        notes: "",
-      });
+function calculateRetirement(inputs: RetirementInputs) {
+  const { currentAge, retirementAge, currentSavings, monthlyContribution, annualReturnRate } = inputs;
+
+  if (currentAge <= 0 || retirementAge <= currentAge || currentSavings < 0 || monthlyContribution < 0 || annualReturnRate < 0) {
+    throw new Error("Invalid input values.");
+  }
+
+  const yearsToRetirement = retirementAge - currentAge;
+  const n = yearsToRetirement * 12; // Total months
+  const r = annualReturnRate / 100 / 12; // Monthly rate
+
+  // Future value of current savings
+  const fvCurrentSavings = currentSavings * Math.pow(1 + r, n);
+
+  // Future value of monthly contributions (annuity)
+  let fvMonthlyContributions = 0;
+  if (r === 0) {
+    fvMonthlyContributions = monthlyContribution * n;
+  } else {
+    fvMonthlyContributions = (monthlyContribution * (Math.pow(1 + r, n) - 1)) / r;
+  }
+
+  const projectedSavings = fvCurrentSavings + fvMonthlyContributions;
+
+  return {
+    projectedSavings,
+    yearsToRetirement,
+  };
+}
+
+export default function RetirementCalculatorPage() {
+  const [values, setValues] = useState<RetirementInputs>(initialValues);
+  const [loading, setLoading] = useState(false);
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const retirementResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      return calculateRetirement(values);
+    } catch (err: any) {
+      console.error("Retirement calculation error:", err);
+      setCalculationError(err.message || "An error occurred during calculation.");
+      return null;
     }
-  }, [currentAge, retirementAge, currentSavings, monthly, rate, fv]);
+  }, [values]);
 
-  const fields: CalculatorFormField[] = [
+  // Set initial goal to calculated projected savings if not set by user
+  // This useEffect is intentionally kept here as it modifies state based on calculation results
+  // and is specific to the retirement calculator's goal setting.
+  React.useEffect(() => {
+    if (retirementResults && values.retirementGoal === 0) {
+      setValues(prev => ({ ...prev, retirementGoal: retirementResults.projectedSavings }));
+    }
+  }, [retirementResults, values.retirementGoal]);
+
+  const fields: EnhancedCalculatorField[] = [
     {
       label: "Current Age",
       name: "currentAge",
       type: "number",
-      placeholder: "e.g. 30",
-      min: 0,
+      placeholder: "30",
+      min: 18,
+      max: 90,
       required: true,
+      tooltip: "Your current age."
     },
     {
       label: "Retirement Age",
       name: "retirementAge",
       type: "number",
-      placeholder: "e.g. 65",
-      min: currentAge + 1,
+      placeholder: "65",
+      min: values.currentAge + 1,
+      max: 100,
       required: true,
+      tooltip: "The age at which you plan to retire."
     },
     {
-      label: "Current Savings ($)",
+      label: "Current Savings",
       name: "currentSavings",
       type: "number",
-      placeholder: "Enter current savings",
+      placeholder: "20,000",
+      unit: currency.symbol,
       min: 0,
       required: true,
+      tooltip: "Your total current retirement savings."
     },
     {
-      label: "Monthly Contribution ($)",
-      name: "monthly",
+      label: "Monthly Contribution",
+      name: "monthlyContribution",
       type: "number",
-      placeholder: "Enter monthly contribution",
+      placeholder: "500",
+      unit: currency.symbol,
       min: 0,
       required: true,
+      tooltip: "Amount you plan to save monthly towards retirement."
     },
     {
-      label: "Expected Return Rate (%)",
-      name: "rate",
-      type: "number",
-      placeholder: "e.g. 7",
+      label: "Annual Return Rate",
+      name: "annualReturnRate",
+      type: "percentage",
+      placeholder: "7",
       min: 0,
-      step: 0.01,
+      max: 20,
+      step: 0.1,
       required: true,
+      tooltip: "Expected annual return on your retirement investments."
+    },
+    {
+      label: "Retirement Goal",
+      name: "retirementGoal",
+      type: "number",
+      placeholder: "1,000,000",
+      unit: currency.symbol,
+      min: 0,
+      tooltip: "Your target savings amount for retirement."
     },
   ];
 
-  const values = { currentAge, retirementAge, currentSavings, monthly, rate };
-  const handleChange = (name: string, value: any) => {
-    if (name === "currentAge") setCurrentAge(Number(value));
-    if (name === "retirementAge") setRetirementAge(Number(value));
-    if (name === "currentSavings") setCurrentSavings(Number(value));
-    if (name === "monthly") setMonthly(Number(value));
-    if (name === "rate") setRate(Number(value));
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!retirementResults) return [];
+
+    return [
+      {
+        label: "Projected Savings at Retirement",
+        value: retirementResults.projectedSavings,
+        type: "currency",
+        highlight: true,
+        tooltip: "Estimated total savings you will have by your retirement age.",
+      },
+      {
+        label: "Years to Retirement",
+        value: retirementResults.yearsToRetirement,
+        type: "number",
+        tooltip: "Number of years remaining until your planned retirement age.",
+      },
+    ];
+  }, [retirementResults, currency.symbol]);
+
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
+
+  const handleCalculate = () => {
+    setLoading(true);
+    setCalculationError(undefined);
+    setTimeout(() => setLoading(false), 600);
   };
 
-  return (
-    <section className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 w-full">
-      <h1 className="text-3xl font-bold mb-6 text-blue-700">Retirement Calculator</h1>
-      <CalculatorForm fields={fields} values={values} onChange={handleChange} />
-      <AdsPlaceholder position="in-content" size="728x90" />
-      <div className="bg-yellow-50 rounded-xl p-6 text-center shadow-inner border border-yellow-100 animate-fade-in">
-        <div className="text-lg font-semibold text-yellow-700 mb-1">Projected Retirement Savings</div>
-        <div className="text-4xl font-extrabold text-yellow-700 mb-2">${fv ? fv.toLocaleString(undefined, {maximumFractionDigits: 2}) : "0.00"}</div>
-        <div className="text-sm text-gray-500">Based on your inputs above</div>
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
       </div>
-      <div className="mt-6">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Set Retirement Savings Goal ($)</label>
-        <input
-          type="number"
-          min={1}
-          value={goal}
-          onChange={e => setGoal(Number(e.target.value))}
-          className="w-full px-4 py-2 border border-gray-200 rounded-lg mb-2"
-        />
-        <GoalProgressChart currentValue={fv} goalValue={goal || 1} label="Retirement Savings Progress" unit="$" />
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Retirement Planning Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Start saving early to maximize compound growth.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Regularly review and adjust your retirement plan.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Consider inflation and healthcare costs in retirement.</p>
+          </div>
+        </div>
       </div>
-      <AdsPlaceholder position="below-results" size="336x280" />
-      <div className="mt-8 text-base text-gray-600">
-        <p>This calculator estimates your retirement savings based on your current savings, contributions, and expected return rate.</p>
-      </div>
-      <style jsx global>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(16px); }
-          to { opacity: 1; transform: none; }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.7s cubic-bezier(.4,0,.2,1);
-        }
-      `}</style>
-    </section>
+    </div>
   );
-} 
+
+  return (
+    <CalculatorLayout
+      title="Retirement Calculator"
+      description="Plan for your future with our retirement calculator. Estimate your savings, contributions, and see if you're on track to meet your retirement goals."
+      sidebar={sidebar}
+    >
+      <EnhancedCalculatorForm
+        title="Retirement Details"
+        description="Enter your retirement planning details."
+        fields={fields}
+        values={values}
+        onChange={handleChange}
+        onCalculate={handleCalculate}
+        results={retirementResults ? results : []}
+        loading={loading}
+        error={calculationError}
+        showComparison={false}
+      />
+      {retirementResults && values.retirementGoal > 0 && (
+        <div className="mt-6 card p-6">
+          <GoalProgressChart 
+            currentValue={retirementResults.projectedSavings} 
+            goalValue={values.retirementGoal} 
+            label="Retirement Savings Progress" 
+            unit={currency.symbol} 
+          />
+        </div>
+      )
+      }
+    </CalculatorLayout>
+  );
+}

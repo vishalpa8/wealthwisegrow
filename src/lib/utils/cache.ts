@@ -169,7 +169,7 @@ export function initializeCache(): void {
   
   // Clear expired cache on app start
    
-  clearExpiredCache().catch((_err) => {
+  clearExpiredCache().catch(() => {
     // Silent error handling instead of console.error
     // We don't want to break the app if cache clearing fails
   });

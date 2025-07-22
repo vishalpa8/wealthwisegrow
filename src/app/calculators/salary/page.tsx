@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateSalary, SalaryInputs } from '@/lib/calculations/tax';
 import { salarySchema } from '@/lib/validations/calculator';
 
@@ -14,9 +17,59 @@ const initialValues = {
 };
 
 export default function SalaryCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<SalaryInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const salaryResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Custom validation for salary calculations
+      if (values.ctc < 100000) {
+        throw new Error('CTC should be at least ₹1,00,000');
+      }
+
+      if (values.ctc > 100000000) {
+        throw new Error('CTC amount is too high (max ₹10 crores)');
+      }
+
+      if (values.basicPercent < 40 || values.basicPercent > 70) {
+        throw new Error('Basic salary should be between 40% and 70% of CTC');
+      }
+
+      if (values.hraPercent > 50) {
+        throw new Error('HRA cannot exceed 50% of basic salary');
+      }
+
+      if (values.pfContribution > 12) {
+        throw new Error('PF contribution cannot exceed 12%');
+      }
+
+      if (values.professionalTax > 2500) {
+        throw new Error('Professional tax cannot exceed ₹2,500 per month');
+      }
+
+      const validation = salarySchema.safeParse(values);
+      if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
+        throw new Error(errorMessage);
+      }
+
+      const calculation = calculateSalary(values);
+
+      if (!calculation || isNaN(calculation.netSalary) || calculation.netSalary <= 0) {
+        throw new Error('Unable to calculate salary. Please check your inputs.');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Salary calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please verify your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -24,6 +77,7 @@ export default function SalaryCalculatorPage() {
       name: 'ctc',
       type: 'number',
       placeholder: '12,00,000',
+      unit: currency.symbol,
       min: 100000,
       max: 100000000,
       required: true,
@@ -64,6 +118,7 @@ export default function SalaryCalculatorPage() {
       name: 'professionalTax',
       type: 'number',
       placeholder: '2,400',
+      unit: currency.symbol,
       min: 0,
       max: 2500,
       tooltip: 'Annual professional tax (varies by state, max ₹2,500)'
@@ -73,249 +128,132 @@ export default function SalaryCalculatorPage() {
       name: 'otherAllowances',
       type: 'number',
       placeholder: '50,000',
+      unit: currency.symbol,
       min: 0,
       max: 1000000,
       tooltip: 'Medical, transport, and other annual allowances'
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Custom validation for salary calculations
-      if (values.ctc < 100000) {
-        setError('CTC should be at least ₹1,00,000');
-        return [];
-      }
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!salaryResults) return [];
 
-      if (values.ctc > 100000000) {
-        setError('CTC amount is too high (max ₹10 crores)');
-        return [];
-      }
+    const yearlyNetSalary = salaryResults.netSalary * 12;
+    const takeHomePercentage = (yearlyNetSalary / values.ctc) * 100;
 
-      if (values.basicPercent < 40 || values.basicPercent > 70) {
-        setError('Basic salary should be between 40% and 70% of CTC');
-        return [];
+    return [
+      {
+        label: 'Monthly Net Salary',
+        value: salaryResults.netSalary,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Monthly take-home salary after all deductions'
+      },
+      {
+        label: 'Annual Net Salary',
+        value: yearlyNetSalary,
+        type: 'currency',
+        tooltip: 'Annual take-home salary'
+      },
+      {
+        label: 'Monthly Basic Salary',
+        value: salaryResults.basicSalary,
+        type: 'currency',
+        tooltip: 'Monthly basic salary component'
+      },
+      {
+        label: 'Monthly HRA',
+        value: salaryResults.hra,
+        type: 'currency',
+        tooltip: 'House Rent Allowance per month'
+      },
+      {
+        label: 'Monthly Gross Salary',
+        value: salaryResults.grossSalary,
+        type: 'currency',
+        tooltip: 'Gross salary before deductions'
+      },
+      {
+        label: 'Monthly PF Deduction',
+        value: salaryResults.pfDeduction,
+        type: 'currency',
+        tooltip: 'Provident Fund deduction per month'
+      },
+      {
+        label: 'Monthly Income Tax',
+        value: salaryResults.incomeTax,
+        type: 'currency',
+        tooltip: 'Estimated income tax deduction per month'
+      },
+      {
+        label: 'Total Monthly Deductions',
+        value: salaryResults.totalDeductions,
+        type: 'currency',
+        tooltip: 'All deductions per month'
+      },
+      {
+        label: 'Take-home %',
+        value: takeHomePercentage,
+        type: 'percentage',
+        tooltip: 'Net salary as percentage of CTC'
       }
+    ];
+  }, [salaryResults, values.ctc, currency.symbol]);
 
-      if (values.hraPercent > 50) {
-        setError('HRA cannot exceed 50% of basic salary');
-        return [];
-      }
-
-      if (values.pfContribution > 12) {
-        setError('PF contribution cannot exceed 12%');
-        return [];
-      }
-
-      if (values.professionalTax > 2500) {
-        setError('Professional tax cannot exceed ₹2,500 per month');
-        return [];
-      }
-
-      const validation = salarySchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        setError(errorMessage);
-        return [];
-      }
-
-      // Ensure the data is correctly typed
-      const salaryInputs: SalaryInputs = {
-        ctc: Number(validation.data.ctc),
-        basicPercent: Number(validation.data.basicPercent),
-        hraPercent: Number(validation.data.hraPercent),
-        pfContribution: Number(validation.data.pfContribution),
-        professionalTax: Number(validation.data.professionalTax),
-        otherAllowances: Number(validation.data.otherAllowances)
-      };
-      
-      const calculation = calculateSalary(salaryInputs);
-
-      // Validate calculation results
-      if (!calculation || isNaN(calculation.netSalary) || calculation.netSalary <= 0) {
-        setError('Unable to calculate salary. Please check your inputs.');
-        return [];
-      }
-
-      // Additional calculations
-      const yearlyNetSalary = calculation.netSalary * 12;
-      // const totalDeductionsAnnual = calculation.totalDeductions * 12; // Not currently used
-      const takeHomePercentage = (yearlyNetSalary / values.ctc) * 100;
-      
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Monthly Net Salary',
-          value: calculation.netSalary,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Monthly take-home salary after all deductions'
-        },
-        {
-          label: 'Annual Net Salary',
-          value: yearlyNetSalary,
-          type: 'currency',
-          tooltip: 'Annual take-home salary'
-        },
-        {
-          label: 'Monthly Basic Salary',
-          value: calculation.basicSalary,
-          type: 'currency',
-          tooltip: 'Monthly basic salary component'
-        },
-        {
-          label: 'Monthly HRA',
-          value: calculation.hra,
-          type: 'currency',
-          tooltip: 'House Rent Allowance per month'
-        },
-        {
-          label: 'Monthly Gross Salary',
-          value: calculation.grossSalary,
-          type: 'currency',
-          tooltip: 'Gross salary before deductions'
-        },
-        {
-          label: 'Monthly PF Deduction',
-          value: calculation.pfDeduction,
-          type: 'currency',
-          tooltip: 'Provident Fund deduction per month'
-        },
-        {
-          label: 'Monthly Income Tax',
-          value: calculation.incomeTax,
-          type: 'currency',
-          tooltip: 'Estimated income tax deduction per month'
-        },
-        {
-          label: 'Total Monthly Deductions',
-          value: calculation.totalDeductions,
-          type: 'currency',
-          tooltip: 'All deductions per month'
-        },
-        {
-          label: 'Take-home %',
-          value: takeHomePercentage,
-          type: 'percentage',
-          tooltip: 'Net salary as percentage of CTC'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Salary calculation error:', err);
-      setError('Calculation failed. Please verify your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      // Real-time validation
-      if (name === 'ctc') {
-        if (numValue < 0) {
-          setError('CTC cannot be negative');
-          return;
-        }
-        if (numValue > 100000000) {
-          setError('CTC amount is too high');
-          return;
-        }
-      }
-      
-      if (name === 'basicPercent') {
-        if (numValue < 0 || numValue > 100) {
-          setError('Basic salary percentage should be between 0% and 100%');
-          return;
-        }
-        if (numValue < 40) {
-          setError('Basic salary is typically at least 40% of CTC');
-          return;
-        }
-      }
-      
-      if (name === 'hraPercent') {
-        if (numValue < 0 || numValue > 100) {
-          setError('HRA percentage should be between 0% and 100%');
-          return;
-        }
-        if (numValue > 50) {
-          setError('HRA typically does not exceed 50% of basic salary');
-          return;
-        }
-      }
-      
-      if (name === 'pfContribution') {
-        if (numValue < 0 || numValue > 12) {
-          setError('PF contribution should be between 0% and 12%');
-          return;
-        }
-      }
-      
-      if (name === 'professionalTax') {
-        if (numValue < 0) {
-          setError('Professional tax cannot be negative');
-          return;
-        }
-        if (numValue > 30000) { // Annual limit
-          setError('Professional tax seems too high');
-          return;
-        }
-      }
-      
-      if (name === 'otherAllowances') {
-        if (numValue < 0) {
-          setError('Other allowances cannot be negative');
-          return;
-        }
-        if (numValue > values.ctc / 2) {
-          setError('Other allowances seem too high compared to CTC');
-          return;
-        }
-      }
-
-      // Cross-validation
-      if (name === 'basicPercent' || name === 'ctc') {
-        const basicPercent = name === 'basicPercent' ? numValue : values.basicPercent;
-        const ctc = name === 'ctc' ? numValue : values.ctc;
-        const basicAmount = (ctc * basicPercent) / 100;
-        
-        if (basicAmount < 21000) { // Minimum wage consideration
-          setError('Basic salary seems too low. Consider increasing basic %');
-          return;
-        }
-      }
-
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 800);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Salary Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand all components of your CTC.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Optimize your tax deductions to maximize take-home pay.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Review your payslip regularly for accuracy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Salary Calculator"
+      description="Convert your CTC to in-hand salary with detailed breakdown of all components and deductions."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Salary Calculator"
-        description="Convert your CTC to in-hand salary with detailed breakdown of all components and deductions."
+        title="Salary Details"
+        description="Enter your salary details to calculate your take-home pay."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={salaryResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateDividendYield, DividendYieldInputs } from '@/lib/calculations/savings';
 import { dividendYieldSchema } from '@/lib/validations/calculator';
 
@@ -11,9 +14,37 @@ const initialValues = {
 };
 
 export default function DividendYieldCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<DividendYieldInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const dividendYieldResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      const parsedValues = {
+        stockPrice: parseFloat(values.stockPrice as any),
+        annualDividend: parseFloat(values.annualDividend as any),
+        numberOfShares: parseInt(values.numberOfShares as any, 10),
+      };
+  
+      const validation = dividendYieldSchema.safeParse(parsedValues);
+  
+      if (!validation.success) {
+        const errorMessage = validation.error.errors[0]?.message;
+        if (errorMessage) {
+          throw new Error(errorMessage);
+        }
+      }
+
+      return calculateDividendYield(values);
+    } catch (err: any) {
+      console.error('Dividend yield calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -21,6 +52,7 @@ export default function DividendYieldCalculatorPage() {
       name: 'stockPrice',
       type: 'number',
       placeholder: '1,000',
+      unit: currency.symbol,
       min: 1,
       max: 100000,
       required: true,
@@ -31,6 +63,7 @@ export default function DividendYieldCalculatorPage() {
       name: 'annualDividend',
       type: 'number',
       placeholder: '50',
+      unit: currency.symbol,
       min: 0,
       max: 10000,
       required: true,
@@ -48,91 +81,98 @@ export default function DividendYieldCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    const parsedValues = {
-      stockPrice: parseFloat(values.stockPrice as any),
-      annualDividend: parseFloat(values.annualDividend as any),
-      numberOfShares: parseInt(values.numberOfShares as any, 10),
-    };
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!dividendYieldResults) return [];
 
-    const validation = dividendYieldSchema.safeParse(parsedValues);
-
-    if (!validation.success) {
-      const firstError = validation.error.errors[0]?.message;
-      if (firstError) {
-        setError(firstError);
+    return [
+      {
+        label: 'Dividend Yield',
+        value: dividendYieldResults.dividendYield,
+        type: 'percentage',
+        highlight: true,
+        tooltip: 'Annual dividend yield as percentage of stock price'
+      },
+      {
+        label: 'Total Investment',
+        value: dividendYieldResults.totalInvestment,
+        type: 'currency',
+        tooltip: 'Total amount invested in the stock'
+      },
+      {
+        label: 'Annual Dividend Income',
+        value: dividendYieldResults.annualDividendIncome,
+        type: 'currency',
+        tooltip: 'Total annual dividend income from all shares'
+      },
+      {
+        label: 'Quarterly Dividend Income',
+        value: dividendYieldResults.quarterlyDividendIncome,
+        type: 'currency',
+        tooltip: 'Quarterly dividend income'
+      },
+      {
+        label: 'Monthly Dividend Income',
+        value: dividendYieldResults.monthlyDividendIncome,
+        type: 'currency',
+        tooltip: 'Average monthly dividend income'
       }
-      return [];
-    }
+    ];
+  }, [dividendYieldResults, currency.symbol]);
 
-    try {
-      setError('');
-      const calculation = calculateDividendYield(validation.data as DividendYieldInputs);
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Dividend Yield',
-          value: calculation.dividendYield,
-          type: 'percentage',
-          highlight: true,
-          tooltip: 'Annual dividend yield as percentage of stock price'
-        },
-        {
-          label: 'Total Investment',
-          value: calculation.totalInvestment,
-          type: 'currency',
-          tooltip: 'Total amount invested in the stock'
-        },
-        {
-          label: 'Annual Dividend Income',
-          value: calculation.annualDividendIncome,
-          type: 'currency',
-          tooltip: 'Total annual dividend income from all shares'
-        },
-        {
-          label: 'Quarterly Dividend Income',
-          value: calculation.quarterlyDividendIncome,
-          type: 'currency',
-          tooltip: 'Quarterly dividend income'
-        },
-        {
-          label: 'Monthly Dividend Income',
-          value: calculation.monthlyDividendIncome,
-          type: 'currency',
-          tooltip: 'Average monthly dividend income'
-        }
-      ];
-
-      return calculatorResults;
-    } catch {
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: any) => {
     setValues(prev => ({ ...prev, [name]: value }));
-  };
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Dividend Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Focus on companies with consistent dividend history.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">High dividend yield doesn't always mean a good investment.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Reinvest dividends to accelerate wealth accumulation.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Dividend Yield Calculator"
+      description="Calculate dividend yield and income from your stock investments."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Dividend Yield Calculator"
-        description="Calculate dividend yield and income from your stock investments."
+        title="Dividend Details"
+        description="Enter your stock and dividend information."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={dividendYieldResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

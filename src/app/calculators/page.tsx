@@ -1,6 +1,8 @@
 import React from 'react';
+import Link from 'next/link';
 import { CalculatorList } from "@/components/ui/calculator-list";
 import type { Metadata } from "next";
+import { CalculatorLayout } from "@/components/layout/calculator-layout";
 
 export const metadata: Metadata = {
   title: "Financial Calculators | WealthWise Hub",
@@ -14,10 +16,30 @@ export const metadata: Metadata = {
 };
 
 export default function CalculatorsPage() {
+  const sidebar = (
+    <div className="space-y-4">
+      {/* You can add specific sidebar content for the main calculators page here */}
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Quick Links</h3>
+        <ul className="space-y-2">
+          <li><Link href="/calculators/mortgage" className="text-blue-600 hover:underline">Mortgage Calculator</Link></li>
+          <li><Link href="/calculators/loan" className="text-blue-600 hover:underline">Loan Calculator</Link></li>
+          <li><Link href="/calculators/investment" className="text-blue-600 hover:underline">Investment Calculator</Link></li>
+          <li><Link href="/calculators/retirement" className="text-blue-600 hover:underline">Retirement Calculator</Link></li>
+        </ul>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <CalculatorLayout
+      title="Financial Calculators"
+      description="Make informed financial decisions with our comprehensive suite of calculators. From mortgages to investments, we've got you covered."
+      sidebar={sidebar}
+      containerSize="full"
+    >
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700">
+      <section className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 py-16 sm:py-20 lg:py-24 mb-8">
         <div className="absolute inset-0 bg-black/20"></div>
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 to-purple-600/90"></div>
         
@@ -28,45 +50,43 @@ export default function CalculatorsPage() {
           }}></div>
         </div>
 
-        <div className="relative container-wide py-16 sm:py-20 lg:py-24">
-          <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6">
-              <span className="mr-2">🧮</span>
-              26+ Professional Calculators
-            </div>
-            
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
-              Financial Calculators
-              <span className="block text-blue-200 text-3xl sm:text-4xl lg:text-5xl mt-2">
-                Made Simple
-              </span>
-            </h1>
-            
-            <p className="text-xl sm:text-2xl text-blue-100 mb-8 leading-relaxed max-w-3xl mx-auto">
-              Make informed financial decisions with our comprehensive suite of calculators. 
-              From mortgages to investments, we've got you covered.
-            </p>
+        <div className="relative container-wide text-center max-w-4xl mx-auto">
+          <div className="inline-flex items-center px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white/90 text-sm font-medium mb-6">
+            <span className="mr-2">🧮</span>
+            26+ Professional Calculators
+          </div>
+          
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 tracking-tight">
+            Financial Calculators
+            <span className="block text-blue-200 text-3xl sm:text-4xl lg:text-5xl mt-2">
+              Made Simple
+            </span>
+          </h1>
+          
+          <p className="text-xl sm:text-2xl text-blue-100 mb-8 leading-relaxed max-w-3xl mx-auto">
+            Make informed financial decisions with our comprehensive suite of calculators. 
+            From mortgages to investments, we've got you covered.
+          </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <div className="flex items-center text-white/90">
-                <span className="mr-2">✓</span>
-                <span>Free to Use</span>
-              </div>
-              <div className="flex items-center text-white/90">
-                <span className="mr-2">✓</span>
-                <span>Accurate Results</span>
-              </div>
-              <div className="flex items-center text-white/90">
-                <span className="mr-2">✓</span>
-                <span>No Registration</span>
-              </div>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div className="flex items-center text-white/90">
+              <span className="mr-2">✓</span>
+              <span>Free to Use</span>
+            </div>
+            <div className="flex items-center text-white/90">
+              <span className="mr-2">✓</span>
+              <span>Accurate Results</span>
+            </div>
+            <div className="flex items-center text-white/90">
+              <span className="mr-2">✓</span>
+              <span>No Registration</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Quick Stats */}
-      <section className="relative -mt-16 z-10">
+      <section className="relative -mt-16 z-10 mb-8">
         <div className="container-wide">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
             <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100 text-center">
@@ -278,16 +298,16 @@ export default function CalculatorsPage() {
               <span className="mr-2">🧮</span>
               Browse All Calculators
             </a>
-            <a 
+            <Link 
               href="/calculators/mortgage" 
               className="inline-flex items-center px-8 py-4 bg-blue-500 text-white font-semibold rounded-2xl hover:bg-blue-400 transition-colors duration-200"
             >
               <span className="mr-2">🏠</span>
               Start with Mortgage
-            </a>
+            </Link>
           </div>
         </div>
       </section>
-    </div>
+    </CalculatorLayout>
   );
 }

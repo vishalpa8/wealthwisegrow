@@ -1,6 +1,9 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import {
   parseRobustNumber,
   safeDivide,
@@ -152,9 +155,45 @@ function calculateBusinessLoan(inputs: BusinessLoanInputs) {
 }
 
 export default function BusinessLoanCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<BusinessLoanInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const businessLoanResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Validate inputs
+      if (values.loanAmount <= 0) {
+        throw new Error('Loan amount must be greater than zero');
+      }
+
+      if (values.interestRate <= 0) {
+        throw new Error('Interest rate must be greater than zero');
+      }
+
+      if (values.businessRevenue <= 0) {
+        throw new Error('Business revenue must be greater than zero');
+      }
+
+      if (values.creditScore < 300 || values.creditScore > 900) {
+        throw new Error('Credit score must be between 300 and 900');
+      }
+
+      const calculation = calculateBusinessLoan(values);
+
+      if (isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
+        throw new Error('Unable to calculate payment. Please check your inputs.');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Business loan calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -175,6 +214,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'loanAmount',
       type: 'number',
       placeholder: '20,00,000',
+      unit: currency.symbol,
       min: 100000,
       max: 500000000,
       required: true,
@@ -217,6 +257,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'collateralValue',
       type: 'number',
       placeholder: '25,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 1000000000,
       tooltip: 'Value of assets offered as collateral'
@@ -226,6 +267,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'businessRevenue',
       type: 'number',
       placeholder: '50,00,000',
+      unit: currency.symbol,
       min: 500000,
       max: 10000000000,
       required: true,
@@ -236,6 +278,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'existingDebt',
       type: 'number',
       placeholder: '5,00,000',
+      unit: currency.symbol,
       min: 0,
       max: 100000000,
       tooltip: 'Current outstanding business loans'
@@ -263,172 +306,142 @@ export default function BusinessLoanCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (values.loanAmount <= 0) {
-        setError('Loan amount must be greater than zero');
-        return [];
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!businessLoanResults) return [];
+
+    const calculatorResults: CalculatorResult[] = [
+      {
+        label: 'Monthly Payment',
+        value: businessLoanResults.monthlyPayment,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Monthly payment amount for the business loan'
+      },
+      {
+        label: 'Total Payment',
+        value: businessLoanResults.totalPayment,
+        type: 'currency',
+        tooltip: 'Total amount to be paid over loan term'
+      },
+      {
+        label: 'Total Interest',
+        value: businessLoanResults.totalInterest,
+        type: 'currency',
+        tooltip: 'Total interest paid over the loan term'
+      },
+      {
+        label: 'Processing Fee',
+        value: businessLoanResults.processingFeeAmount,
+        type: 'currency',
+        tooltip: 'One-time processing fee charged by lender'
+      },
+      {
+        label: 'Total Cost',
+        value: businessLoanResults.totalCost,
+        type: 'currency',
+        tooltip: 'Total cost including interest and fees'
+      },
+      {
+        label: 'Net Cost (After Tax)',
+        value: businessLoanResults.netCost,
+        type: 'currency',
+        tooltip: 'Total cost after considering tax benefits'
+      },
+      {
+        label: 'Annual Tax Saving',
+        value: businessLoanResults.annualTaxSaving,
+        type: 'currency',
+        tooltip: 'Annual tax savings from interest deduction'
+      },
+      {
+        label: 'Debt-to-Income Ratio',
+        value: businessLoanResults.debtToIncomeRatio,
+        type: 'percentage',
+        tooltip: 'Total debt as percentage of business revenue'
+      },
+      {
+        label: 'Loan-to-Value Ratio',
+        value: businessLoanResults.loanToValueRatio,
+        type: 'percentage',
+        tooltip: 'Loan amount as percentage of collateral value'
+      },
+      {
+        label: 'Debt Service Coverage Ratio',
+        value: businessLoanResults.dscr,
+        type: 'number',
+        tooltip: 'Ability to service debt payments (should be > 1.25)'
+      },
+      {
+        label: 'Eligibility Score',
+        value: businessLoanResults.eligibilityScore,
+        type: 'number',
+        tooltip: 'Loan eligibility score based on your profile (out of 100)'
+      },
+      {
+        label: 'Risk Level',
+        value: businessLoanResults.riskLevel,
+        type: 'number',
+        tooltip: 'Risk assessment based on your business profile'
       }
+    ];
 
-      if (values.interestRate <= 0) {
-        setError('Interest rate must be greater than zero');
-        return [];
-      }
+    return calculatorResults;
+  }, [businessLoanResults, currency.symbol]);
 
-      if (values.businessRevenue <= 0) {
-        setError('Business revenue must be greater than zero');
-        return [];
-      }
-
-      if (values.creditScore < 300 || values.creditScore > 900) {
-        setError('Credit score must be between 300 and 900');
-        return [];
-      }
-
-      const calculation = calculateBusinessLoan(values);
-
-      if (isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
-        setError('Unable to calculate payment. Please check your inputs.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Monthly Payment',
-          value: calculation.monthlyPayment,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Monthly payment amount for the business loan'
-        },
-        {
-          label: 'Total Payment',
-          value: calculation.totalPayment,
-          type: 'currency',
-          tooltip: 'Total amount to be paid over loan term'
-        },
-        {
-          label: 'Total Interest',
-          value: calculation.totalInterest,
-          type: 'currency',
-          tooltip: 'Total interest paid over the loan term'
-        },
-        {
-          label: 'Processing Fee',
-          value: calculation.processingFeeAmount,
-          type: 'currency',
-          tooltip: 'One-time processing fee charged by lender'
-        },
-        {
-          label: 'Total Cost',
-          value: calculation.totalCost,
-          type: 'currency',
-          tooltip: 'Total cost including interest and fees'
-        },
-        {
-          label: 'Net Cost (After Tax)',
-          value: calculation.netCost,
-          type: 'currency',
-          tooltip: 'Total cost after considering tax benefits'
-        },
-        {
-          label: 'Annual Tax Saving',
-          value: calculation.annualTaxSaving,
-          type: 'currency',
-          tooltip: 'Annual tax savings from interest deduction'
-        },
-        {
-          label: 'Debt-to-Income Ratio',
-          value: calculation.debtToIncomeRatio,
-          type: 'percentage',
-          tooltip: 'Total debt as percentage of business revenue'
-        },
-        {
-          label: 'Loan-to-Value Ratio',
-          value: calculation.loanToValueRatio,
-          type: 'percentage',
-          tooltip: 'Loan amount as percentage of collateral value'
-        },
-        {
-          label: 'Debt Service Coverage Ratio',
-          value: calculation.dscr,
-          type: 'number',
-          tooltip: 'Ability to service debt payments (should be > 1.25)'
-        },
-        {
-          label: 'Eligibility Score',
-          value: calculation.eligibilityScore,
-          type: 'number',
-          tooltip: 'Loan eligibility score based on your profile (out of 100)'
-        },
-        {
-          label: 'Risk Level',
-          value: calculation.riskLevel,
-          type: 'number',
-          tooltip: 'Risk assessment based on your business profile'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Business loan calculation error:', err);
-      setError('Calculation failed. Please check your inputs.');
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    try {
-      // For select fields, we don't need to parse the value
-      if (name === 'loanType') {
-        setValues(prev => ({ ...prev, [name]: value }));
-        if (error) setError('');
-        return;
-      }
-      
-      // Use parseRobustNumber for numeric fields
-      const numValue = parseRobustNumber(value);
-      
-      // Specific validation for required numeric fields
-      if ((name === 'loanAmount' || name === 'interestRate' || name === 'businessRevenue') && numValue < 0) {
-        setError(`${name} cannot be negative`);
-        return;
-      }
-      
-      if (name === 'creditScore' && (numValue < 300 || numValue > 900)) {
-        setError('Credit score must be between 300 and 900');
-        return;
-      }
-
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError('');
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 800);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Business Loan Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Maintain a strong credit score for better rates.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Understand the different types of business loans.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Prepare a solid business plan before applying.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Business Loan Calculator"
+      description="Calculate EMI, eligibility, and total cost for various business loan types. Includes risk assessment and tax benefit analysis."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Business Loan Calculator"
-        description="Calculate EMI, eligibility, and total cost for various business loan types. Includes risk assessment and tax benefit analysis."
+        title="Business Loan Details"
+        description="Enter your business loan details to get a comprehensive analysis."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={businessLoanResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

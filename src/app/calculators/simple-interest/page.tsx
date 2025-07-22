@@ -1,11 +1,14 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { 
-  parseRobustNumber, 
-  safeDivide, 
-  safeMultiply, 
-  safeAdd, 
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
+import {
+  parseRobustNumber,
+  safeDivide,
+  safeMultiply,
+  safeAdd,
   roundToPrecision
 } from '@/lib/utils/number';
 
@@ -26,11 +29,6 @@ function calculateSimpleInterest(inputs: SimpleInterestInputs) {
   const rate = parseRobustNumber(inputs.rate);
   const time = parseRobustNumber(inputs.time);
 
-  // Validate inputs
-  if (principal <= 0) throw new Error('Principal must be positive');
-  if (rate < 0) throw new Error('Interest rate cannot be negative');
-  if (time <= 0) throw new Error('Time period must be positive');
-
   // Simple Interest formula: SI = P * R * T / 100
   const simpleInterest = safeDivide(
     safeMultiply(safeMultiply(principal, rate), time),
@@ -49,9 +47,39 @@ function calculateSimpleInterest(inputs: SimpleInterestInputs) {
 }
 
 export default function SimpleInterestCalculatorPage() {
-  const [values, setValues] = useState(initialValues);
+  const [values, setValues] = useState<SimpleInterestInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
+
+  const simpleInterestResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      // Basic validation before calculation
+      if (values.principal <= 0) {
+        throw new Error('Principal amount must be greater than zero');
+      }
+      if (values.rate < 0) {
+        throw new Error('Interest rate cannot be negative');
+      }
+      if (values.time <= 0) {
+        throw new Error('Time period must be greater than zero');
+      }
+
+      const calculation = calculateSimpleInterest(values);
+
+      if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
+        throw new Error('Calculation overflow. Please use smaller values.');
+      }
+
+      return calculation;
+    } catch (err: any) {
+      console.error('Simple interest calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
+      return null;
+    }
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -59,6 +87,7 @@ export default function SimpleInterestCalculatorPage() {
       name: 'principal',
       type: 'number',
       placeholder: '1,00,000',
+      unit: currency.symbol,
       min: 100,
       max: 100000000,
       required: true,
@@ -89,153 +118,98 @@ export default function SimpleInterestCalculatorPage() {
     }
   ];
 
-  const results = useMemo(() => {
-    try {
-      setError('');
-      
-      // Validate inputs
-      if (!values.principal || !values.rate || !values.time) {
-        setError('Please fill in all required fields');
-        return [];
-      }
+  const results: CalculatorResult[] = useMemo(() => {
+    if (!simpleInterestResults) return [];
 
-      if (values.principal <= 0) {
-        setError('Principal amount must be greater than zero');
-        return [];
+    return [
+      {
+        label: 'Total Amount',
+        value: simpleInterestResults.totalAmount,
+        type: 'currency',
+        highlight: true,
+        tooltip: 'Principal + Simple Interest'
+      },
+      {
+        label: 'Principal Amount',
+        value: simpleInterestResults.principal,
+        type: 'currency',
+        tooltip: 'Initial investment amount'
+      },
+      {
+        label: 'Simple Interest',
+        value: simpleInterestResults.simpleInterest,
+        type: 'currency',
+        tooltip: 'Interest earned using simple interest formula'
+      },
+      {
+        label: 'Effective Return Rate',
+        value: simpleInterestResults.effectiveRate,
+        type: 'percentage',
+        tooltip: 'Total return as percentage of principal'
+      },
+      {
+        label: 'Monthly Interest',
+        value: simpleInterestResults.monthlyInterest,
+        type: 'currency',
+        tooltip: 'Average interest earned per month'
       }
+    ];
+  }, [simpleInterestResults, currency.symbol]);
 
-      if (values.rate < 0) {
-        setError('Interest rate cannot be negative');
-        return [];
-      }
-
-      if (values.time <= 0) {
-        setError('Time period must be greater than zero');
-        return [];
-      }
-
-      if (values.principal > 100000000) {
-        setError('Principal amount is too large');
-        return [];
-      }
-
-      if (values.rate > 50) {
-        setError('Interest rate seems unreasonably high');
-        return [];
-      }
-
-      if (values.time > 50) {
-        setError('Time period is too long');
-        return [];
-      }
-
-      const calculation = calculateSimpleInterest(values);
-
-      // Validate calculation results
-      if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
-        setError('Calculation overflow. Please use smaller values.');
-        return [];
-      }
-
-      const calculatorResults: CalculatorResult[] = [
-        {
-          label: 'Total Amount',
-          value: calculation.totalAmount,
-          type: 'currency',
-          highlight: true,
-          tooltip: 'Principal + Simple Interest'
-        },
-        {
-          label: 'Principal Amount',
-          value: calculation.principal,
-          type: 'currency',
-          tooltip: 'Initial investment amount'
-        },
-        {
-          label: 'Simple Interest',
-          value: calculation.simpleInterest,
-          type: 'currency',
-          tooltip: 'Interest earned using simple interest formula'
-        },
-        {
-          label: 'Effective Return Rate',
-          value: calculation.effectiveRate,
-          type: 'percentage',
-          tooltip: 'Total return as percentage of principal'
-        },
-        {
-          label: 'Monthly Interest',
-          value: calculation.monthlyInterest,
-          type: 'currency',
-          tooltip: 'Average interest earned per month'
-        }
-      ];
-
-      return calculatorResults;
-    } catch (err) {
-      console.error('Simple interest calculation error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Calculation failed. Please check your inputs.');
-      }
-      return [];
-    }
-  }, [values]);
-
-  const handleChange = (name: string, value: any) => {
-    try {
-      const numValue = typeof value === 'string' ? parseFloat(value) || 0 : value;
-      
-      // Input validation
-      if (name === 'principal' && numValue < 0) {
-        setError('Principal cannot be negative');
-        return;
-      }
-      
-      if (name === 'rate' && numValue < 0) {
-        setError('Interest rate cannot be negative');
-        return;
-      }
-      
-      if (name === 'time' && numValue < 0) {
-        setError('Time period cannot be negative');
-        return;
-      }
-
-      // Check for extremely large values
-      if (numValue > Number.MAX_SAFE_INTEGER / 1000) {
-        setError('Value is too large');
-        return;
-      }
-
-      setValues(prev => ({ ...prev, [name]: value }));
-      if (error) setError(''); // Clear error on valid input
-    } catch (err) {
-      console.error('Input change error:', err);
-      setError('Invalid input format');
-    }
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 400);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Simple Interest Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Simple interest is calculated only on the principal amount.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Often used for short-term loans or basic investments.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Compare with compound interest for long-term gains.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Simple Interest Calculator"
+      description="Calculate simple interest earned on investments or loans using the formula: SI = P × R × T ÷ 100"
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Simple Interest Calculator"
-        description="Calculate simple interest earned on investments or loans using the formula: SI = P × R × T ÷ 100"
+        title="Simple Interest Details"
+        description="Enter the principal, rate, and time to calculate simple interest."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
-        results={results}
+        results={simpleInterestResults ? results : []}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

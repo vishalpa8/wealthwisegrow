@@ -1,5 +1,5 @@
 import { generateCalculatorMetadata } from '@/lib/seo/metadata';
-import BreakEvenCalculatorClient from './client';
+import BreakEvenCalculator from './BreakEvenCalculator';
 
 export const metadata = generateCalculatorMetadata(
   'break-even',
@@ -7,6 +7,4 @@ export const metadata = generateCalculatorMetadata(
   'Calculate the point at which total revenue equals total costs, indicating when your business becomes profitable.'
 );
 
-export default function BreakEvenCalculatorPage() {
-  return <BreakEvenCalculatorClient />;
-}
+export default BreakEvenCalculator;
