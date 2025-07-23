@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLoan } from '@/lib/calculations/loan';
-import { loanSchema } from '@/lib/validations/calculator';
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   principal: 1500000,
@@ -31,45 +31,25 @@ export default function EducationLoanCalculatorPage() {
   const educationLoanResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Custom validation for education loans
-      if (values.principal < 50000) {
-        throw new Error('Education loan amount should be at least ' + currency.symbol + '50,000');
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues = {
+        principal: Math.abs(parseRobustNumber(values.principal)) || 50000,
+        rate: Math.abs(parseRobustNumber(values.rate)) || 8.5,
+        years: Math.max(1, Math.abs(parseRobustNumber(values.years)) || 10),
+        extraPayment: Math.abs(parseRobustNumber(values.extraPayment)) || 0
+      };
 
-      if (values.principal > 100000000) {
-        throw new Error('Education loan amount is too high (max ' + currency.symbol + '10 crores)');
-      }
-
-      if (values.rate < 6 || values.rate > 16) {
-        throw new Error('Education loan interest rate should be between 6% and 16%');
-      }
-
-      if (values.years < 5 || values.years > 20) {
-        throw new Error('Education loan tenure should be between 5 and 20 years');
-      }
-
-      const validation = loanSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
-      const calculation = calculateLoan(values);
-
-      // Validate calculation results
-      if (!calculation || isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
-        throw new Error('Unable to calculate EMI. Please check your inputs.');
-      }
+      const calculation = calculateLoan(validatedValues);
 
       // Education loan specific calculations
       const totalInterest = calculation.totalInterest;
-      const principal = values.principal;
+      const principal = validatedValues.principal;
       
       // Tax benefits on education loan interest (Section 80E in India)
-      const annualInterest = totalInterest / values.years;
+      const annualInterest = totalInterest / validatedValues.years;
       const taxBracket = 0.30; // Assume 30% tax bracket
       const annualTaxSaving = Math.min(annualInterest, 50000) * taxBracket; // Assuming some limit
-      const totalTaxSaving = annualTaxSaving * values.years;
+      const totalTaxSaving = annualTaxSaving * validatedValues.years;
       
       // Career impact calculations
       const educationROI = principal * 0.15; // Assume education increases earning by 15% of loan amount annually
@@ -85,7 +65,7 @@ export default function EducationLoanCalculatorPage() {
       setCalculationError(err.message || 'Calculation failed. Please verify your inputs.');
       return null;
     }
-  }, [values, currency.symbol]);
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -94,9 +74,6 @@ export default function EducationLoanCalculatorPage() {
       type: 'number',
       placeholder: '15,00,000',
       unit: currency.symbol,
-      min: 50000,
-      max: 100000000,
-      required: true,
       tooltip: 'Total loan amount for educational expenses'
     },
     {
@@ -104,10 +81,7 @@ export default function EducationLoanCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '8.5',
-      min: 6,
-      max: 16,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate (typically 7-12% for education loans in India)'
     },
     {
@@ -115,10 +89,7 @@ export default function EducationLoanCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '10',
-      min: 5,
-      max: 20,
       unit: 'years',
-      required: true,
       tooltip: 'Duration to repay the education loan (typically 5-15 years)'
     },
     {
@@ -127,8 +98,6 @@ export default function EducationLoanCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 50000,
       tooltip: 'Additional payment to reduce loan burden faster'
     }
   ];

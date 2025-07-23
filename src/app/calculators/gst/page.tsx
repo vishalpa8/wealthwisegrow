@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateGST, GSTInputs } from '@/lib/calculations/tax';
-import { gstSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   amount: 10000,
@@ -23,12 +23,7 @@ export default function GSTCalculatorPage() {
   const gstResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = gstSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateGST(values);
 
       return calculation;
@@ -46,9 +41,6 @@ export default function GSTCalculatorPage() {
       type: 'number',
       placeholder: '10,000',
       unit: currency.symbol,
-      min: 1,
-      max: 100000000,
-      required: true,
       tooltip: 'Enter the base amount (exclusive) or total amount (inclusive)'
     },
     {
@@ -56,17 +48,13 @@ export default function GSTCalculatorPage() {
       name: 'gstRate',
       type: 'percentage',
       placeholder: '18',
-      min: 0,
-      max: 28,
       step: 0.1,
-      required: true,
       tooltip: 'GST rate applicable (0%, 5%, 12%, 18%, 28%)'
     },
     {
       label: 'Amount Type',
       name: 'type',
       type: 'select',
-      required: true,
       options: [
         { value: 'exclusive', label: 'GST Exclusive (Add GST)' },
         { value: 'inclusive', label: 'GST Inclusive (Extract GST)' }

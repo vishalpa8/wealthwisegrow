@@ -25,11 +25,13 @@ const initialValues: RetirementInputs = {
 };
 
 function calculateRetirement(inputs: RetirementInputs) {
-  const { currentAge, retirementAge, currentSavings, monthlyContribution, annualReturnRate } = inputs;
+  const currentAge = Math.max(Math.abs(inputs.currentAge || 25), 1);
+  const retirementAge = Math.max(Math.abs(inputs.retirementAge || 65), currentAge + 1);
+  const currentSavings = Math.abs(inputs.currentSavings || 0);
+  const monthlyContribution = Math.abs(inputs.monthlyContribution || 0);
+  const annualReturnRate = Math.abs(inputs.annualReturnRate || 0);
 
-  if (currentAge <= 0 || retirementAge <= currentAge || currentSavings < 0 || monthlyContribution < 0 || annualReturnRate < 0) {
-    throw new Error("Invalid input values.");
-  }
+  // Handle edge cases gracefully without throwing errors
 
   const yearsToRetirement = retirementAge - currentAge;
   const n = yearsToRetirement * 12; // Total months
@@ -87,9 +89,6 @@ export default function RetirementCalculatorPage() {
       name: "currentAge",
       type: "number",
       placeholder: "30",
-      min: 18,
-      max: 90,
-      required: true,
       tooltip: "Your current age."
     },
     {
@@ -97,9 +96,6 @@ export default function RetirementCalculatorPage() {
       name: "retirementAge",
       type: "number",
       placeholder: "65",
-      min: values.currentAge + 1,
-      max: 100,
-      required: true,
       tooltip: "The age at which you plan to retire."
     },
     {
@@ -108,8 +104,6 @@ export default function RetirementCalculatorPage() {
       type: "number",
       placeholder: "20,000",
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: "Your total current retirement savings."
     },
     {
@@ -118,8 +112,6 @@ export default function RetirementCalculatorPage() {
       type: "number",
       placeholder: "500",
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: "Amount you plan to save monthly towards retirement."
     },
     {
@@ -127,10 +119,7 @@ export default function RetirementCalculatorPage() {
       name: "annualReturnRate",
       type: "percentage",
       placeholder: "7",
-      min: 0,
-      max: 20,
       step: 0.1,
-      required: true,
       tooltip: "Expected annual return on your retirement investments."
     },
     {
@@ -139,7 +128,6 @@ export default function RetirementCalculatorPage() {
       type: "number",
       placeholder: "1,000,000",
       unit: currency.symbol,
-      min: 0,
       tooltip: "Your target savings amount for retirement."
     },
   ];

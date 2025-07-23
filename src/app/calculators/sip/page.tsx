@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateSIP, SIPInputs } from '@/lib/calculations/savings';
-import { sipSchema } from '@/lib/validations/calculator';
+// Removed sipSchema import as we're using flexible validation
 
 const initialValues = {
   monthlyInvestment: 5000,
@@ -23,12 +23,7 @@ export default function SIPCalculatorPage() {
   const sipResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = sipSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateSIP(values);
       
       if (calculation.error) {
@@ -50,9 +45,6 @@ export default function SIPCalculatorPage() {
       type: 'number',
       placeholder: '5,000',
       unit: currency.symbol,
-      min: 100,
-      max: 1000000,
-      required: true,
       tooltip: 'Amount you plan to invest every month through SIP'
     },
     {
@@ -60,9 +52,6 @@ export default function SIPCalculatorPage() {
       name: 'annualReturn',
       type: 'percentage',
       placeholder: '12',
-      min: 1,
-      max: 50,
-      required: true,
       tooltip: 'Expected annual return rate from your investments'
     },
     {
@@ -70,10 +59,7 @@ export default function SIPCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '10',
-      min: 1,
-      max: 50,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you plan to continue the SIP'
     }
   ];

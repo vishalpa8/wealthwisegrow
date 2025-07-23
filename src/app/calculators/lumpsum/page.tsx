@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLumpsum, LumpsumInputs } from '@/lib/calculations/savings';
-import { lumpsumSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   principal: 100000,
@@ -23,12 +23,7 @@ export default function LumpsumCalculatorPage() {
   const lumpsumResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = lumpsumSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateLumpsum(values);
       
       return calculation;
@@ -46,9 +41,6 @@ export default function LumpsumCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 100000000,
-      required: true,
       tooltip: 'One-time investment amount'
     },
     {
@@ -56,9 +48,6 @@ export default function LumpsumCalculatorPage() {
       name: 'annualReturn',
       type: 'percentage',
       placeholder: '12',
-      min: 1,
-      max: 50,
-      required: true,
       tooltip: 'Expected annual return rate from your investment'
     },
     {
@@ -66,10 +55,7 @@ export default function LumpsumCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '10',
-      min: 1,
-      max: 50,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years to keep the investment'
     }
   ];

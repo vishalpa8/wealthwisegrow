@@ -26,7 +26,7 @@ export function parseRobustNumber(value: any): number {
   // If already a number
   if (typeof value === 'number') {
     // Handle NaN, Infinity, -Infinity, and very small numbers that might be calculation artifacts
-    if (!isFinite(value) || isNaN(value) || Math.abs(value) < 1e-10) {
+    if (!isFinite(value) || isNaN(value)) {
       return 0;
     }
     return value;
@@ -220,7 +220,7 @@ export function roundToPrecision(value: number, decimals: number = 2): number {
  */
 export function isEffectivelyZero(value: number, tolerance: number = 1e-10): boolean {
   const parsed = parseRobustNumber(value);
-  return Math.abs(parsed) < tolerance;
+  return Math.abs(parsed) <= tolerance;
 }
 
 /**

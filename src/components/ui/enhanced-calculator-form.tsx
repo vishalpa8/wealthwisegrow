@@ -69,7 +69,6 @@ export function EnhancedCalculatorForm({
 }: EnhancedCalculatorFormProps) {
   const { formatCurrency, formatNumber } = useCurrency();
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const formRef = useRef<HTMLDivElement>(null);
 
   // Handle keyboard navigation
@@ -91,42 +90,22 @@ export function EnhancedCalculatorForm({
     }
   }, [showTooltip]);
 
-  // Validate field value
-  const validateField = (field: EnhancedCalculatorField, value: any): string | null => {
-    const parsedValue = parseRobustNumber(value);
-
-    if (field.required && (parsedValue === 0)) {
-      return `${field.label} is required`;
-    }
-
-    if ((field.type === 'number' || field.type === 'percentage') && !isFinite(parsedValue)) {
-      return `${field.label} must be a valid number`;
-    }
-
-    if (field.max !== undefined && parsedValue > field.max) {
-      return `${field.label} cannot exceed ${formatNumber(field.max)}`;
-    }
-
-    return null;
-  };
-
-  // Handle field change with validation
+  // Handle field change with ultra-flexible validation
   const handleFieldChange = (field: EnhancedCalculatorField, value: any) => {
-    const error = validateField(field, value);
-    setValidationErrors(prev => ({
-      ...prev,
-      [field.name]: error || ''
-    }));
-
-    onChange(field.name, value);
+    // For number and percentage fields, ensure we handle empty values gracefully
+    if (field.type === 'number' || field.type === 'percentage') {
+      if (value === '' || value === null || value === undefined) {
+        onChange(field.name, 0);
+        return;
+      }
+      
+      const parsedValue = parseRobustNumber(value);
+      // Accept any value - parseRobustNumber handles all edge cases
+      onChange(field.name, parsedValue);
+    } else {
+      onChange(field.name, value);
+    }
   };
-
-  // Handle number input change with proper decimal support
-  // const handleNumberInputChange = (field: EnhancedCalculatorField, inputValue: string) => {
-  //   // Parse the input safely to handle all edge cases
-  //   const numValue = parseRobustNumber(inputValue);
-  //   handleFieldChange(field, numValue);
-  // };
 
   // Export results as CSV
   const exportResults = () => {
@@ -184,7 +163,6 @@ export function EnhancedCalculatorForm({
   };
 
   const renderField = (field: EnhancedCalculatorField) => {
-    const hasError = validationErrors[field.name];
     const fieldId = `field-${field.name}`;
     const currentValue = values[field.name];
 
@@ -192,7 +170,6 @@ export function EnhancedCalculatorForm({
       <div key={field.name} className="relative">
         <label htmlFor={fieldId} className="block text-sm font-medium text-gray-700 mb-1">
           {field.label}
-          {field.required && <span className="text-red-500 ml-1">*</span>}
           {field.tooltip && (
             <button
               type="button"
@@ -212,9 +189,7 @@ export function EnhancedCalculatorForm({
             id={fieldId}
             value={currentValue || ''}
             onChange={(e) => handleFieldChange(field, e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              hasError ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">{field.placeholder || 'Select...'}</option>
             {field.options?.map(option => (
@@ -229,36 +204,26 @@ export function EnhancedCalculatorForm({
             type="date"
             value={currentValue || ''}
             onChange={(e) => handleFieldChange(field, e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              hasError ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         ) : (
           <NumericInput
             id={fieldId}
             label=""
-            value={currentValue}
+            value={currentValue || 0}
             onValueChange={(value) => handleFieldChange(field, value)}
             placeholder={field.placeholder}
             step={field.step}
-            min={field.min}
-            max={field.max}
+            
             decimalPlaces={field.type === 'percentage' ? 2 : 2}
-            allowNegative={false}
+            allowNegative={true}
             allowZero={true}
-            showCurrencySymbol={field.type === 'number'}
-            errorText={hasError}
-            isValid={!hasError}
+            showCurrencySymbol={field.type === 'number' && Boolean(field.unit)}
+            errorText=""
+            isValid={true}
             className="w-full"
-            inputClassName={`w-full ${hasError ? 'border-red-500' : ''}`}
+            inputClassName="w-full"
           />
-        )}
-
-        {hasError && (
-          <div className="flex items-center mt-1 text-red-500 text-sm">
-            <AlertTriangle className="w-4 h-4 mr-1" />
-            {hasError}
-          </div>
         )}
 
         {showTooltip === field.name && field.tooltip && (
@@ -365,7 +330,7 @@ export function EnhancedCalculatorForm({
           <div className="mt-6">
             <Button
               onClick={onCalculate}
-              disabled={loading || Object.values(validationErrors).some(error => error)}
+              disabled={loading}
               className="w-full py-3 text-lg font-semibold"
             >
               {loading ? (

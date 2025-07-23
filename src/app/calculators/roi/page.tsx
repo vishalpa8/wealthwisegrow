@@ -6,13 +6,11 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import {
-  parseRobustNumber,
   safeDivide,
   safeMultiply,
   safePower,
   safeAdd,
-  safeSubtract,
-  isEffectivelyZero
+  safeSubtract
 } from '@/lib/utils/number';
 
 const initialValues = {
@@ -152,25 +150,8 @@ export default function ROICalculatorPage() {
   const roiResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.initialInvestment <= 0) {
-        throw new Error('Initial investment must be greater than zero');
-      }
-      if (values.projectDuration <= 0) {
-        throw new Error('Project duration must be greater than zero');
-      }
-      if (values.discountRate < 0) {
-        throw new Error('Discount rate cannot be negative');
-      }
-      if (values.taxRate < 0 || values.taxRate > 100) {
-        throw new Error('Tax rate must be between 0 and 100');
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateROI(values);
-
-      if (!isFinite(calculation.roi) || !isFinite(calculation.npv)) {
-        throw new Error('Calculation overflow. Please use smaller values.');
-      }
 
       return calculation;
     } catch (err: any) {
@@ -187,8 +168,6 @@ export default function ROICalculatorPage() {
       type: 'number',
       placeholder: '100,000',
       unit: currency.symbol,
-      min: 1,
-      required: true,
       tooltip: 'Total upfront investment amount'
     },
     {
@@ -196,10 +175,7 @@ export default function ROICalculatorPage() {
       name: 'projectDuration',
       type: 'number',
       placeholder: '12',
-      min: 1,
-      max: 360,
       unit: 'months',
-      required: true,
       tooltip: 'Duration of the investment project in months'
     },
     {
@@ -210,7 +186,6 @@ export default function ROICalculatorPage() {
         { value: 'recurring', label: 'Recurring Revenue' },
         { value: 'one-time', label: 'One-time Revenue' }
       ],
-      required: true,
       tooltip: 'Choose between recurring or one-time revenue'
     },
     {
@@ -219,8 +194,6 @@ export default function ROICalculatorPage() {
       type: 'number',
       placeholder: values.revenueType === 'recurring' ? '15,000' : '100,000',
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: values.revenueType === 'recurring' ? 'Expected monthly revenue' : 'Expected one-time revenue'
     },
     {
@@ -229,8 +202,6 @@ export default function ROICalculatorPage() {
       type: 'number',
       placeholder: '5,000',
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: 'Regular operating expenses'
     },
     {
@@ -239,8 +210,6 @@ export default function ROICalculatorPage() {
       type: 'number',
       placeholder: '1,000',
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: 'Regular maintenance and upkeep costs'
     },
     {
@@ -249,7 +218,6 @@ export default function ROICalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
       tooltip: 'Expected value at end of project'
     },
     {
@@ -257,10 +225,7 @@ export default function ROICalculatorPage() {
       name: 'discountRate',
       type: 'percentage',
       placeholder: '10',
-      min: 0,
-      max: 100,
       step: 0.1,
-      required: true,
       tooltip: 'Rate used to calculate present value of future cash flows'
     },
     {
@@ -268,10 +233,7 @@ export default function ROICalculatorPage() {
       name: 'taxRate',
       type: 'percentage',
       placeholder: '20',
-      min: 0,
-      max: 100,
       step: 0.1,
-      required: true,
       tooltip: 'Applicable tax rate on profits'
     }
   ];

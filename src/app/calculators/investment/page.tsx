@@ -2,7 +2,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { parseRobustNumber, safeMultiply, safeAdd, safePower, safeDivide, safeSubtract } from "@/lib/utils/number";
 
-
 import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
@@ -26,15 +25,12 @@ const initialValues: InvestmentInputs = {
 };
 
 function calculateInvestment(inputs: InvestmentInputs) {
-  const initial = parseRobustNumber(inputs.initialInvestment);
-  const monthly = parseRobustNumber(inputs.monthlyContribution);
-  const rate = parseRobustNumber(inputs.annualReturnRate);
-  const years = parseRobustNumber(inputs.years);
+  const initial = Math.abs(parseRobustNumber(inputs.initialInvestment) || 0);
+  const monthly = Math.abs(parseRobustNumber(inputs.monthlyContribution) || 0);
+  const rate = Math.abs(parseRobustNumber(inputs.annualReturnRate) || 0);
+  const years = Math.max(parseRobustNumber(inputs.years) || 1, 1);
 
-  if (initial < 0) throw new Error("Initial investment cannot be negative.");
-  if (monthly < 0) throw new Error("Monthly contribution cannot be negative.");
-  if (rate < 0) throw new Error("Annual return rate cannot be negative.");
-  if (years <= 0) throw new Error("Years must be greater than zero.");
+  // Handle edge cases gracefully without throwing errors
 
   const n = years * 12; // Total months
   const r = safeDivide(safeDivide(rate, 12), 100); // Monthly rate
@@ -54,10 +50,19 @@ function calculateInvestment(inputs: InvestmentInputs) {
   const totalContributions = safeAdd(initial, safeMultiply(monthly, n));
   const totalInterestEarned = safeSubtract(totalFutureValue, totalContributions);
 
+  // Calculate additional metrics
+  const annualizedReturn = totalContributions > 0 
+    ? (Math.pow(totalFutureValue / totalContributions, 1 / years) - 1) * 100
+    : 0;
+
+  const returnMultiple = totalContributions > 0 ? totalFutureValue / totalContributions : 0;
+
   return {
     totalFutureValue,
     totalContributions,
     totalInterestEarned,
+    annualizedReturn,
+    returnMultiple,
   };
 }
 
@@ -66,7 +71,6 @@ export default function InvestmentCalculatorPage() {
   const [loading, setLoading] = useState(false);
   const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
-  
   const { currency } = useCurrency();
 
   const investmentResults = useMemo(() => {
@@ -80,8 +84,6 @@ export default function InvestmentCalculatorPage() {
     }
   }, [values]);
 
-  
-
   const fields: EnhancedCalculatorField[] = [
     {
       label: "Initial Investment",
@@ -89,8 +91,7 @@ export default function InvestmentCalculatorPage() {
       type: "number",
       placeholder: "10,000",
       unit: currency.symbol,
-      min: 0,
-      required: true,
+      tooltip: "One-time initial investment amount"
     },
     {
       label: "Monthly Contribution",
@@ -98,28 +99,23 @@ export default function InvestmentCalculatorPage() {
       type: "number",
       placeholder: "500",
       unit: currency.symbol,
-      min: 0,
-      required: true,
+      tooltip: "Amount you plan to invest every month"
     },
     {
       label: "Annual Return Rate",
       name: "annualReturnRate",
       type: "percentage",
       placeholder: "7",
-      min: 0,
-      max: 50,
       step: 0.1,
-      required: true,
+      tooltip: "Expected annual return rate from your investments"
     },
     {
-      label: "Years",
+      label: "Investment Period",
       name: "years",
       type: "number",
       placeholder: "20",
-      min: 1,
-      max: 60,
       unit: "years",
-      required: true,
+      tooltip: "Number of years you plan to invest"
     },
     {
       label: "Investment Goal",
@@ -127,7 +123,6 @@ export default function InvestmentCalculatorPage() {
       type: "number",
       placeholder: "1,000,000",
       unit: currency.symbol,
-      min: 0,
       tooltip: "Set a target for your investment growth."
     },
   ];
@@ -137,26 +132,38 @@ export default function InvestmentCalculatorPage() {
 
     return [
       {
-        label: "Total Future Value",
+        label: "Final Amount",
         value: investmentResults.totalFutureValue,
         type: "currency",
         highlight: true,
-        tooltip: "The total value of your investment at the end of the period.",
+        tooltip: "Total value of your investment at maturity",
       },
       {
         label: "Total Contributions",
         value: investmentResults.totalContributions,
         type: "currency",
-        tooltip: "The sum of your initial investment and all monthly contributions.",
+        tooltip: "Total amount you will invest over the period",
       },
       {
-        label: "Total Interest Earned",
+        label: "Total Growth",
         value: investmentResults.totalInterestEarned,
         type: "currency",
-        tooltip: "The total interest or returns generated by your investment.",
+        tooltip: "Total returns earned from your investments",
+      },
+      {
+        label: "Annualized Return",
+        value: investmentResults.annualizedReturn,
+        type: "percentage",
+        tooltip: "Effective annual return rate achieved",
+      },
+      {
+        label: "Return Multiple",
+        value: investmentResults.returnMultiple,
+        type: "number",
+        tooltip: "How many times your investment will grow",
       },
     ];
-  }, [investmentResults, currency.symbol]);
+  }, [investmentResults]);
 
   const handleChange = useCallback((name: string, value: any) => {
     setValues(prev => ({ ...prev, [name]: value }));
@@ -189,8 +196,32 @@ export default function InvestmentCalculatorPage() {
             <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Diversify your portfolio to manage risk.</p>
           </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Review and rebalance periodically.</p>
+          </div>
         </div>
       </div>
+
+      {investmentResults && (
+        <div className="card">
+          <h3 className="text-base font-semibold text-neutral-900 mb-4">Quick Stats</h3>
+          <div className="space-y-3">
+            <div className="bg-neutral-50 rounded-lg p-3">
+              <h4 className="font-medium text-neutral-900 mb-1 text-sm">Total Investment</h4>
+              <p className="text-sm text-neutral-700">{currency.symbol}{investmentResults.totalContributions.toLocaleString()}</p>
+            </div>
+            <div className="bg-neutral-50 rounded-lg p-3">
+              <h4 className="font-medium text-neutral-900 mb-1 text-sm">Expected Growth</h4>
+              <p className="text-sm text-success-600 font-medium">{currency.symbol}{investmentResults.totalInterestEarned.toLocaleString()}</p>
+            </div>
+            <div className="bg-neutral-50 rounded-lg p-3">
+              <h4 className="font-medium text-neutral-900 mb-1 text-sm">Growth Multiple</h4>
+              <p className="text-sm text-blue-600 font-medium">{investmentResults.returnMultiple.toFixed(2)}x</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -221,8 +252,7 @@ export default function InvestmentCalculatorPage() {
             unit={currency.symbol} 
           />
         </div>
-      )
-      }
+      )}
     </CalculatorLayout>
   );
 }

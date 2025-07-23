@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateEPF, EPFInputs } from '@/lib/calculations/savings';
-import { epfSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   basicSalary: 50000,
@@ -24,12 +24,7 @@ export default function EPFCalculatorPage() {
   const epfResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = epfSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateEPF(values);
 
       return calculation;
@@ -47,9 +42,6 @@ export default function EPFCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 500000,
-      required: true,
       tooltip: 'Your monthly basic salary'
     },
     {
@@ -57,9 +49,6 @@ export default function EPFCalculatorPage() {
       name: 'employeeContribution',
       type: 'percentage',
       placeholder: '12',
-      min: 8,
-      max: 12,
-      required: true,
       tooltip: 'Percentage of basic salary contributed by employee'
     },
     {
@@ -67,9 +56,6 @@ export default function EPFCalculatorPage() {
       name: 'employerContribution',
       type: 'percentage',
       placeholder: '12',
-      min: 8,
-      max: 12,
-      required: true,
       tooltip: 'Percentage of basic salary contributed by employer'
     },
     {
@@ -77,10 +63,7 @@ export default function EPFCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '30',
-      min: 1,
-      max: 40,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you plan to work'
     }
   ];

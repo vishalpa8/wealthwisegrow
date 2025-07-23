@@ -25,40 +25,11 @@ const initialValues: LoanInputs = {
 export default function LoanCalculator() {
   const [values, setValues] = useState<LoanInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  // Removed validationErrors state for more flexible user experience
   const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
   const { addHistory } = useIndexedDBHistory();
   const { currency } = useCurrency();
-
-  const { monthly, totalPayment, totalInterest, interestPercentage, monthlyInterest, monthlyPrincipal, effectiveRate } = useMemo(() => {
-    setCalculationError(undefined);
-    let monthly = 0;
-    let totalPayment = 0;
-    let totalInterest = 0;
-    let interestPercentage = 0;
-    let monthlyInterest = 0;
-    let monthlyPrincipal = 0;
-    let effectiveRate = 0;
-
-    try {
-      if (values.amount > 0 && values.rate > 0 && values.years > 0) {
-        const n = values.years * 12;
-        const r = values.rate / 100 / 12;
-        monthly = (values.amount * r) / (1 - Math.pow(1 + r, -n));
-        totalPayment = monthly * n;
-        totalInterest = totalPayment - values.amount;
-        interestPercentage = values.amount > 0 ? (totalInterest / values.amount) * 100 : 0;
-        monthlyInterest = totalInterest / n;
-        monthlyPrincipal = monthly - monthlyInterest;
-        effectiveRate = values.amount > 0 ? (totalInterest / values.amount / values.years) * 100 : 0;
-      }
-    } catch (error: any) {
-      setCalculationError(error.message || "An error occurred during calculation.");
-    }
-
-    return { monthly, totalPayment, totalInterest, interestPercentage, monthlyInterest, monthlyPrincipal, effectiveRate };
-  }, [values]);
 
   const handleInputChange = useCallback(
     (name: string, value: any) => {
@@ -66,40 +37,15 @@ export default function LoanCalculator() {
         ...prev,
         [name]: value,
       }));
-      if (validationErrors[name]) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-      }
     },
-    [validationErrors]
+    []
   );
 
   const handleCalculate = () => {
     setLoading(true);
-    setValidationErrors({});
     setCalculationError(undefined);
 
-    const errors: Record<string, string> = {};
-
-    if (values.amount <= 0) {
-      errors.amount = "Loan amount must be greater than 0";
-    }
-    if (values.rate <= 0) {
-      errors.rate = "Interest rate must be greater than 0";
-    }
-    if (values.years <= 0) {
-      errors.years = "Loan term must be at least 1 year";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      setLoading(false);
-      return;
-    }
-
+    // No validation errors - let the calculation handle edge cases gracefully
     setTimeout(() => {
       setLoading(false);
     }, 500);
@@ -124,36 +70,115 @@ export default function LoanCalculator() {
         value: type,
         label: `${config.icon} ${type.charAt(0).toUpperCase() + type.slice(1)} Loan`,
       })),
-      required: true,
+      required: true
     },
     {
-      label: "Loan Amount",
-      name: "amount",
-      type: "number",
-      placeholder: "500,000",
+      label: 'Loan Amount',
+      name: 'amount',
+      type: 'number',
+      placeholder: '5,00,000',
       unit: currency.symbol,
-      min: currentConfig.min,
-      max: currentConfig.max,
-      required: true,
+      tooltip: 'Total amount you want to borrow'
     },
     {
-      label: "Interest Rate",
-      name: "rate",
-      type: "percentage",
-      placeholder: "12",
+      label: 'Interest Rate',
+      name: 'rate',
+      type: 'percentage',
+      placeholder: '10',
       step: 0.1,
-      required: true,
+      tooltip: 'Annual interest rate offered by the lender'
     },
     {
-      label: "Loan Term",
-      name: "years",
-      type: "number",
-      placeholder: "5",
-      unit: "years",
-      min: 1,
-      required: true,
+      label: 'Loan Term',
+      name: 'years',
+      type: 'number',
+      placeholder: '20',
+      unit: 'years',
+      tooltip: 'Duration of the loan in years'
     },
+    {
+      label: 'Extra Payment',
+      name: 'extraPayment',
+      type: 'number',
+      placeholder: '0',
+      unit: currency.symbol,
+      tooltip: 'Additional monthly payment towards principal'
+    }
   ];
+
+  const calculateLoan = (values: LoanInputs) => {
+    const principal = Math.abs(values.amount || 0);
+    const annualRate = Math.abs(values.rate || 0);
+    const years = Math.abs(values.years || 1);
+    
+    // Handle edge cases gracefully
+    if (principal === 0) {
+      return {
+        monthly: 0,
+        totalPayment: 0,
+        totalInterest: 0,
+        interestPercentage: 0,
+        effectiveRate: annualRate,
+        monthlyPrincipal: 0,
+        monthlyInterest: 0
+      };
+    }
+    
+    const rate = annualRate / 100 / 12; // Monthly interest rate
+    const months = years * 12;
+
+    let monthly = 0;
+    if (rate === 0) {
+      // Handle zero interest rate
+      monthly = principal / months;
+    } else {
+      monthly = (principal * rate * Math.pow(1 + rate, months)) / (Math.pow(1 + rate, months) - 1);
+    }
+    
+    const totalPayment = monthly * months;
+    const totalInterest = totalPayment - principal;
+    const interestPercentage = principal > 0 ? (totalInterest / principal) * 100 : 0;
+    const effectiveRate = rate > 0 ? ((Math.pow(1 + rate, 12) - 1) * 100) : 0;
+    const monthlyPrincipal = principal / months;
+    const monthlyInterest = monthly - monthlyPrincipal;
+
+    return {
+      monthly: isFinite(monthly) ? monthly : 0,
+      totalPayment: isFinite(totalPayment) ? totalPayment : 0,
+      totalInterest: isFinite(totalInterest) ? totalInterest : 0,
+      interestPercentage: isFinite(interestPercentage) ? interestPercentage : 0,
+      effectiveRate: isFinite(effectiveRate) ? effectiveRate : 0,
+      monthlyPrincipal: isFinite(monthlyPrincipal) ? monthlyPrincipal : 0,
+      monthlyInterest: isFinite(monthlyInterest) ? monthlyInterest : 0
+    };
+  };
+
+  
+
+  const { 
+    monthly,
+    totalPayment,
+    totalInterest,
+    interestPercentage,
+    effectiveRate,
+    monthlyPrincipal,
+    monthlyInterest
+  } = useMemo(() => {
+    try {
+      return calculateLoan(values);
+    } catch (error) {
+      console.error('Error calculating loan:', error);
+      return {
+        monthly: 0,
+        totalPayment: 0,
+        totalInterest: 0,
+        interestPercentage: 0,
+        effectiveRate: 0,
+        monthlyPrincipal: 0,
+        monthlyInterest: 0,
+      };
+    }
+  }, [values]);
 
   const results: CalculatorResult[] = useMemo(() => {
     if (monthly <= 0) return [];

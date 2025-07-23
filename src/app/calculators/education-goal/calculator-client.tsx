@@ -65,18 +65,17 @@ interface EducationGoalInputs {
 }
 
 function calculateEducationPlan(inputs: EducationGoalInputs) {
-  const {
-    childAge,
-    courseDuration,
-    startingAge,
-    currentCost,
-    expectedInflation,
-    existingSavings,
-    expectedReturn
-  } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const childAge = Math.max(0, Math.min(17, Math.abs(parseRobustNumber(inputs.childAge)) || 5));
+  const courseDuration = Math.max(1, Math.abs(parseRobustNumber(inputs.courseDuration)) || 4);
+  const startingAge = Math.max(15, Math.min(25, Math.abs(parseRobustNumber(inputs.startingAge)) || 18));
+  const currentCost = Math.abs(parseRobustNumber(inputs.currentCost)) || 100000;
+  const expectedInflation = Math.max(0, Math.abs(parseRobustNumber(inputs.expectedInflation)) || 10);
+  const existingSavings = Math.abs(parseRobustNumber(inputs.existingSavings)) || 0;
+  const expectedReturn = Math.max(0, Math.abs(parseRobustNumber(inputs.expectedReturn)) || 12);
 
   // Calculate time until education starts
-  const yearsToStart = startingAge - childAge;
+  const yearsToStart = Math.max(1, startingAge - childAge);
   
   // Calculate future cost using compound inflation
   const futureCost = currentCost * Math.pow(1 + expectedInflation / 100, yearsToStart);
@@ -88,7 +87,7 @@ function calculateEducationPlan(inputs: EducationGoalInputs) {
   const futureSavings = existingSavings * Math.pow(1 + expectedReturn / 100, yearsToStart);
   
   // Calculate required corpus
-  const requiredCorpus = totalFutureCost - futureSavings;
+  const requiredCorpus = Math.max(0, totalFutureCost - futureSavings);
   
   // Calculate monthly SIP required
   const monthlyRate = expectedReturn / 12 / 100;
@@ -127,24 +126,9 @@ export default function EducationPlanningCalculatorClient() {
   const educationResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.startingAge <= values.childAge) {
-        throw new Error('Starting age must be greater than current age');
-      }
-      if (values.currentCost <= 0) {
-        throw new Error('Current cost must be greater than zero');
-      }
-      if (values.courseDuration <= 0) {
-        throw new Error('Course duration must be greater than zero');
-      }
-      if (values.expectedInflation < 0) {
-        throw new Error('Expected inflation cannot be negative');
-      }
-      if (values.expectedReturn < 0) {
-        throw new Error('Expected return cannot be negative');
-      }
-
-      return calculateEducationPlan(values);
+      // Always attempt calculation - let the function handle edge cases gracefully
+      const calculation = calculateEducationPlan(values);
+      return calculation;
     } catch (err: any) {
       console.error('Education planning calculation error:', err);
       setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
@@ -152,26 +136,12 @@ export default function EducationPlanningCalculatorClient() {
     }
   }, [values]);
 
-  const handleCourseTypeChange = useCallback((value: string) => {
-    const course = courseTypes[value as keyof typeof courseTypes];
-    setValues(prev => ({
-      ...prev,
-      courseType: value,
-      currentCost: course.baseAmount,
-      expectedInflation: course.inflation
-    }));
-    setCalculationError(undefined);
-  }, []);
-
   const fields: EnhancedCalculatorField[] = [
     {
       label: 'Child\'s Current Age',
       name: 'childAge',
       type: 'number',
       placeholder: '5',
-      min: 0,
-      max: 17,
-      required: true,
       tooltip: 'Current age of your child'
     },
     {
@@ -182,7 +152,6 @@ export default function EducationPlanningCalculatorClient() {
         value: key,
         label: value.name
       })),
-      required: true,
       tooltip: 'Select the type of education course'
     },
     {
@@ -191,9 +160,6 @@ export default function EducationPlanningCalculatorClient() {
       type: 'number',
       placeholder: '1,50,000',
       unit: currency.symbol,
-      min: 10000,
-      max: 10000000,
-      required: true,
       tooltip: 'Current annual cost of the course'
     },
     {
@@ -201,9 +167,6 @@ export default function EducationPlanningCalculatorClient() {
       name: 'courseDuration',
       type: 'number',
       placeholder: '4',
-      min: 1,
-      max: 10,
-      required: true,
       tooltip: 'Duration of the course in years'
     },
     {
@@ -211,9 +174,6 @@ export default function EducationPlanningCalculatorClient() {
       name: 'startingAge',
       type: 'number',
       placeholder: '18',
-      min: 15,
-      max: 25,
-      required: true,
       tooltip: 'Age at which education will start'
     },
     {
@@ -221,10 +181,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'expectedInflation',
       type: 'percentage',
       placeholder: '10',
-      min: 0,
-      max: 20,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual increase in education costs'
     },
     {
@@ -233,8 +190,6 @@ export default function EducationPlanningCalculatorClient() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      required: true,
       tooltip: 'Amount already saved for education'
     },
     {
@@ -242,10 +197,7 @@ export default function EducationPlanningCalculatorClient() {
       name: 'expectedReturn',
       type: 'percentage',
       placeholder: '12',
-      min: 0,
-      max: 18,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual return on your investments'
     },
     {

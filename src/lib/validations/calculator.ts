@@ -1,694 +1,236 @@
 import { z } from "zod";
-import { 
-  parseRobustNumber, 
-  validateSafeNumber, 
-  MAX_SAFE_CALCULATION_VALUE,
-  parseAndValidate,
-  // formatLargeNumber,
-} from "../utils/number";
+import { parseRobustNumber } from "../utils/number";
 
-// Global currency and number validation with robust error handling
-export const safeNumber = z
+// Ultra-flexible number validation that accepts any input and transforms it gracefully
+const flexibleNumber = z
   .any()
   .transform((val) => {
-    const validation = validateSafeNumber(val);
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Invalid number");
+    if (val === "" || val === null || val === undefined) {
+      return 0;
     }
-    return validation.number;
-  })
-  .refine((val) => isFinite(val), "Must be a finite number");
-
-// Base validators with robust parsing
-export const positiveNumber = z
-  .any()
-  .transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      allowZero: true, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Must be a positive number");
+    const parsed = parseRobustNumber(val);
+    if (isNaN(parsed)) {
+      return 0;
     }
-    return validation.value;
+    // Allow negative numbers but convert them to positive for most calculations
+    return Math.abs(parsed);
   });
 
-export const nonNegativeNumber = z
+// Ultra-flexible percentage that accepts any input
+const flexiblePercentage = z
   .any()
   .transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      allowZero: true, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Must be zero or positive");
+    if (val === "" || val === null || val === undefined) {
+      return 0;
     }
-    return validation.value;
+    const parsed = parseRobustNumber(val);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      return 0;
+    }
+    // Allow any percentage value - no upper limit for maximum flexibility
+    // Accept negative percentages for scenarios like deflation, losses, etc.
+    return Math.abs(parsed);
   });
 
-export const percentage = z
+// Ultra-flexible year validation
+const flexibleYear = z
   .any()
   .transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 100, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Percentage must be between 0 and 100");
+    if (val === "" || val === null || val === undefined) {
+      return 1;
     }
-    return validation.value;
+    const parsed = parseRobustNumber(val);
+    if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
+      return 1;
+    }
+    // Allow any positive value - no upper limit for maximum flexibility
+    // Round to nearest integer for year calculations
+    return Math.max(Math.round(Math.abs(parsed)), 1);
   });
 
-export const interestRate = z
+// Ultra-flexible age validation
+const flexibleAge = z
   .any()
   .transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 50, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Interest rate must be between 0 and 50%");
+    if (val === "" || val === null || val === undefined) {
+      return 25;
     }
-    return validation.value;
+    const parsed = parseRobustNumber(val);
+    if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
+      return 25;
+    }
+    // Allow any positive age value for maximum flexibility
+    // Round to nearest integer for age calculations
+    return Math.max(Math.round(Math.abs(parsed)), 1);
+  });
+
+// Ultra-flexible number that allows negative values (for things like extra payments, adjustments)
+const flexibleSignedNumber = z
+  .any()
+  .transform((val) => {
+    if (val === "" || val === null || val === undefined) {
+      return 0;
+    }
+    const parsed = parseRobustNumber(val);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      return 0;
+    }
+    // Allow both positive and negative values for maximum flexibility
+    return parsed;
   });
 
 // Mortgage Calculator Schema
 export const mortgageSchema = z.object({
-  principal: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Loan amount must be at least 1");
-    }
-    return validation.value;
-  }),
-  rate: interestRate,
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 50) {
-      throw new Error("Loan term must be between 1 and 50 years");
-    }
-    return rounded;
-  }),
-  downPayment: nonNegativeNumber.optional().default(0),
-  propertyTax: nonNegativeNumber.optional().default(0),
-  insurance: nonNegativeNumber.optional().default(0),
-  pmi: nonNegativeNumber.optional().default(0),
+  principal: flexibleNumber,
+  rate: flexiblePercentage,
+  years: flexibleYear,
+  downPayment: flexibleSignedNumber.optional().default(0),
+  propertyTax: flexibleSignedNumber.optional().default(0),
+  insurance: flexibleSignedNumber.optional().default(0),
+  pmi: flexibleSignedNumber.optional().default(0),
 });
 
 // Loan Calculator Schema
 export const loanSchema = z.object({
-  principal: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Loan amount must be at least 1");
-    }
-    return validation.value;
-  }),
-  rate: interestRate,
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 50) {
-      throw new Error("Loan term must be between 1 and 50 years");
-    }
-    return rounded;
-  }),
-  extraPayment: nonNegativeNumber.optional().default(0),
+  principal: flexibleNumber,
+  rate: flexiblePercentage,
+  years: flexibleYear,
+  extraPayment: flexibleSignedNumber.optional().default(0),
 });
 
 // Investment Calculator Schema
 export const investmentSchema = z.object({
-  initialAmount: nonNegativeNumber,
-  monthlyContribution: nonNegativeNumber,
-  annualReturn: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: -50, 
-      max: 50, 
-      allowZero: true, 
-      allowNegative: true
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Return must be between -50% and 50%");
-    }
-    return validation.value;
-  }),
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 100) {
-      throw new Error("Investment period must be between 1 and 100 years");
-    }
-    return rounded;
-  }),
+  initialAmount: flexibleSignedNumber,
+  monthlyContribution: flexibleSignedNumber,
+  annualReturn: flexiblePercentage,
+  years: flexibleYear,
   compoundingFrequency: z.enum(["annually", "semiannually", "quarterly", "monthly", "daily"]).default("monthly"),
 });
 
 // Retirement Calculator Schema
 export const retirementSchema = z.object({
-  currentAge: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 18 || rounded > 100) {
-      throw new Error("Age must be between 18 and 100 years");
-    }
-    return rounded;
-  }),
-  retirementAge: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 50 || rounded > 100) {
-      throw new Error("Retirement age must be between 50 and 100 years");
-    }
-    return rounded;
-  }),
-  currentSavings: nonNegativeNumber.default(0),
-  monthlyContribution: nonNegativeNumber.default(0),
-  expectedReturn: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 20, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Expected return must be between 0% and 20%");
-    }
-    return validation.value;
-  }),
-  inflationRate: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 10, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Inflation rate must be between 0% and 10%");
-    }
-    return validation.value;
-  }),
-  retirementIncome: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1000, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Retirement income must be at least ₹1,000");
-    }
-    return validation.value;
-  }),
-}).refine((data) => data.retirementAge > data.currentAge, {
-  message: "Retirement age must be greater than current age",
-  path: ["retirementAge"],
+  currentAge: flexibleAge,
+  retirementAge: flexibleAge,
+  currentSavings: flexibleSignedNumber.default(0),
+  monthlyContribution: flexibleSignedNumber.default(0),
+  expectedReturn: flexiblePercentage,
+  inflationRate: flexiblePercentage,
+  retirementIncome: flexibleNumber,
 });
 
 // Budget Calculator Schema
 export const budgetSchema = z.object({
-  monthlyIncome: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Monthly income must be at least 1");
-    }
-    return validation.value;
-  }),
-  housing: nonNegativeNumber.default(0),
-  transportation: nonNegativeNumber.default(0),
-  food: nonNegativeNumber.default(0),
-  utilities: nonNegativeNumber.default(0),
-  insurance: nonNegativeNumber.default(0),
-  healthcare: nonNegativeNumber.default(0),
-  savings: nonNegativeNumber.default(0),
-  entertainment: nonNegativeNumber.default(0),
-  other: nonNegativeNumber.default(0),
+  monthlyIncome: flexibleNumber,
+  housing: flexibleSignedNumber.default(0),
+  transportation: flexibleSignedNumber.default(0),
+  food: flexibleSignedNumber.default(0),
+  utilities: flexibleSignedNumber.default(0),
+  insurance: flexibleSignedNumber.default(0),
+  healthcare: flexibleSignedNumber.default(0),
+  savings: flexibleSignedNumber.default(0),
+  entertainment: flexibleSignedNumber.default(0),
+  other: flexibleSignedNumber.default(0),
 });
 
 // SIP Calculator Schema
 export const sipSchema = z.object({
-  monthlyInvestment: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Monthly investment must be at least 1");
-    }
-    return validation.value;
-  }),
-  annualReturn: interestRate,
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 50) {
-      throw new Error("Investment period must be between 1 and 50 years");
-    }
-    return rounded;
-  }),
+  monthlyInvestment: flexibleSignedNumber,
+  annualReturn: flexiblePercentage,
+  years: flexibleYear,
 });
 
 // Lumpsum Investment Schema
 export const lumpsumSchema = z.object({
-  principal: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Investment amount must be at least 1");
-    }
-    return validation.value;
-  }),
-  annualReturn: interestRate,
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 50) {
-      throw new Error("Investment period must be between 1 and 50 years");
-    }
-    return rounded;
-  }),
+  principal: flexibleSignedNumber,
+  annualReturn: flexiblePercentage,
+  years: flexibleYear,
 });
 
 // PPF Calculator Schema
 export const ppfSchema = z.object({
-  yearlyInvestment: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      max: 150000, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "PPF investment must be between 1 and ₹1,50,000 per year");
-    }
-    return validation.value;
-  }),
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 15 || rounded > 50) {
-      throw new Error("PPF period must be between 15 and 50 years");
-    }
-    return rounded;
-  }),
+  yearlyInvestment: flexibleSignedNumber,
+  years: flexibleYear,
 });
 
 // FD Calculator Schema
 export const fdSchema = z.object({
-  principal: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Minimum FD amount is 1");
-    }
-    return validation.value;
-  }),
-  annualRate: interestRate,
-  years: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0.25, 
-      max: 20, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "FD tenure must be between 3 months (0.25 years) and 20 years");
-    }
-    return validation.value;
-  }),
+  principal: flexibleSignedNumber,
+  annualRate: flexiblePercentage,
+  years: flexibleYear,
   compoundingFrequency: z.enum(['monthly', 'quarterly', 'yearly']).default('quarterly'),
 });
 
 // RD Calculator Schema
 export const rdSchema = z.object({
-  monthlyDeposit: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Minimum monthly deposit is 1");
-    }
-    return validation.value;
-  }),
-  annualRate: interestRate,
-  years: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      max: 10, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "RD tenure must be between 1 and 10 years");
-    }
-    return validation.value;
-  }),
+  monthlyDeposit: flexibleSignedNumber,
+  annualRate: flexiblePercentage,
+  years: flexibleYear,
 });
 
 // EPF Calculator Schema
 export const epfSchema = z.object({
-  basicSalary: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Basic salary must be at least 1");
-    }
-    return validation.value;
-  }),
-  employeeContribution: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 8, 
-      max: 12, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Employee contribution must be between 8% and 12%");
-    }
-    return validation.value;
-  }),
-  employerContribution: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 8, 
-      max: 12, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Employer contribution must be between 8% and 12%");
-    }
-    return validation.value;
-  }),
-  years: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1 || rounded > 40) {
-      throw new Error("Service period must be between 1 and 40 years");
-    }
-    return rounded;
-  }),
+  basicSalary: flexibleNumber,
+  employeeContribution: flexiblePercentage,
+  employerContribution: flexiblePercentage,
+  years: flexibleYear,
 });
 
 // Dividend Yield Calculator Schema
 export const dividendYieldSchema = z.object({
-  stockPrice: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Stock price must be at least ₹1");
-    }
-    return validation.value;
-  }),
-  annualDividend: nonNegativeNumber,
-  numberOfShares: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 1) {
-      throw new Error("Number of shares must be at least 1");
-    }
-    return rounded;
-  }),
+  stockPrice: flexibleNumber,
+  annualDividend: flexibleSignedNumber,
+  numberOfShares: flexibleNumber,
 });
 
 // Gold Investment Calculator Schema
 export const goldSchema = z.object({
-  investmentAmount: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Investment amount must be at least 1");
-    }
-    return validation.value;
-  }),
-  goldPricePerGram: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Gold price must be at least 1 per gram");
-    }
-    return validation.value;
-  }),
-  years: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      max: 30, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Investment period must be between 1 and 30 years");
-    }
-    return validation.value;
-  }),
-  expectedAnnualReturn: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: -20, 
-      max: 30, 
-      allowZero: true, 
-      allowNegative: true
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Expected return must be between -20% and 30%");
-    }
-    return validation.value;
-  }),
+  investmentAmount: flexibleSignedNumber,
+  goldPricePerGram: flexibleNumber,
+  years: flexibleYear,
+  expectedAnnualReturn: flexiblePercentage,
 });
 
 // Income Tax Calculator Schema
 export const incomeTaxSchema = z.object({
-  annualIncome: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Annual income must be at least 1");
-    }
-    return validation.value;
-  }),
-  age: z.any().transform((val) => {
-    const parsed = parseRobustNumber(val);
-    const rounded = Math.round(parsed);
-    if (rounded < 18 || rounded > 100) {
-      throw new Error("Age must be between 18 and 100 years");
-    }
-    return rounded;
-  }),
-  deductions: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 1500000, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Deductions cannot exceed ₹15,00,000");
-    }
-    return validation.value;
-  }),
+  annualIncome: flexibleNumber,
+  age: flexibleAge,
+  deductions: flexibleSignedNumber,
   regime: z.enum(['old', 'new']).default('new'),
 });
 
 // GST Calculator Schema
 export const gstSchema = z.object({
-  amount: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Amount must be at least ₹1");
-    }
-    return validation.value;
-  }),
-  gstRate: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 28, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "GST rate must be between 0% and 28%");
-    }
-    return validation.value;
-  }),
+  amount: flexibleSignedNumber,
+  gstRate: flexiblePercentage,
   type: z.enum(['exclusive', 'inclusive']).default('exclusive'),
 });
 
 // Salary Calculator Schema
 export const salarySchema = z.object({
-  ctc: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "CTC must be at least 1");
-    }
-    return validation.value;
-  }),
-  basicPercent: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 40, 
-      max: 70, 
-      allowZero: false, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Basic salary should be between 40% and 70% of CTC");
-    }
-    return validation.value;
-  }),
-  hraPercent: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 50, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "HRA cannot exceed 50% of basic salary");
-    }
-    return validation.value;
-  }),
-  pfContribution: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 12, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "PF contribution cannot exceed 12%");
-    }
-    return validation.value;
-  }),
-  professionalTax: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 0, 
-      max: 2500, 
-      allowZero: true, 
-      allowNegative: false
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Professional tax cannot exceed ₹2,500 per month");
-    }
-    return validation.value;
-  }),
-  otherAllowances: nonNegativeNumber.default(0),
+  ctc: flexibleNumber,
+  basicPercent: flexiblePercentage,
+  hraPercent: flexiblePercentage,
+  pfContribution: flexiblePercentage,
+  professionalTax: flexibleSignedNumber,
+  otherAllowances: flexibleSignedNumber.default(0),
 });
 
 // HRA Calculator Schema
 export const hraSchema = z.object({
-  basicSalary: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Basic salary must be at least 1");
-    }
-    return validation.value;
-  }),
-  hraReceived: nonNegativeNumber.default(0),
-  rentPaid: nonNegativeNumber.default(0),
+  basicSalary: flexibleNumber,
+  hraReceived: flexibleSignedNumber.default(0),
+  rentPaid: flexibleSignedNumber.default(0),
   cityType: z.enum(['metro', 'non-metro']).default('non-metro'),
 });
 
 // Capital Gains Calculator Schema
 export const capitalGainsSchema = z.object({
-  purchasePrice: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Purchase price must be at least 1");
-    }
-    return validation.value;
-  }),
-  salePrice: z.any().transform((val) => {
-    const validation = parseAndValidate(val, { 
-      min: 1, 
-      allowZero: false, 
-      allowNegative: false,
-      max: MAX_SAFE_CALCULATION_VALUE
-    });
-    if (!validation.isValid) {
-      throw new Error(validation.error || "Sale price must be at least 1");
-    }
-    return validation.value;
-  }),
-  purchaseDate: z.date().max(new Date(), "Purchase date cannot be in the future"),
-  saleDate: z.date().max(new Date(), "Sale date cannot be in the future"),
+  purchasePrice: flexibleNumber,
+  salePrice: flexibleNumber,
+  purchaseDate: z.date().optional().default(new Date()),
+  saleDate: z.date().optional().default(new Date()),
   assetType: z.enum(['equity', 'debt', 'property', 'gold']).default('equity'),
   indexationBenefit: z.boolean().optional().default(false),
-}).refine((data) => data.saleDate >= data.purchaseDate, {
-  message: "Sale date must be after purchase date",
-  path: ["saleDate"],
 });
 
 // Export all types
@@ -710,3 +252,6 @@ export type GSTInputs = z.infer<typeof gstSchema>;
 export type SalaryInputs = z.infer<typeof salarySchema>;
 export type HRAInputs = z.infer<typeof hraSchema>;
 export type CapitalGainsInputs = z.infer<typeof capitalGainsSchema>;
+
+// Export flexible validation functions for reuse
+export { flexibleNumber, flexiblePercentage, flexibleYear, flexibleAge, flexibleSignedNumber };

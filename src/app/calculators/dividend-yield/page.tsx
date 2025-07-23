@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateDividendYield, DividendYieldInputs } from '@/lib/calculations/savings';
-import { dividendYieldSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   stockPrice: 1000,
@@ -23,21 +23,7 @@ export default function DividendYieldCalculatorPage() {
   const dividendYieldResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const parsedValues = {
-        stockPrice: parseFloat(values.stockPrice as any),
-        annualDividend: parseFloat(values.annualDividend as any),
-        numberOfShares: parseInt(values.numberOfShares as any, 10),
-      };
-  
-      const validation = dividendYieldSchema.safeParse(parsedValues);
-  
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message;
-        if (errorMessage) {
-          throw new Error(errorMessage);
-        }
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       return calculateDividendYield(values);
     } catch (err: any) {
       console.error('Dividend yield calculation error:', err);
@@ -53,9 +39,6 @@ export default function DividendYieldCalculatorPage() {
       type: 'number',
       placeholder: '1,000',
       unit: currency.symbol,
-      min: 1,
-      max: 100000,
-      required: true,
       tooltip: 'Current price per share of the stock'
     },
     {
@@ -64,9 +47,6 @@ export default function DividendYieldCalculatorPage() {
       type: 'number',
       placeholder: '50',
       unit: currency.symbol,
-      min: 0,
-      max: 10000,
-      required: true,
       tooltip: 'Dividend paid per share annually'
     },
     {
@@ -74,9 +54,6 @@ export default function DividendYieldCalculatorPage() {
       name: 'numberOfShares',
       type: 'number',
       placeholder: '100',
-      min: 1,
-      max: 1000000,
-      required: true,
       tooltip: 'Number of shares you own or plan to buy'
     }
   ];

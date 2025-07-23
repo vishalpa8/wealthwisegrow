@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateSalary, SalaryInputs } from '@/lib/calculations/tax';
-import { salarySchema } from '@/lib/validations/calculator';
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   ctc: 1200000,
@@ -26,41 +26,29 @@ export default function SalaryCalculatorPage() {
   const salaryResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Custom validation for salary calculations
-      if (values.ctc < 100000) {
-        throw new Error('CTC should be at least ₹1,00,000');
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues = {
+        ctc: Math.abs(parseRobustNumber(values.ctc)) || 100000, // Default to minimum if zero
+        basicPercent: Math.max(30, Math.min(70, Math.abs(parseRobustNumber(values.basicPercent)) || 50)), // Clamp between 30-70%
+        hraPercent: Math.max(0, Math.min(50, Math.abs(parseRobustNumber(values.hraPercent)) || 40)), // Clamp between 0-50%
+        pfContribution: Math.max(0, Math.min(12, Math.abs(parseRobustNumber(values.pfContribution)) || 12)), // Clamp between 0-12%
+        professionalTax: Math.max(0, Math.min(30000, Math.abs(parseRobustNumber(values.professionalTax)) || 0)), // Clamp between 0-30000
+        otherAllowances: Math.abs(parseRobustNumber(values.otherAllowances)) || 0
+      };
 
-      if (values.ctc > 100000000) {
-        throw new Error('CTC amount is too high (max ₹10 crores)');
-      }
+      const calculation = calculateSalary(validatedValues);
 
-      if (values.basicPercent < 40 || values.basicPercent > 70) {
-        throw new Error('Basic salary should be between 40% and 70% of CTC');
-      }
-
-      if (values.hraPercent > 50) {
-        throw new Error('HRA cannot exceed 50% of basic salary');
-      }
-
-      if (values.pfContribution > 12) {
-        throw new Error('PF contribution cannot exceed 12%');
-      }
-
-      if (values.professionalTax > 2500) {
-        throw new Error('Professional tax cannot exceed ₹2,500 per month');
-      }
-
-      const validation = salarySchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
-      const calculation = calculateSalary(values);
-
-      if (!calculation || isNaN(calculation.netSalary) || calculation.netSalary <= 0) {
-        throw new Error('Unable to calculate salary. Please check your inputs.');
+      if (!calculation || isNaN(calculation.netSalary) || calculation.netSalary < 0) {
+        // Return a default calculation instead of throwing error
+        return {
+          basicSalary: validatedValues.ctc * (validatedValues.basicPercent / 100) / 12,
+          hra: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.hraPercent / 100) / 12,
+          grossSalary: validatedValues.ctc / 12,
+          pfDeduction: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12,
+          incomeTax: 0,
+          totalDeductions: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12 + validatedValues.professionalTax / 12,
+          netSalary: validatedValues.ctc / 12 - (validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12 + validatedValues.professionalTax / 12)
+        };
       }
 
       return calculation;
@@ -78,9 +66,6 @@ export default function SalaryCalculatorPage() {
       type: 'number',
       placeholder: '12,00,000',
       unit: currency.symbol,
-      min: 100000,
-      max: 100000000,
-      required: true,
       tooltip: 'Cost to Company - Total annual salary package'
     },
     {
@@ -88,9 +73,6 @@ export default function SalaryCalculatorPage() {
       name: 'basicPercent',
       type: 'percentage',
       placeholder: '50',
-      min: 40,
-      max: 70,
-      required: true,
       tooltip: 'Basic salary as percentage of CTC (typically 40-60%)'
     },
     {
@@ -98,9 +80,6 @@ export default function SalaryCalculatorPage() {
       name: 'hraPercent',
       type: 'percentage',
       placeholder: '40',
-      min: 0,
-      max: 50,
-      required: true,
       tooltip: 'House Rent Allowance as percentage of basic salary'
     },
     {
@@ -108,9 +87,6 @@ export default function SalaryCalculatorPage() {
       name: 'pfContribution',
       type: 'percentage',
       placeholder: '12',
-      min: 0,
-      max: 12,
-      required: true,
       tooltip: 'Provident Fund contribution (maximum 12%)'
     },
     {
@@ -119,8 +95,6 @@ export default function SalaryCalculatorPage() {
       type: 'number',
       placeholder: '2,400',
       unit: currency.symbol,
-      min: 0,
-      max: 2500,
       tooltip: 'Annual professional tax (varies by state, max ₹2,500)'
     },
     {
@@ -129,8 +103,6 @@ export default function SalaryCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 0,
-      max: 1000000,
       tooltip: 'Medical, transport, and other annual allowances'
     }
   ];

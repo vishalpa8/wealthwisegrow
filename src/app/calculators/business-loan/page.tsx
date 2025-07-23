@@ -41,15 +41,15 @@ interface BusinessLoanInputs {
 function calculateBusinessLoan(inputs: BusinessLoanInputs) {
   // Use parseRobustNumber to handle all edge cases including null, undefined, empty strings, etc.
   const loanType = inputs.loanType || 'term-loan';
-  const loanAmount = parseRobustNumber(inputs.loanAmount);
-  const interestRate = parseRobustNumber(inputs.interestRate);
-  const loanTerm = parseRobustNumber(inputs.loanTerm);
-  const processingFee = parseRobustNumber(inputs.processingFee);
-  const collateralValue = parseRobustNumber(inputs.collateralValue);
-  const businessRevenue = parseRobustNumber(inputs.businessRevenue);
-  const existingDebt = parseRobustNumber(inputs.existingDebt);
-  const creditScore = parseRobustNumber(inputs.creditScore);
-  const businessAge = parseRobustNumber(inputs.businessAge);
+  const loanAmount = Math.abs(parseRobustNumber(inputs.loanAmount)) || 100000;
+  const interestRate = Math.abs(parseRobustNumber(inputs.interestRate)) || 12;
+  const loanTerm = Math.max(1, Math.abs(parseRobustNumber(inputs.loanTerm)) || 1);
+  const processingFee = Math.abs(parseRobustNumber(inputs.processingFee)) || 0;
+  const collateralValue = Math.abs(parseRobustNumber(inputs.collateralValue)) || 0;
+  const businessRevenue = Math.abs(parseRobustNumber(inputs.businessRevenue)) || 1000000;
+  const existingDebt = Math.abs(parseRobustNumber(inputs.existingDebt)) || 0;
+  const creditScore = Math.max(300, Math.min(900, Math.abs(parseRobustNumber(inputs.creditScore)) || 750));
+  const businessAge = Math.abs(parseRobustNumber(inputs.businessAge)) || 1;
 
   // Safe division for monthly rate calculation
   const monthlyRate = safeDivide(safeDivide(interestRate, 12), 100);
@@ -93,7 +93,7 @@ function calculateBusinessLoan(inputs: BusinessLoanInputs) {
   const totalCost = totalPayment + processingFeeAmount;
   
   // Business metrics
-  const debtToIncomeRatio = safeMultiply(safeDivide(existingDebt + loanAmount, businessRevenue), 100);
+  const debtToIncomeRatio = safeMultiply(safeDivide(existingDebt + loanAmount, Math.max(1, businessRevenue)), 100);
   const loanToValueRatio = safeMultiply(safeDivide(loanAmount, Math.max(1, collateralValue)), 100);
   const dscr = safeDivide(safeMultiply(businessRevenue, 0.3), safeMultiply(monthlyPayment, 12)); // Assuming 30% net margin
   
@@ -164,28 +164,8 @@ export default function BusinessLoanCalculatorPage() {
   const businessLoanResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.loanAmount <= 0) {
-        throw new Error('Loan amount must be greater than zero');
-      }
-
-      if (values.interestRate <= 0) {
-        throw new Error('Interest rate must be greater than zero');
-      }
-
-      if (values.businessRevenue <= 0) {
-        throw new Error('Business revenue must be greater than zero');
-      }
-
-      if (values.creditScore < 300 || values.creditScore > 900) {
-        throw new Error('Credit score must be between 300 and 900');
-      }
-
+      // Always attempt calculation - let the function handle edge cases gracefully
       const calculation = calculateBusinessLoan(values);
-
-      if (isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
-        throw new Error('Unable to calculate payment. Please check your inputs.');
-      }
 
       return calculation;
     } catch (err: any) {
@@ -206,7 +186,6 @@ export default function BusinessLoanCalculatorPage() {
         { value: 'equipment-loan', label: 'Equipment Financing' },
         { value: 'line-of-credit', label: 'Line of Credit' }
       ],
-      required: true,
       tooltip: 'Type of business loan you need'
     },
     {
@@ -215,9 +194,6 @@ export default function BusinessLoanCalculatorPage() {
       type: 'number',
       placeholder: '20,00,000',
       unit: currency.symbol,
-      min: 100000,
-      max: 500000000,
-      required: true,
       tooltip: 'Amount you want to borrow for your business'
     },
     {
@@ -225,10 +201,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'interestRate',
       type: 'percentage',
       placeholder: '12',
-      min: 8,
-      max: 30,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate offered by the lender'
     },
     {
@@ -236,10 +209,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'loanTerm',
       type: 'number',
       placeholder: '5',
-      min: 1,
-      max: 20,
       unit: 'years',
-      required: true,
       tooltip: 'Duration to repay the business loan'
     },
     {
@@ -247,8 +217,6 @@ export default function BusinessLoanCalculatorPage() {
       name: 'processingFee',
       type: 'percentage',
       placeholder: '1',
-      min: 0,
-      max: 5,
       step: 0.1,
       tooltip: 'Processing fee as percentage of loan amount'
     },
@@ -258,8 +226,6 @@ export default function BusinessLoanCalculatorPage() {
       type: 'number',
       placeholder: '25,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 1000000000,
       tooltip: 'Value of assets offered as collateral'
     },
     {
@@ -268,9 +234,6 @@ export default function BusinessLoanCalculatorPage() {
       type: 'number',
       placeholder: '50,00,000',
       unit: currency.symbol,
-      min: 500000,
-      max: 10000000000,
-      required: true,
       tooltip: 'Your business annual revenue/turnover'
     },
     {
@@ -279,8 +242,6 @@ export default function BusinessLoanCalculatorPage() {
       type: 'number',
       placeholder: '5,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 100000000,
       tooltip: 'Current outstanding business loans'
     },
     {
@@ -288,9 +249,6 @@ export default function BusinessLoanCalculatorPage() {
       name: 'creditScore',
       type: 'number',
       placeholder: '750',
-      min: 300,
-      max: 900,
-      required: true,
       tooltip: 'Business or personal credit score'
     },
     {
@@ -298,10 +256,7 @@ export default function BusinessLoanCalculatorPage() {
       name: 'businessAge',
       type: 'number',
       placeholder: '3',
-      min: 0,
-      max: 50,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years your business has been operating'
     }
   ];

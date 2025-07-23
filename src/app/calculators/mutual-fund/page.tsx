@@ -106,22 +106,10 @@ export default function MutualFundCalculatorPage() {
   const mutualFundResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Basic validation
+      // Always attempt calculation - let the function handle edge cases
       if (!values.startDate || new Date(values.startDate).toString() === 'Invalid Date') {
         // Don't throw an error, just return null to indicate no valid calculation yet
         return null;
-      }
-      if (values.investmentType === 'lumpsum' && values.initialInvestment <= 0) {
-        throw new Error('Initial investment must be greater than zero');
-      }
-      if (values.investmentType === 'sip' && values.monthlyInvestment <= 0) {
-        throw new Error('Monthly investment must be greater than zero');
-      }
-      if (values.purchaseNav <= 0 || values.currentNav <= 0) {
-        throw new Error('NAV values must be greater than zero');
-      }
-      if (values.entryLoad < 0 || values.exitLoad < 0) {
-        throw new Error('Loads cannot be negative');
       }
 
       return calculateReturns(values);
@@ -141,14 +129,12 @@ export default function MutualFundCalculatorPage() {
         { value: 'lumpsum', label: 'Lumpsum Investment' },
         { value: 'sip', label: 'SIP Investment' }
       ],
-      required: true,
       tooltip: 'Choose between one-time or regular monthly investments'
     },
     {
       label: 'Investment Start Date',
       name: 'startDate',
       type: 'date',
-      required: true,
       tooltip: 'When did you start investing?'
     },
     {
@@ -163,9 +149,6 @@ export default function MutualFundCalculatorPage() {
       type: 'number',
       placeholder: values.investmentType === 'lumpsum' ? '1,00,000' : '10,000',
       unit: currency.symbol,
-      min: 100,
-      max: 10000000,
-      required: true,
       tooltip: values.investmentType === 'lumpsum' ? 'One-time investment amount' : 'Monthly SIP amount'
     },
     {
@@ -174,9 +157,7 @@ export default function MutualFundCalculatorPage() {
       type: 'number',
       placeholder: '10.00',
       unit: currency.symbol,
-      min: 0.01,
       step: 0.01,
-      required: true,
       tooltip: 'NAV at which units were purchased'
     },
     {
@@ -185,9 +166,7 @@ export default function MutualFundCalculatorPage() {
       type: 'number',
       placeholder: '12.00',
       unit: currency.symbol,
-      min: 0.01,
       step: 0.01,
-      required: true,
       tooltip: 'Current NAV of the mutual fund'
     },
     {
@@ -195,8 +174,6 @@ export default function MutualFundCalculatorPage() {
       name: 'entryLoad',
       type: 'percentage',
       placeholder: '0',
-      min: 0,
-      max: 5,
       step: 0.01,
       tooltip: 'Entry load charged by the fund (if any)'
     },
@@ -205,8 +182,6 @@ export default function MutualFundCalculatorPage() {
       name: 'exitLoad',
       type: 'percentage',
       placeholder: '0',
-      min: 0,
-      max: 5,
       step: 0.01,
       tooltip: 'Exit load charged by the fund (if any)'
     },

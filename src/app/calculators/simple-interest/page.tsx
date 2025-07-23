@@ -56,22 +56,8 @@ export default function SimpleInterestCalculatorPage() {
   const simpleInterestResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Basic validation before calculation
-      if (values.principal <= 0) {
-        throw new Error('Principal amount must be greater than zero');
-      }
-      if (values.rate < 0) {
-        throw new Error('Interest rate cannot be negative');
-      }
-      if (values.time <= 0) {
-        throw new Error('Time period must be greater than zero');
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateSimpleInterest(values);
-
-      if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
-        throw new Error('Calculation overflow. Please use smaller values.');
-      }
 
       return calculation;
     } catch (err: any) {
@@ -88,9 +74,6 @@ export default function SimpleInterestCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 100,
-      max: 100000000,
-      required: true,
       tooltip: 'The initial amount of money'
     },
     {
@@ -98,10 +81,7 @@ export default function SimpleInterestCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '8',
-      min: 0,
-      max: 50,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate (simple interest rate)'
     },
     {
@@ -109,11 +89,8 @@ export default function SimpleInterestCalculatorPage() {
       name: 'time',
       type: 'number',
       placeholder: '3',
-      min: 0.1,
-      max: 50,
       step: 0.1,
       unit: 'years',
-      required: true,
       tooltip: 'Duration for which money is invested or borrowed'
     }
   ];

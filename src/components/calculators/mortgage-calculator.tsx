@@ -22,9 +22,7 @@ const initialValues: MortgageInputs = {
 export function MortgageCalculator() {
   const [values, setValues] = useState<MortgageInputs>(initialValues);
   const [loading, setLoading] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<
-    Record<string, string>
-  >({});
+  // Removed validationErrors state for more flexible user experience
   const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
   const { formatCurrency, formatNumber, currency } = useCurrency();
@@ -32,13 +30,12 @@ export function MortgageCalculator() {
   const mortgageResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      if (values.principal > 0 && values.rate > 0 && values.years > 0) {
-        return calculateMortgage(values);
-      }
+      // Always attempt calculation - let the function handle edge cases
+      return calculateMortgage(values);
     } catch (error: any) {
       setCalculationError(error.message || "An error occurred during calculation.");
+      return null;
     }
-    return null;
   }, [values]);
 
   const handleInputChange = useCallback(
@@ -47,45 +44,15 @@ export function MortgageCalculator() {
         ...prev,
         [name]: value,
       }));
-      if (validationErrors[name]) {
-        setValidationErrors((prev) => {
-          const newErrors = { ...prev };
-          delete newErrors[name];
-          return newErrors;
-        });
-      }
     },
-    [validationErrors]
+    []
   );
 
   const handleCalculate = () => {
     setLoading(true);
-    setValidationErrors({});
     setCalculationError(undefined);
 
-    const errors: Record<string, string> = {};
-
-    if (values.principal <= 0) {
-      errors.principal = "Home price must be greater than 0";
-    }
-    if (values.downPayment < 0) {
-      errors.downPayment = "Down payment can't be negative";
-    } else if (values.downPayment >= values.principal) {
-      errors.downPayment = "Down payment can't exceed home price";
-    }
-    if (values.rate <= 0) {
-      errors.rate = "Interest rate must be greater than 0";
-    }
-    if (values.years <= 0) {
-      errors.years = "Loan term must be at least 1 year";
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setValidationErrors(errors);
-      setLoading(false);
-      return;
-    }
-
+    // No validation errors - let the calculation handle edge cases gracefully
     setTimeout(() => {
       setLoading(false);
     }, 500);
@@ -98,7 +65,6 @@ export function MortgageCalculator() {
       type: "number",
       placeholder: "500,000",
       unit: currency.symbol,
-      required: true,
     },
     {
       label: "Down Payment",
@@ -106,7 +72,6 @@ export function MortgageCalculator() {
       type: "number",
       placeholder: "100,000",
       unit: currency.symbol,
-      required: true,
     },
     {
       label: "Interest Rate",
@@ -114,7 +79,6 @@ export function MortgageCalculator() {
       type: "percentage",
       placeholder: "7.5",
       step: 0.001,
-      required: true,
     },
     {
       label: "Loan Term",
@@ -122,8 +86,6 @@ export function MortgageCalculator() {
       type: "number",
       placeholder: "30",
       unit: "years",
-      min: 1,
-      required: true,
     },
     {
       label: "Annual Property Tax",

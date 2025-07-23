@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculatePPF, PPFInputs } from '@/lib/calculations/savings';
-import { ppfSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   yearlyInvestment: 150000,
@@ -22,12 +22,7 @@ export default function PPFCalculatorPage() {
   const ppfResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = ppfSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculatePPF(values);
 
       return calculation;
@@ -45,21 +40,15 @@ export default function PPFCalculatorPage() {
       type: 'number',
       placeholder: '1,50,000',
       unit: currency.symbol,
-      min: 500,
-      max: 150000,
-      required: true,
-      tooltip: 'Amount you plan to invest annually in PPF (Min: ₹500, Max: ₹1,50,000)'
+      tooltip: 'Amount you plan to invest annually in PPF'
     },
     {
       label: 'Investment Period',
       name: 'years',
       type: 'number',
       placeholder: '15',
-      min: 15,
-      max: 50,
       unit: 'years',
-      required: true,
-      tooltip: 'Duration for PPF investment (Minimum 15 years lock-in period)'
+      tooltip: 'Duration for PPF investment'
     }
   ];
 

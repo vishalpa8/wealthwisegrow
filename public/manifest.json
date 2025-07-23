@@ -1,0 +1,39 @@
+{
+  "name": "WealthWise Hub - Financial Calculators & Guides",
+  "short_name": "WealthWise Hub",
+  "description": "Access financial calculators and guides for mortgages, loans, investments, and more.",
+  "start_url": "https://wealthwise-hub.netlify.app",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "education", "productivity"],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "platform": "mobile"
+    },
+    {
+      "src": "/screenshots/desktop.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "platform": "desktop"
+    }
+  ]
+}

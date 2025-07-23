@@ -10,7 +10,6 @@ interface Calculator {
   path: string;
   category: string;
   icon: string;
-  popular?: boolean;
   difficulty: 'Easy' | 'Medium' | 'Advanced';
   estimatedTime: string;
   features: string[];
@@ -23,7 +22,6 @@ const calculators: Calculator[] = [
     path: '/calculators/mortgage', 
     category: 'Loans', 
     icon: '🏠', 
-    popular: true, 
     difficulty: 'Medium',
     estimatedTime: '3-5 min',
     features: ['Monthly Payment', 'Total Interest', 'Amortization Schedule', 'Tax & Insurance']
@@ -34,7 +32,6 @@ const calculators: Calculator[] = [
     path: '/calculators/loan', 
     category: 'Loans', 
     icon: '💳', 
-    popular: true, 
     difficulty: 'Easy',
     estimatedTime: '2-3 min',
     features: ['EMI Calculator', 'Multiple Loan Types', 'Interest Breakdown', 'Prepayment Analysis']
@@ -45,7 +42,6 @@ const calculators: Calculator[] = [
     path: '/calculators/investment', 
     category: 'Investments', 
     icon: '📈', 
-    popular: true, 
     difficulty: 'Medium',
     estimatedTime: '4-6 min',
     features: ['SIP Calculator', 'Lump Sum', 'Goal Planning', 'Returns Analysis']
@@ -56,7 +52,6 @@ const calculators: Calculator[] = [
     path: '/calculators/retirement', 
     category: 'Planning', 
     icon: '🧓', 
-    popular: true, 
     difficulty: 'Advanced',
     estimatedTime: '5-8 min',
     features: ['Corpus Calculation', 'Inflation Adjustment', 'Multiple Scenarios', 'Goal Tracking']
@@ -91,13 +86,21 @@ interface CalculatorExplorerProps {
 export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps) {
   const [selectedCalculator, setSelectedCalculator] = useState<Calculator | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
 
   if (!isOpen) return null;
 
   const categories = ['All', 'Loans', 'Investments', 'Planning', 'Tax'];
-  const filteredCalculators = selectedCategory === 'All' 
-    ? calculators 
-    : calculators.filter(calc => calc.category === selectedCategory);
+  
+  const filteredCalculators = calculators.filter(calc => {
+    const matchesCategory = selectedCategory === 'All' || calc.category === selectedCategory;
+    const matchesSearch = !searchTerm.trim() || 
+      calc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      calc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      calc.category.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesCategory && matchesSearch;
+  });
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -128,8 +131,35 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
         <div className="flex h-[calc(90vh-120px)]">
           {/* Left Panel - Calculator List */}
           <div className="w-1/2 border-r border-gray-200 overflow-y-auto">
-            {/* Category Filter */}
-            <div className="p-4 border-b border-gray-100">
+            {/* Search and Filter */}
+            <div className="p-4 border-b border-gray-100 space-y-4">
+              {/* Search Box */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search calculators..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              
+              {/* Category Filter */}
               <div className="flex flex-wrap gap-2">
                 {categories.map((category) => (
                   <button
@@ -145,11 +175,16 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
                   </button>
                 ))}
               </div>
+              
+              {/* Results count */}
+              <div className="text-xs text-gray-500">
+                {filteredCalculators.length} calculator{filteredCalculators.length !== 1 ? 's' : ''} found
+              </div>
             </div>
 
             {/* Calculator List */}
             <div className="p-4 space-y-3">
-              {filteredCalculators.map((calculator) => (
+              {filteredCalculators.length > 0 ? filteredCalculators.map((calculator) => (
                 <div
                   key={calculator.name}
                   onClick={() => setSelectedCalculator(calculator)}
@@ -159,25 +194,21 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
                       : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                   }`}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center">
-                      <span className="text-2xl mr-3">{calculator.icon}</span>
-                      <div>
-                        <h3 className="font-semibold text-gray-900 flex items-center">
-                          {calculator.name}
-                          {calculator.popular && (
-                            <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-0.5 rounded-full">
-                              ⭐ Popular
-                            </span>
-                          )}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start">
+                      <span className="text-2xl mr-3 flex-shrink-0">{calculator.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 flex items-center flex-wrap gap-2 mb-1">
+                          <span>{calculator.name}</span>
+                          
                         </h3>
-                        <p className="text-sm text-gray-600 mt-1">{calculator.description}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{calculator.description}</p>
                       </div>
                     </div>
                   </div>
                   
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2 flex-wrap gap-1">
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
                         {calculator.category}
                       </span>
@@ -185,10 +216,26 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
                         {calculator.difficulty}
                       </span>
                     </div>
-                    <span className="text-xs text-gray-500">{calculator.estimatedTime}</span>
+                    <span className="text-xs text-gray-500 ml-2">{calculator.estimatedTime}</span>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-2">🔍</div>
+                  <p className="text-gray-500 text-sm">
+                    {searchTerm ? `No calculators found for "${searchTerm}"` : 'No calculators in this category'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedCategory('All');
+                    }}
+                    className="text-blue-600 hover:text-blue-700 text-sm mt-2"
+                  >
+                    Clear filters
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 

@@ -1,8 +1,11 @@
 "use client";
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { useCurrency } from "@/contexts/currency-context";
 import { calculateIncomeTax, IncomeTaxInputs } from '@/lib/calculations/tax';
-import { incomeTaxSchema } from '@/lib/validations/calculator';
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   annualIncome: 1000000,
@@ -14,7 +17,9 @@ const initialValues = {
 export default function IncomeTaxCalculatorPage() {
   const [values, setValues] = useState(initialValues);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
+
+  const { currency } = useCurrency();
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -22,9 +27,7 @@ export default function IncomeTaxCalculatorPage() {
       name: 'annualIncome',
       type: 'number',
       placeholder: '10,00,000',
-      min: 100000,
-      max: 50000000,
-      required: true,
+      unit: currency.symbol,
       tooltip: 'Your total annual income from all sources'
     },
     {
@@ -32,16 +35,12 @@ export default function IncomeTaxCalculatorPage() {
       name: 'age',
       type: 'number',
       placeholder: '30',
-      min: 18,
-      max: 100,
-      required: true,
       tooltip: 'Your age (affects tax exemption limits)'
     },
     {
       label: 'Tax Regime',
       name: 'regime',
       type: 'select',
-      required: true,
       options: [
         { value: 'new', label: 'New Tax Regime' },
         { value: 'old', label: 'Old Tax Regime' }
@@ -53,23 +52,23 @@ export default function IncomeTaxCalculatorPage() {
       name: 'deductions',
       type: 'number',
       placeholder: '1,50,000',
-      min: 0,
-      max: 1500000,
-      required: true,
+      unit: currency.symbol,
       tooltip: 'Total deductions under 80C, 80D, etc. (only for old regime)'
     }
   ];
 
   const results = useMemo(() => {
+    setCalculationError(undefined);
     try {
-      setError('');
-      const validation = incomeTaxSchema.safeParse(values);
-      if (!validation.success) {
-        setError(validation.error.errors[0]?.message || 'Invalid input');
-        return [];
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues: IncomeTaxInputs = {
+        annualIncome: Math.abs(parseRobustNumber(values.annualIncome)) || 0,
+        age: Math.max(18, Math.abs(parseRobustNumber(values.age)) || 25),
+        deductions: Math.abs(parseRobustNumber(values.deductions)) || 0,
+        regime: (values.regime as 'old' | 'new') || 'new'
+      };
 
-      const calculation = calculateIncomeTax(validation.data as IncomeTaxInputs);
+      const calculation = calculateIncomeTax(validatedValues);
 
       const calculatorResults: CalculatorResult[] = [
         {
@@ -112,36 +111,67 @@ export default function IncomeTaxCalculatorPage() {
       ];
 
       return calculatorResults;
-    } catch {
-      setError('Calculation failed. Please check your inputs.');
+    } catch (err: any) {
+      console.error('Income tax calculation error:', err);
+      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
       return [];
     }
   }, [values]);
 
-  const handleChange = (name: string, value: any) => {
-    const parsedValue = (name === 'annualIncome' || name === 'age' || name === 'deductions') ? parseFloat(value) : value;
-    setValues(prev => ({ ...prev, [name]: isNaN(parsedValue) ? 0 : parsedValue }));
-  };
+  const handleChange = useCallback((name: string, value: any) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    setCalculationError(undefined);
+  }, []);
 
   const handleCalculate = () => {
     setLoading(true);
+    setCalculationError(undefined);
     setTimeout(() => setLoading(false), 500);
   };
 
+  const sidebar = (
+    <div className="space-y-4">
+      <div className="card">
+        <AdsPlaceholder position="sidebar" size="300x250" />
+      </div>
+      <div className="card">
+        <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Planning Tips</h3>
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Compare old vs new tax regime to save more.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Maximize deductions under Section 80C, 80D.</p>
+          </div>
+          <div className="flex items-start space-x-2">
+            <span className="text-success-500 text-sm">✓</span>
+            <p className="text-sm text-neutral-600">Plan investments for tax efficiency.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <CalculatorLayout
+      title="Income Tax Calculator"
+      description="Calculate your income tax liability under both old and new tax regimes in India."
+      sidebar={sidebar}
+    >
       <EnhancedCalculatorForm
-        title="Income Tax Calculator"
-        description="Calculate your income tax liability under both old and new tax regimes in India."
+        title="Income Tax Details"
+        description="Enter your income and deduction details."
         fields={fields}
         values={values}
         onChange={handleChange}
         onCalculate={handleCalculate}
         results={results}
         loading={loading}
-        error={error}
-        showComparison={true}
+        error={calculationError}
+        showComparison={false}
       />
-    </div>
+    </CalculatorLayout>
   );
 }

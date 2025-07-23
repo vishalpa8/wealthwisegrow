@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://wealthwise-hub.netlify.app/sitemap.xml
+
+# Important pages
+Allow: /calculators/
+Allow: /guides/
+Allow: /privacy-policy
+
+# Prevent access to certain paths
+Disallow: /api/
+Disallow: /_next/static/

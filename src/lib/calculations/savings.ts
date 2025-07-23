@@ -49,16 +49,18 @@ export interface SIPMonthlyBreakdown {
 
 export function calculateSIP(inputs: SIPInputs): SIPResults {
   return safeCalculation(() => {
-    const { monthlyInvestment, annualReturn, years } = inputs;
+    // Use robust parsing and handle edge cases gracefully
+    const monthlyInvestment = Math.abs(parseRobustNumber(inputs.monthlyInvestment) || 0);
+    const annualReturn = Math.abs(parseRobustNumber(inputs.annualReturn) || 0);
+    const years = Math.max(parseRobustNumber(inputs.years) || 1, 1);
     
-    // Validate inputs
-    if (!isSafeNumber(monthlyInvestment) || !isSafeNumber(annualReturn) || !isSafeNumber(years)) {
+    // Handle zero investment gracefully
+    if (monthlyInvestment === 0) {
       return {
         totalInvestment: 0,
         maturityAmount: 0,
         totalGains: 0,
-        monthlyBreakdown: [],
-        error: 'Invalid input values'
+        monthlyBreakdown: []
       };
     }
     

@@ -12,8 +12,6 @@ interface NumericInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   allowNegative?: boolean;
   allowZero?: boolean;
   decimalPlaces?: number;
-  min?: number | undefined;
-  max?: number | undefined;
   formatOptions?: Intl.NumberFormatOptions;
   hideControls?: boolean; // Hide the increment/decrement arrows
   showCurrencySymbol?: boolean;
@@ -34,12 +32,9 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
     {
       value,
       onValueChange,
-      allowNegative = false,
+      allowNegative = true,
       allowZero = true,
       decimalPlaces = 2,
-      min,
-      max,
-      formatOptions,
       // hideControls = false,
       showCurrencySymbol = false,
       placeholder,
@@ -72,11 +67,10 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
           minimumFractionDigits: 0,
           maximumFractionDigits: decimalPlaces,
           useGrouping: false, // No thousand separators in the input
-          ...formatOptions
         });
         setInputValue(formatter.format(value));
       }
-    }, [value, decimalPlaces, formatOptions]);
+    }, [value, decimalPlaces]);
 
     // Handle input changes
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,36 +94,14 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       // Parse the input as a number
       const parsedValue = parseRobustNumber(newValue);
       
-      // Apply validation rules
-      if (!allowNegative && parsedValue < 0) {
-        // For negative values in non-negative inputs, convert to positive
-        if (parsedValue !== 0) {
-          const positiveValue = Math.abs(parsedValue);
-          setInputValue(positiveValue.toString());
-          onValueChange(positiveValue);
-          return;
-        }
-        return; // Don't allow negative values if not enabled
-      }
-      
-      if (!allowZero && parsedValue === 0) {
-        // If zero isn't allowed but was entered, we don't update the parent
-        // but we allow the user to continue typing
-        return;
-      }
+      // Ultra-flexible validation - accept all values for maximum user-friendliness
+      // Let parseRobustNumber handle all edge cases gracefully
+      // Remove strict validation rules to allow users to input any value
       
       const finalValue = parsedValue;
       
-      // Apply min/max constraints if specified
-      if (min !== undefined && parsedValue < min) {
-        // We still update the input field but leave validation to the parent
-        // Optionally, we could clamp the value: finalValue = Math.max(parsedValue, min);
-      }
-      
-      if (max !== undefined && parsedValue > max) {
-        // We still update the input field but leave validation to the parent
-        // Optionally, we could clamp the value: finalValue = Math.min(parsedValue, max);
-      }
+      // Remove min/max constraints for maximum flexibility
+      // Let the parent component handle any validation if needed
       
       // Notify parent of the new value
       onValueChange(finalValue);
@@ -150,34 +122,17 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         return;
       }
       
-      let parsedValue = parseRobustNumber(inputValue);
+      const parsedValue = parseRobustNumber(inputValue);
       
-      // Apply constraints on blur for better UX
-      if (!allowNegative && parsedValue < 0) {
-        parsedValue = Math.abs(parsedValue);
-      }
-      
-      if (!allowZero && parsedValue === 0 && min !== undefined) {
-        parsedValue = min;
-      }
-      
-      // Apply min/max on blur
-      if (min !== undefined && parsedValue < min) {
-        parsedValue = min;
-        onValueChange(parsedValue);
-      }
-      
-      if (max !== undefined && parsedValue > max) {
-        parsedValue = max;
-        onValueChange(parsedValue);
-      }
+      // Ultra-flexible approach - no constraints on blur
+      // Accept any value the user enters for maximum user-friendliness
+      // Let the parent component and calculation functions handle edge cases
       
       // Format the parsed value for display
       const formatter = new Intl.NumberFormat(undefined, {
         minimumFractionDigits: 0,
         maximumFractionDigits: decimalPlaces,
         useGrouping: false, // No thousand separators in the input
-        ...formatOptions
       });
       
       setInputValue(formatter.format(parsedValue));

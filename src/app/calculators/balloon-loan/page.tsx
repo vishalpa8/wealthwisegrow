@@ -4,6 +4,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   loanAmount: 1000000,
@@ -22,7 +23,12 @@ interface BalloonLoanInputs {
 }
 
 function calculateBalloonLoan(inputs: BalloonLoanInputs) {
-  const { loanAmount, interestRate, loanTerm, balloonPayment, paymentFrequency } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const loanAmount = Math.abs(parseRobustNumber(inputs.loanAmount)) || 100000;
+  const interestRate = Math.abs(parseRobustNumber(inputs.interestRate)) || 9;
+  const loanTerm = Math.max(1, Math.abs(parseRobustNumber(inputs.loanTerm)) || 5);
+  const balloonPayment = Math.abs(parseRobustNumber(inputs.balloonPayment)) || 10000;
+  const paymentFrequency = inputs.paymentFrequency || 'monthly';
   
   const periodsPerYear = paymentFrequency === 'monthly' ? 12 : 4;
   const totalPeriods = loanTerm * periodsPerYear;
@@ -32,18 +38,20 @@ function calculateBalloonLoan(inputs: BalloonLoanInputs) {
   const pvBalloon = balloonPayment / Math.pow(1 + periodRate, totalPeriods);
   
   // Calculate the loan amount to be amortized (excluding balloon payment)
-  const amortizedAmount = loanAmount - pvBalloon;
+  const amortizedAmount = Math.max(0, loanAmount - pvBalloon);
   
   // Calculate regular payment using PMT formula
   let regularPayment = 0;
   if (amortizedAmount > 0 && periodRate > 0) {
     regularPayment = (amortizedAmount * periodRate) / (1 - Math.pow(1 + periodRate, -totalPeriods));
+  } else if (amortizedAmount > 0) {
+    regularPayment = amortizedAmount / totalPeriods;
   }
   
   // Calculate total payments
   const totalRegularPayments = regularPayment * totalPeriods;
   const totalPayments = totalRegularPayments + balloonPayment;
-  const totalInterest = totalPayments - loanAmount;
+  const totalInterest = Math.max(0, totalPayments - loanAmount);
   
   // Calculate amortization schedule for first few payments
   let balance = loanAmount;
@@ -51,8 +59,8 @@ function calculateBalloonLoan(inputs: BalloonLoanInputs) {
   
   for (let i = 1; i <= Math.min(12, totalPeriods); i++) {
     const interestPayment = balance * periodRate;
-    const principalPayment = regularPayment - interestPayment;
-    balance -= principalPayment;
+    const principalPayment = Math.max(0, regularPayment - interestPayment);
+    balance = Math.max(0, balance - principalPayment);
     
     schedule.push({
       period: i,
@@ -64,11 +72,16 @@ function calculateBalloonLoan(inputs: BalloonLoanInputs) {
   }
   
   // Calculate what the payment would be for a traditional loan
-  const traditionalPayment = (loanAmount * periodRate) / (1 - Math.pow(1 + periodRate, -totalPeriods));
-  const paymentSavings = traditionalPayment - regularPayment;
+  let traditionalPayment = 0;
+  if (periodRate > 0) {
+    traditionalPayment = (loanAmount * periodRate) / (1 - Math.pow(1 + periodRate, -totalPeriods));
+  } else {
+    traditionalPayment = loanAmount / totalPeriods;
+  }
+  const paymentSavings = Math.max(0, traditionalPayment - regularPayment);
   
   // Calculate interest rate as percentage of loan
-  const interestPercentage = (totalInterest / loanAmount) * 100;
+  const interestPercentage = loanAmount > 0 ? (totalInterest / loanAmount) * 100 : 0;
   
   return {
     regularPayment,
@@ -81,7 +94,7 @@ function calculateBalloonLoan(inputs: BalloonLoanInputs) {
     paymentSavings,
     finalBalance: balloonPayment,
     schedule,
-    effectiveRate: ((totalPayments / loanAmount) ** (1 / loanTerm) - 1) * 100
+    effectiveRate: loanAmount > 0 ? ((totalPayments / loanAmount) ** (1 / loanTerm) - 1) * 100 : 0
   };
 }
 
@@ -95,33 +108,8 @@ export default function BalloonLoanCalculatorPage() {
   const balloonLoanResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.loanAmount <= 0) {
-        throw new Error('Loan amount must be greater than zero');
-      }
-
-      if (values.interestRate <= 0) {
-        throw new Error('Interest rate must be greater than zero');
-      }
-
-      if (values.loanTerm <= 0) {
-        throw new Error('Loan term must be greater than zero');
-      }
-
-      if (values.balloonPayment <= 0) {
-        throw new Error('Balloon payment must be greater than zero');
-      }
-
-      if (values.balloonPayment >= values.loanAmount) {
-        throw new Error('Balloon payment should be less than the total loan amount');
-      }
-
+      // Always attempt calculation - let the function handle edge cases gracefully
       const calculation = calculateBalloonLoan(values);
-
-      if (isNaN(calculation.regularPayment) || calculation.regularPayment <= 0) {
-        throw new Error('Unable to calculate payment. Please check your inputs.');
-      }
-
       return calculation;
     } catch (err: any) {
       console.error('Balloon loan calculation error:', err);
@@ -137,9 +125,6 @@ export default function BalloonLoanCalculatorPage() {
       type: 'number',
       placeholder: '10,00,000',
       unit: currency.symbol,
-      min: 50000,
-      max: 100000000,
-      required: true,
       tooltip: 'Total amount you want to borrow'
     },
     {
@@ -147,10 +132,7 @@ export default function BalloonLoanCalculatorPage() {
       name: 'interestRate',
       type: 'percentage',
       placeholder: '9',
-      min: 1,
-      max: 25,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate for the balloon loan'
     },
     {
@@ -158,10 +140,7 @@ export default function BalloonLoanCalculatorPage() {
       name: 'loanTerm',
       type: 'number',
       placeholder: '5',
-      min: 1,
-      max: 30,
       unit: 'years',
-      required: true,
       tooltip: 'Duration of the loan before balloon payment is due'
     },
     {
@@ -170,9 +149,6 @@ export default function BalloonLoanCalculatorPage() {
       type: 'number',
       placeholder: '3,00,000',
       unit: currency.symbol,
-      min: 10000,
-      max: 50000000,
-      required: true,
       tooltip: 'Large final payment due at the end of the loan term'
     },
     {
@@ -183,7 +159,6 @@ export default function BalloonLoanCalculatorPage() {
         { value: 'monthly', label: 'Monthly' },
         { value: 'quarterly', label: 'Quarterly' }
       ],
-      required: true,
       tooltip: 'How often you will make regular payments'
     }
   ];

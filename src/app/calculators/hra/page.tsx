@@ -5,6 +5,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   basicSalary: 50000,
@@ -23,13 +24,12 @@ interface HRAInputs {
 }
 
 function calculateHRAExemption(inputs: HRAInputs) {
-  const {
-    basicSalary,
-    hraReceived,
-    rentPaid,
-    cityType,
-    monthsRented
-  } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const basicSalary = Math.abs(parseRobustNumber(inputs.basicSalary)) || 1000;
+  const hraReceived = Math.abs(parseRobustNumber(inputs.hraReceived)) || 0;
+  const rentPaid = Math.abs(parseRobustNumber(inputs.rentPaid)) || 0;
+  const monthsRented = Math.max(1, Math.min(12, Math.abs(parseRobustNumber(inputs.monthsRented)) || 12));
+  const cityType = inputs.cityType || 'metro';
 
   // Annual calculations
   const annualBasic = basicSalary * 12;
@@ -75,24 +75,9 @@ export default function HRACalculatorPage() {
   const hraResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.rentPaid > values.basicSalary) {
-        throw new Error('Rent paid seems unusually high compared to basic salary');
-      }
-      if (values.basicSalary <= 0) {
-        throw new Error('Basic salary must be greater than zero');
-      }
-      if (values.hraReceived < 0) {
-        throw new Error('HRA received cannot be negative');
-      }
-      if (values.rentPaid < 0) {
-        throw new Error('Rent paid cannot be negative');
-      }
-      if (values.monthsRented <= 0 || values.monthsRented > 12) {
-        throw new Error('Months rented must be between 1 and 12');
-      }
-
-      return calculateHRAExemption(values);
+      // Always attempt calculation - let the function handle edge cases gracefully
+      const calculation = calculateHRAExemption(values);
+      return calculation;
     } catch (err: any) {
       console.error('HRA calculation error:', err);
       setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
@@ -107,9 +92,6 @@ export default function HRACalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 1000000,
-      required: true,
       tooltip: 'Your monthly basic salary'
     },
     {
@@ -118,9 +100,6 @@ export default function HRACalculatorPage() {
       type: 'number',
       placeholder: '20,000',
       unit: currency.symbol,
-      min: 0,
-      max: 500000,
-      required: true,
       tooltip: 'Monthly HRA received from employer'
     },
     {
@@ -129,9 +108,6 @@ export default function HRACalculatorPage() {
       type: 'number',
       placeholder: '15,000',
       unit: currency.symbol,
-      min: 0,
-      max: 500000,
-      required: true,
       tooltip: 'Monthly rent paid for accommodation'
     },
     {
@@ -142,7 +118,6 @@ export default function HRACalculatorPage() {
         { value: 'metro', label: 'Metro City (50%)' },
         { value: 'non-metro', label: 'Non-Metro City (40%)' }
       ],
-      required: true,
       tooltip: 'Metro cities: Delhi, Mumbai, Kolkata, Chennai'
     },
     {
@@ -150,9 +125,6 @@ export default function HRACalculatorPage() {
       name: 'monthsRented',
       type: 'number',
       placeholder: '12',
-      min: 1,
-      max: 12,
-      required: true,
       tooltip: 'Number of months rent paid in the financial year'
     }
   ];

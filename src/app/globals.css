@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Ad placeholder styles */
+.ad-placeholder {
+  @apply transition-all duration-300 ease-in-out;
+  opacity: 0.3;
+}
+
+.ad-placeholder:hover {
+  opacity: 0.5;
+}
+
+/* Hide ad placeholders when ads are loaded */
+.ad-loaded .ad-placeholder {
+  display: none;
+}
+
 @layer base {
   :root {
     /* Professional Color System */
@@ -299,7 +328,7 @@
   
   /* Simple Calculator Card Styles */
   .calculator-card {
-    @apply bg-white rounded-lg border border-neutral-200 p-6 transition-colors duration-200;
+    @apply bg-white rounded-lg border border-neutral-200 p-6 transition-colors duration-200 h-full flex flex-col;
     box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   }
   
@@ -308,11 +337,15 @@
   }
   
   .calculator-card-title {
-    @apply text-lg font-semibold text-neutral-900 mb-2;
+    @apply text-lg font-semibold text-neutral-900 mb-2 leading-tight;
   }
   
   .calculator-card-description {
-    @apply text-sm text-neutral-600 mb-4 leading-relaxed;
+    @apply text-sm text-neutral-600 mb-4 leading-relaxed flex-1;
+  }
+  
+  .calculator-card-footer {
+    @apply mt-auto pt-3 border-t border-gray-100;
   }
   
   /* Clean Form Styles */
@@ -538,13 +571,37 @@
   
   @media (min-width: 1280px) {
     .calculator-results-grid-wide {
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
     }
   }
   
   @media (min-width: 1600px) {
     .calculator-results-grid-wide {
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+  
+  /* Card Grid Utilities */
+  .card-grid {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+  @media (max-width: 640px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .card-grid-responsive {
+    @apply grid gap-6;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  
+  @media (max-width: 640px) {
+    .card-grid-responsive {
+      grid-template-columns: 1fr;
+      @apply gap-4;
     }
   }
   
@@ -823,12 +880,14 @@
     line-height: 1.1;
   }
   
-  /* Text Clamping */
+  /* Text Clamping - Optional utility classes */
   .line-clamp-1 {
     display: -webkit-box;
     -webkit-line-clamp: 1;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
   .line-clamp-2 {
@@ -836,6 +895,8 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
   
   .line-clamp-3 {
@@ -843,6 +904,19 @@
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+  
+  /* Text utilities for better readability */
+  .text-wrap-balance {
+    text-wrap: balance;
+  }
+  
+  .text-no-truncate {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
   }
   
   /* Table Responsive Styles */

@@ -147,23 +147,7 @@ export default function SavingsCalculatorPage() {
   const savingsResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.savingsGoal <= 0) {
-        throw new Error('Savings goal must be greater than zero');
-      }
-
-      if (values.monthlyContribution <= 0) {
-        throw new Error('Monthly contribution must be greater than zero');
-      }
-
-      if (values.interestRate <= 0) {
-        throw new Error('Interest rate must be greater than zero');
-      }
-
-      if (values.timeHorizon <= 0) {
-        throw new Error('Time horizon must be greater than zero');
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateSavings(values);
 
       return calculation;
@@ -184,7 +168,6 @@ export default function SavingsCalculatorPage() {
         { value: 'growth', label: 'Wealth Accumulation' },
         { value: 'emergency', label: 'Emergency Fund' }
       ],
-      required: true,
       tooltip: 'Type of savings plan you want to calculate'
     },
     {
@@ -193,9 +176,6 @@ export default function SavingsCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 10000,
-      max: 100000000,
-      required: true,
       tooltip: 'Target amount you want to save'
     },
     {
@@ -204,9 +184,6 @@ export default function SavingsCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 0,
-      max: 50000000,
-      required: true,
       tooltip: 'Amount you have already saved'
     },
     {
@@ -215,9 +192,6 @@ export default function SavingsCalculatorPage() {
       type: 'number',
       placeholder: '10,000',
       unit: currency.symbol,
-      min: 500,
-      max: 500000,
-      required: true,
       tooltip: 'Amount you can save each month'
     },
     {
@@ -225,10 +199,7 @@ export default function SavingsCalculatorPage() {
       name: 'interestRate',
       type: 'percentage',
       placeholder: '8',
-      min: 1,
-      max: 25,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual return on your savings'
     },
     {
@@ -236,10 +207,7 @@ export default function SavingsCalculatorPage() {
       name: 'timeHorizon',
       type: 'number',
       placeholder: '10',
-      min: 1,
-      max: 50,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you plan to save'
     },
     {
@@ -247,10 +215,7 @@ export default function SavingsCalculatorPage() {
       name: 'inflationRate',
       type: 'percentage',
       placeholder: '6',
-      min: 2,
-      max: 15,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual inflation rate'
     },
     {
@@ -258,10 +223,7 @@ export default function SavingsCalculatorPage() {
       name: 'taxRate',
       type: 'percentage',
       placeholder: '10',
-      min: 0,
-      max: 30,
       step: 0.1,
-      required: true,
       tooltip: 'Tax rate applicable on investment returns'
     }
   ];

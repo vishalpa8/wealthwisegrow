@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateGoldInvestment, GoldInputs } from '@/lib/calculations/savings';
-import { goldSchema } from '@/lib/validations/calculator';
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   investmentAmount: 100000,
@@ -24,13 +24,15 @@ export default function GoldCalculatorPage() {
   const goldResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = goldSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues: GoldInputs = {
+        investmentAmount: Math.abs(parseRobustNumber(values.investmentAmount)) || 1000,
+        goldPricePerGram: Math.abs(parseRobustNumber(values.goldPricePerGram)) || 6000,
+        years: Math.max(1, Math.abs(parseRobustNumber(values.years)) || 1),
+        expectedAnnualReturn: parseRobustNumber(values.expectedAnnualReturn) || 8 // Allow negative returns
+      };
 
-      const calculation = calculateGoldInvestment(values);
+      const calculation = calculateGoldInvestment(validatedValues);
 
       return calculation;
     } catch (err: any) {
@@ -47,9 +49,6 @@ export default function GoldCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 10000000,
-      required: true,
       tooltip: 'Amount you want to invest in gold'
     },
     {
@@ -58,9 +57,6 @@ export default function GoldCalculatorPage() {
       type: 'number',
       placeholder: '6,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 50000,
-      required: true,
       tooltip: 'Current price of gold per gram'
     },
     {
@@ -68,9 +64,6 @@ export default function GoldCalculatorPage() {
       name: 'expectedAnnualReturn',
       type: 'percentage',
       placeholder: '8',
-      min: -20,
-      max: 30,
-      required: true,
       tooltip: 'Expected annual appreciation in gold prices'
     },
     {
@@ -78,10 +71,7 @@ export default function GoldCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '10',
-      min: 1,
-      max: 30,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you plan to hold the gold'
     }
   ];

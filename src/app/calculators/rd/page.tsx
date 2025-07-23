@@ -5,7 +5,7 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateRD, RDInputs } from '@/lib/calculations/savings';
-import { rdSchema } from '@/lib/validations/calculator';
+
 
 const initialValues = {
   monthlyDeposit: 5000,
@@ -23,12 +23,7 @@ export default function RDCalculatorPage() {
   const rdResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      const validation = rdSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateRD(values);
 
       return calculation;
@@ -46,9 +41,6 @@ export default function RDCalculatorPage() {
       type: 'number',
       placeholder: '5,000',
       unit: currency.symbol,
-      min: 100,
-      max: 1000000,
-      required: true,
       tooltip: 'Amount you plan to deposit every month'
     },
     {
@@ -56,10 +48,7 @@ export default function RDCalculatorPage() {
       name: 'annualRate',
       type: 'percentage',
       placeholder: '6.5',
-      min: 1,
-      max: 20,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate offered by the bank'
     },
     {
@@ -67,10 +56,7 @@ export default function RDCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '5',
-      min: 1,
-      max: 10,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you want to continue the RD'
     }
   ];

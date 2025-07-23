@@ -2,13 +2,54 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
 import Link from "next/link";
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
+import { AdSenseWrapper } from "@/components/ui/adsense-wrapper";
 import { FooterYear } from "@/components/ui/footer-year";
 import { CurrencyProvider } from "@/contexts/currency-context";
 
 export const metadata: Metadata = {
-  title: "WealthWise Hub",
-  description: "Personal Calculator Hub",
+  title: "WealthWise Hub - Financial Calculators & Guides",
+  description: "Access a comprehensive suite of financial calculators and guides for mortgages, loans, investments, retirement planning, and more. Make smarter financial decisions with WealthWise Hub.",
+  keywords: "financial calculator, mortgage calculator, loan calculator, investment calculator, retirement planning, personal finance",
+  authors: [{ name: 'WealthWise Hub' }],
+  metadataBase: new URL('https://wealthwise-hub.netlify.app'),
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'WealthWise Hub - Financial Calculators & Guides',
+    description: 'Comprehensive financial calculators and guides for better money management',
+    url: 'https://wealthwise-hub.netlify.app',
+    siteName: 'WealthWise Hub',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'WealthWise Hub - Financial Calculators & Guides',
+    description: 'Comprehensive financial calculators and guides for better money management',
+    images: ['/og-image.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  verification: {
+    google: 'your-google-verification-code',
+  },
 };
 
 export default function RootLayout({
@@ -17,8 +58,10 @@ export default function RootLayout({
   children: ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col font-sans">
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3402658627618101"
+     crossorigin="anonymous"></script>
         <CurrencyProvider>
         {/* Simple Header */}
         <header className="w-full bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
@@ -50,15 +93,26 @@ export default function RootLayout({
               Guides
             </Link>
           </nav>
-          {/* Mobile menu button */}
-          <button className="md:hidden p-2 rounded-lg hover:bg-neutral-100 transition-colors">
-            <svg className="w-5 h-5 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {/* Mobile menu - Simple responsive navigation */}
+          <div className="md:hidden">
+            <div className="flex items-center space-x-4">
+              <Link
+                href="/calculators"
+                className="text-neutral-600 hover:text-neutral-900 transition-colors font-medium text-sm"
+              >
+                Calculators
+              </Link>
+              <Link
+                href="/guides"
+                className="text-neutral-600 hover:text-neutral-900 transition-colors font-medium text-sm"
+              >
+                Guides
+              </Link>
+            </div>
+          </div>
         </header>
         
-        <AdsPlaceholder position="header" size="728x90" />
+        <AdSenseWrapper adSlot="header-ad" className="w-full h-[90px] max-w-[728px] mx-auto mt-4" />
         
         <div className="flex flex-1 w-full container-wide gap-8 py-8">
           {/* Simple Sidebar */}
@@ -117,7 +171,7 @@ export default function RootLayout({
             </div>
             
             <div className="card">
-              <AdsPlaceholder position="sidebar" size="300x250" />
+              <AdSenseWrapper adSlot="sidebar-ad" className="w-full h-[250px] max-w-[300px]" />
             </div>
           </aside>
           
@@ -142,6 +196,9 @@ export default function RootLayout({
               <div className="text-sm text-neutral-500">
                 &copy; <FooterYear /> WealthWise Hub. All rights reserved.
               </div>
+            </div>
+            <div className="mt-8">
+              <AdSenseWrapper adSlot="footer-ad" className="w-full h-[90px] max-w-[728px] mx-auto" />
             </div>
           </div>
         </footer>

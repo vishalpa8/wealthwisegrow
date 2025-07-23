@@ -11,7 +11,6 @@ import {
   safePower,
   safeAdd,
   safeSubtract,
-  isEffectivelyZero,
   roundToPrecision
 } from '@/lib/utils/number';
 
@@ -38,13 +37,9 @@ interface SimpleInterestInputs {
 }
 
 function calculateSimpleInterest(inputs: SimpleInterestInputs) {
-  const principal = parseRobustNumber(inputs.principal);
-  const rate = parseRobustNumber(inputs.rate);
-  const time = parseRobustNumber(inputs.time);
-
-  if (principal <= 0) throw new Error('Principal must be positive');
-  if (rate < 0) throw Error('Interest rate cannot be negative');
-  if (time <= 0) throw new Error('Time period must be positive');
+  const principal = Math.abs(parseRobustNumber(inputs.principal) || 0);
+  const rate = Math.abs(parseRobustNumber(inputs.rate) || 0);
+  const time = Math.abs(parseRobustNumber(inputs.time) || 1);
 
   const simpleInterest = safeDivide(
     safeMultiply(safeMultiply(principal, rate), time),
@@ -63,11 +58,10 @@ function calculateSimpleInterest(inputs: SimpleInterestInputs) {
 }
 
 function calculateCompoundInterest(inputs: CompoundInterestInputs) {
-  const { principal, rate, time, compoundingFrequency } = inputs;
-
-  if (principal <= 0) throw new Error('Principal must be positive');
-  if (rate < 0) throw new Error('Interest rate cannot be negative');
-  if (time <= 0) throw new Error('Time period must be positive');
+  const principal = Math.abs(parseRobustNumber(inputs.principal) || 0);
+  const rate = Math.abs(parseRobustNumber(inputs.rate) || 0);
+  const time = Math.abs(parseRobustNumber(inputs.time) || 1);
+  const { compoundingFrequency } = inputs;
 
   const frequencies: Record<string, number> = {
     'yearly': 1,
@@ -128,37 +122,12 @@ export default function CompoundInterestCalculatorPage() {
   const compoundInterestResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Basic validation
-      if (values.principal <= 0) {
-        throw new Error('Principal amount must be greater than zero');
-      }
-      if (values.rate < 0) {
-        throw new Error('Interest rate cannot be negative');
-      }
-      if (values.time <= 0) {
-        throw new Error('Time period must be greater than zero');
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       if (values.calculationType === 'compound') {
-        // Additional validation for compound interest
-        if (values.rate > 25 && values.time > 20) {
-          throw new Error('High interest rate with long time period may cause calculation overflow');
-        }
-
         const calculation = calculateCompoundInterest(values);
-
-        if (!isFinite(calculation.totalAmount) || !isFinite(calculation.compoundInterest)) {
-          throw new Error('Calculation overflow. Please use smaller values.');
-        }
-
         return calculation;
       } else {
         const calculation = calculateSimpleInterest(values);
-
-        if (!isFinite(calculation.simpleInterest) || !isFinite(calculation.totalAmount)) {
-          throw new Error('Calculation overflow. Please use smaller values.');
-        }
-
         return calculation;
       }
     } catch (err: any) {
@@ -175,9 +144,6 @@ export default function CompoundInterestCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 100,
-      max: 100000000,
-      required: true,
       tooltip: 'Initial amount of money invested or borrowed'
     },
     {
@@ -185,10 +151,7 @@ export default function CompoundInterestCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '8',
-      min: 0,
-      max: 50,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate (compound interest rate)'
     },
     {
@@ -196,18 +159,14 @@ export default function CompoundInterestCalculatorPage() {
       name: 'time',
       type: 'number',
       placeholder: '5',
-      min: 0.1,
-      max: 50,
       step: 0.1,
       unit: 'years',
-      required: true,
       tooltip: 'Duration for which money is invested or borrowed'
     },
     {
       label: 'Calculation Type',
       name: 'calculationType',
       type: 'select',
-      required: true,
       options: [
         { value: 'compound', label: 'Compound Interest' },
         { value: 'simple', label: 'Simple Interest' },
@@ -218,7 +177,6 @@ export default function CompoundInterestCalculatorPage() {
       label: 'Compounding Frequency',
       name: 'compoundingFrequency',
       type: 'select',
-      required: true,
       options: [
         { value: 'yearly', label: 'Yearly (1 time/year)' },
         { value: 'half-yearly', label: 'Half-Yearly (2 times/year)' },

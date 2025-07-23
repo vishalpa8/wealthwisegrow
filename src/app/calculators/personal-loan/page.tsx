@@ -5,7 +5,6 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLoan } from '@/lib/calculations/loan';
-import { loanSchema } from '@/lib/validations/calculator';
 
 const initialValues = {
   principal: 500000,
@@ -31,37 +30,18 @@ export default function PersonalLoanCalculatorPage() {
   const personalLoanResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Custom validation for personal loans
-      if (values.principal < 10000) {
-        throw new Error('Personal loan amount should be at least ' + currency.symbol + '10,000');
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues = {
+        principal: Math.abs(values.principal || 0),
+        rate: Math.abs(values.rate || 0),
+        years: Math.max(values.years || 1, 1),
+        extraPayment: Math.abs(values.extraPayment || 0)
+      };
 
-      if (values.principal > 50000000) {
-        throw new Error('Personal loan amount cannot exceed ' + currency.symbol + '5 crores');
-      }
+      const calculation = calculateLoan(validatedValues);
 
-      if (values.rate < 8 || values.rate > 30) {
-        throw new Error('Interest rate should be between 8% and 30% for personal loans');
-      }
-
-      if (values.years < 1 || values.years > 10) {
-        throw new Error('Personal loan tenure should be between 1 and 10 years');
-      }
-
-      const validation = loanSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
-      const calculation = calculateLoan(values);
-
-      // Validate calculation results
-      if (!calculation || isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
-        throw new Error('Unable to calculate EMI. Please check your inputs.');
-      }
-
-      const monthlyIncome = values.principal / (values.years * 12) * 3; // Assume 3x EMI as minimum income
+      const monthlyIncome = validatedValues.principal > 0 ? 
+        (validatedValues.principal / (validatedValues.years * 12) * 3) : 0; // Assume 3x EMI as minimum income
 
       return {
         ...calculation,
@@ -72,7 +52,7 @@ export default function PersonalLoanCalculatorPage() {
       setCalculationError(err.message || 'Calculation failed. Please verify your inputs.');
       return null;
     }
-  }, [values, currency.symbol]);
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -81,9 +61,6 @@ export default function PersonalLoanCalculatorPage() {
       type: 'number',
       placeholder: '5,00,000',
       unit: currency.symbol,
-      min: 10000,
-      max: 50000000,
-      required: true,
       tooltip: 'Amount you need for personal expenses'
     },
     {
@@ -91,10 +68,7 @@ export default function PersonalLoanCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '12',
-      min: 8,
-      max: 30,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate (typically 10-24% for personal loans)'
     },
     {
@@ -102,10 +76,7 @@ export default function PersonalLoanCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '5',
-      min: 1,
-      max: 10,
       unit: 'years',
-      required: true,
       tooltip: 'Duration to repay the loan (usually 1-7 years)'
     },
     {
@@ -114,8 +85,6 @@ export default function PersonalLoanCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 100000,
       tooltip: 'Additional payment to reduce loan tenure and interest'
     }
   ];

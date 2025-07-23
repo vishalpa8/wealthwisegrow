@@ -4,6 +4,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   totalDebt: 100000,
@@ -22,10 +23,19 @@ interface DebtPayoffInputs {
 }
 
 function calculateDebtPayoff(inputs: DebtPayoffInputs) {
-  const { totalDebt, interestRate, minimumPayment, extraPayment } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const totalDebt = Math.abs(parseRobustNumber(inputs.totalDebt)) || 100000;
+  const interestRate = Math.abs(parseRobustNumber(inputs.interestRate)) || 18;
+  const minimumPayment = Math.abs(parseRobustNumber(inputs.minimumPayment)) || 1000;
+  const extraPayment = Math.abs(parseRobustNumber(inputs.extraPayment)) || 0;
   
   const monthlyRate = interestRate / 12 / 100;
   const totalMonthlyPayment = minimumPayment + extraPayment;
+  
+  // Ensure minimum payment can cover at least some principal
+  const monthlyInterest = totalDebt * monthlyRate;
+  const effectiveMinPayment = Math.max(minimumPayment, monthlyInterest + 1);
+  const effectiveTotalPayment = Math.max(totalMonthlyPayment, monthlyInterest + 1);
   
   let remainingBalance = totalDebt;
   let totalInterestPaid = 0;
@@ -36,9 +46,9 @@ function calculateDebtPayoff(inputs: DebtPayoffInputs) {
   let minPaymentInterest = 0;
   let minPaymentMonths = 0;
   
-  while (minPaymentBalance > 0 && minPaymentMonths < 600) {
+  while (minPaymentBalance > 0.01 && minPaymentMonths < 600) {
     const interestPayment = minPaymentBalance * monthlyRate;
-    const principalPayment = Math.min(minimumPayment - interestPayment, minPaymentBalance);
+    const principalPayment = Math.min(effectiveMinPayment - interestPayment, minPaymentBalance);
     
     if (principalPayment <= 0) {
       minPaymentMonths = 600; // Never pays off
@@ -51,9 +61,9 @@ function calculateDebtPayoff(inputs: DebtPayoffInputs) {
   }
   
   // Calculate with extra payment
-  while (remainingBalance > 0 && months < 600) {
+  while (remainingBalance > 0.01 && months < 600) {
     const interestPayment = remainingBalance * monthlyRate;
-    const principalPayment = Math.min(totalMonthlyPayment - interestPayment, remainingBalance);
+    const principalPayment = Math.min(effectiveTotalPayment - interestPayment, remainingBalance);
     
     if (principalPayment <= 0) {
       months = 600; // Never pays off
@@ -71,8 +81,8 @@ function calculateDebtPayoff(inputs: DebtPayoffInputs) {
   const minPaymentYears = Math.floor(minPaymentMonths / 12);
   const minPaymentRemainingMonths = minPaymentMonths % 12;
   
-  const interestSaved = minPaymentInterest - totalInterestPaid;
-  const timeSaved = minPaymentMonths - months;
+  const interestSaved = Math.max(0, minPaymentInterest - totalInterestPaid);
+  const timeSaved = Math.max(0, minPaymentMonths - months);
   
   return {
     months,
@@ -85,7 +95,7 @@ function calculateDebtPayoff(inputs: DebtPayoffInputs) {
     minPaymentRemainingMonths,
     minPaymentInterest,
     interestSaved,
-    timeSaved: Math.max(0, timeSaved),
+    timeSaved,
     payoffDate: new Date(Date.now() + months * 30 * 24 * 60 * 60 * 1000)
   };
 }
@@ -100,29 +110,12 @@ export default function DebtPayoffCalculatorPage() {
   const debtPayoffResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.totalDebt <= 0) {
-        throw new Error('Debt amount must be greater than zero');
-      }
-
-      if (values.interestRate <= 0) {
-        throw new Error('Interest rate must be greater than zero');
-      }
-
-      if (values.minimumPayment <= 0) {
-        throw new Error('Minimum payment must be greater than zero');
-      }
-
-      // Check if minimum payment can cover interest
-      const monthlyInterest = (values.totalDebt * values.interestRate / 12 / 100);
-      if (values.minimumPayment <= monthlyInterest) {
-        throw new Error('Minimum payment must be higher than monthly interest to pay off debt');
-      }
-
+      // Always attempt calculation - let the function handle edge cases gracefully
       const calculation = calculateDebtPayoff(values);
 
       if (calculation.months >= 600) {
-        throw new Error('Debt cannot be paid off with current payment amount');
+        setCalculationError('Debt payoff time is very long. Consider increasing payment amount.');
+        return calculation; // Still return results for user to see
       }
 
       return calculation;
@@ -140,9 +133,6 @@ export default function DebtPayoffCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 10000000,
-      required: true,
       tooltip: 'Total outstanding debt amount'
     },
     {
@@ -150,10 +140,7 @@ export default function DebtPayoffCalculatorPage() {
       name: 'interestRate',
       type: 'percentage',
       placeholder: '18',
-      min: 1,
-      max: 50,
       step: 0.1,
-      required: true,
       tooltip: 'Annual interest rate on your debt'
     },
     {
@@ -162,9 +149,6 @@ export default function DebtPayoffCalculatorPage() {
       type: 'number',
       placeholder: '3,000',
       unit: currency.symbol,
-      min: 100,
-      max: 100000,
-      required: true,
       tooltip: 'Minimum payment required each month'
     },
     {
@@ -173,8 +157,6 @@ export default function DebtPayoffCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 100000,
       tooltip: 'Additional amount you can pay monthly'
     },
     {
@@ -186,7 +168,6 @@ export default function DebtPayoffCalculatorPage() {
         { value: 'snowball', label: 'Debt Snowball (Smallest Balance First)' },
         { value: 'minimum', label: 'Minimum Payments Only' }
       ],
-      required: true,
       tooltip: 'Strategy for paying off multiple debts'
     }
   ];

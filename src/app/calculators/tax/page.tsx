@@ -4,6 +4,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   taxType: 'income',
@@ -40,22 +41,21 @@ interface TaxInputs {
 }
 
 function calculateTax(inputs: TaxInputs) {
-  const {
-    taxType,
-    annualIncome,
-    age,
-    regime,
-    deductions80C,
-    deductions80D,
-    hraReceived,
-    hraExemption,
-    otherDeductions,
-    capitalGains,
-    capitalGainsType,
-    businessIncome,
-    professionalTax,
-    tdsDeducted
-  } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const taxType = inputs.taxType || 'income';
+  const annualIncome = Math.abs(parseRobustNumber(inputs.annualIncome)) || 0;
+  const age = Math.max(18, Math.min(100, Math.abs(parseRobustNumber(inputs.age)) || 30));
+  const regime = inputs.regime || 'new';
+  const deductions80C = Math.abs(parseRobustNumber(inputs.deductions80C)) || 0;
+  const deductions80D = Math.abs(parseRobustNumber(inputs.deductions80D)) || 0;
+  const hraReceived = Math.abs(parseRobustNumber(inputs.hraReceived)) || 0;
+  const hraExemption = Math.abs(parseRobustNumber(inputs.hraExemption)) || 0;
+  const otherDeductions = Math.abs(parseRobustNumber(inputs.otherDeductions)) || 0;
+  const capitalGains = Math.abs(parseRobustNumber(inputs.capitalGains)) || 0;
+  const capitalGainsType = inputs.capitalGainsType || 'short-term';
+  const businessIncome = Math.abs(parseRobustNumber(inputs.businessIncome)) || 0;
+  const professionalTax = Math.abs(parseRobustNumber(inputs.professionalTax)) || 0;
+  const tdsDeducted = Math.abs(parseRobustNumber(inputs.tdsDeducted)) || 0;
 
   let taxableIncome = annualIncome + businessIncome;
   let totalDeductions = 0;
@@ -199,18 +199,9 @@ export default function TaxCalculatorPage() {
   const taxResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.annualIncome < 0) {
-        setCalculationError('Annual income cannot be negative');
-        return null;
-      }
-
-      if (values.age < 18 || values.age > 100) {
-        setCalculationError('Age must be between 18 and 100');
-        return null;
-      }
-
-      return calculateTax(values);
+      // Always attempt calculation - let the function handle edge cases gracefully
+      const calculation = calculateTax(values);
+      return calculation;
     } catch (err: any) {
       console.error('Tax calculation error:', err);
       setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
@@ -228,7 +219,6 @@ export default function TaxCalculatorPage() {
         { value: 'gst', label: 'GST Calculator' },
         { value: 'capital-gains', label: 'Capital Gains Tax' }
       ],
-      required: true,
       tooltip: 'Type of tax calculation you need'
     },
     {
@@ -237,9 +227,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '10,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 100000000,
-      required: true,
       tooltip: 'Your total annual income from salary/business'
     },
     {
@@ -247,9 +234,6 @@ export default function TaxCalculatorPage() {
       name: 'age',
       type: 'number',
       placeholder: '30',
-      min: 18,
-      max: 100,
-      required: true,
       tooltip: 'Your age (affects exemption limits)'
     },
     {
@@ -260,7 +244,6 @@ export default function TaxCalculatorPage() {
         { value: 'new', label: 'New Tax Regime' },
         { value: 'old', label: 'Old Tax Regime' }
       ],
-      required: true,
       tooltip: 'Choose between old and new tax regimes'
     },
     {
@@ -269,8 +252,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '1,50,000',
       unit: currency.symbol,
-      min: 0,
-      max: 150000,
       tooltip: 'Investments in PPF, ELSS, life insurance, etc.'
     },
     {
@@ -279,8 +260,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '25,000',
       unit: currency.symbol,
-      min: 0,
-      max: 100000,
       tooltip: 'Health insurance premiums'
     },
     {
@@ -289,8 +268,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '2,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 5000000,
       tooltip: 'House Rent Allowance received from employer'
     },
     {
@@ -299,8 +276,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 5000000,
       tooltip: 'Eligible HRA exemption amount'
     },
     {
@@ -309,8 +284,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 0,
-      max: 1000000,
       tooltip: 'Other eligible deductions (80E, 80G, etc.)'
     },
     {
@@ -319,8 +292,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 50000000,
       tooltip: 'Capital gains from investments'
     },
     {
@@ -339,8 +310,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 50000000,
       tooltip: 'Income from business or profession'
     },
     {
@@ -349,8 +318,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '2,400',
       unit: currency.symbol,
-      min: 0,
-      max: 30000,
       tooltip: 'Professional tax paid during the year'
     },
     {
@@ -359,8 +326,6 @@ export default function TaxCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 0,
-      max: 5000000,
       tooltip: 'Tax deducted at source by employer/others'
     }
   ];
@@ -460,7 +425,6 @@ export default function TaxCalculatorPage() {
   const handleCalculate = () => {
     setLoading(true);
     setCalculationError(undefined);
-    // Add any specific validation for TaxCalculator here if needed
     setTimeout(() => setLoading(false), 700);
   };
 
@@ -505,7 +469,7 @@ export default function TaxCalculatorPage() {
         results={taxResults ? results : []}
         loading={loading}
         error={calculationError}
-        showComparison={false} // Tax calculation typically doesn't involve direct comparison scenarios
+        showComparison={false}
       />
     </CalculatorLayout>
   );

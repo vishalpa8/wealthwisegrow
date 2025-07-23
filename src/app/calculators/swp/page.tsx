@@ -10,7 +10,6 @@ const initialValues = {
   totalCorpus: 1000000,
   monthlyWithdrawal: 10000,
   expectedReturn: 8,
-  inflationRate: 6,
   withdrawalIncrease: 5
 };
 
@@ -18,7 +17,6 @@ interface SWPInputs {
   totalCorpus: number;
   monthlyWithdrawal: number;
   expectedReturn: number;
-  inflationRate: number;
   withdrawalIncrease: number;
 }
 
@@ -27,12 +25,10 @@ function calculateSWP(inputs: SWPInputs) {
     totalCorpus,
     monthlyWithdrawal,
     expectedReturn,
-    inflationRate,
     withdrawalIncrease
   } = inputs;
 
   const monthlyRate = expectedReturn / 12 / 100;
-  const monthlyInflation = inflationRate / 12 / 100;
   const monthlyWithdrawalIncrease = withdrawalIncrease / 12 / 100;
 
   let remainingCorpus = totalCorpus;
@@ -79,33 +75,8 @@ export default function SWPCalculatorPage() {
   const swpResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.totalCorpus <= 0) {
-        throw new Error('Total corpus must be greater than zero');
-      }
-      if (values.monthlyWithdrawal <= 0) {
-        throw new Error('Monthly withdrawal must be greater than zero');
-      }
-      if (values.expectedReturn < 0) {
-        throw new Error('Expected return cannot be negative');
-      }
-      if (values.inflationRate < 0) {
-        throw new Error('Inflation rate cannot be negative');
-      }
-      if (values.withdrawalIncrease < 0) {
-        throw new Error('Withdrawal increase cannot be negative');
-      }
-
-      // Check if monthly withdrawal is too high for the corpus
-      if (values.monthlyWithdrawal * 12 > values.totalCorpus * 0.5) {
-        throw new Error('Annual withdrawal should not exceed 50% of corpus for sustainability');
-      }
-
+      // Always attempt calculation - let the function handle edge cases
       const calculation = calculateSWP(values);
-
-      if (calculation.months >= 600) {
-        throw new Error('Corpus will not last for 50 years with current withdrawal plan.');
-      }
 
       return calculation;
     } catch (err: any) {
@@ -122,9 +93,6 @@ export default function SWPCalculatorPage() {
       type: 'number',
       placeholder: '10,00,000',
       unit: currency.symbol,
-      min: 100000,
-      max: 1000000000,
-      required: true,
       tooltip: 'Your total investment amount from which you plan to withdraw'
     },
     {
@@ -133,9 +101,6 @@ export default function SWPCalculatorPage() {
       type: 'number',
       placeholder: '10,000',
       unit: currency.symbol,
-      min: 1000,
-      max: 10000000,
-      required: true,
       tooltip: 'Amount you wish to withdraw each month'
     },
     {
@@ -143,32 +108,15 @@ export default function SWPCalculatorPage() {
       name: 'expectedReturn',
       type: 'percentage',
       placeholder: '8',
-      min: 1,
-      max: 30,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual return on your remaining investment'
-    },
-    {
-      label: 'Inflation Rate',
-      name: 'inflationRate',
-      type: 'percentage',
-      placeholder: '6',
-      min: 0,
-      max: 20,
-      step: 0.1,
-      required: true,
-      tooltip: 'Expected annual inflation rate'
     },
     {
       label: 'Annual Withdrawal Increase',
       name: 'withdrawalIncrease',
       type: 'percentage',
       placeholder: '5',
-      min: 0,
-      max: 20,
       step: 0.1,
-      required: true,
       tooltip: 'Yearly increase in withdrawal amount to combat inflation'
     }
   ];

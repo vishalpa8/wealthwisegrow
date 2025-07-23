@@ -5,7 +5,6 @@ import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLoan } from '@/lib/calculations/loan';
-import { loanSchema } from '@/lib/validations/calculator';
 
 const initialValues = {
   principal: 3000000,
@@ -31,35 +30,15 @@ export default function HomeLoanCalculatorPage() {
   const homeLoanResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Custom validation for home loans
-      if (values.principal < 100000) {
-        throw new Error('Home loan amount should be at least ' + currency.symbol + '1,00,000');
-      }
+      // Use flexible validation with graceful handling
+      const validatedValues = {
+        principal: Math.abs(values.principal || 0),
+        rate: Math.abs(values.rate || 0),
+        years: Math.max(values.years || 1, 1),
+        extraPayment: Math.abs(values.extraPayment || 0)
+      };
 
-      if (values.principal > 500000000) {
-        throw new Error('Home loan amount seems too high (max ' + currency.symbol + '50 crores)');
-      }
-
-      if (values.rate <= 0 || values.rate > 20) {
-        throw new Error('Interest rate should be between 1% and 20%');
-      }
-
-      if (values.years <= 0 || values.years > 30) {
-        throw new Error('Loan tenure should be between 1 and 30 years');
-      }
-
-      const validation = loanSchema.safeParse(values);
-      if (!validation.success) {
-        const errorMessage = validation.error.errors[0]?.message || 'Invalid input';
-        throw new Error(errorMessage);
-      }
-
-      const calculation = calculateLoan(values);
-
-      // Check for calculation errors
-      if (!calculation || isNaN(calculation.monthlyPayment) || calculation.monthlyPayment <= 0) {
-        throw new Error('Unable to calculate EMI. Please check your inputs.');
-      }
+      const calculation = calculateLoan(validatedValues);
 
       return calculation;
     } catch (err: any) {
@@ -67,7 +46,7 @@ export default function HomeLoanCalculatorPage() {
       setCalculationError(err.message || 'Calculation failed. Please verify your inputs and try again.');
       return null;
     }
-  }, [values, currency.symbol]);
+  }, [values]);
 
   const fields: EnhancedCalculatorField[] = [
     {
@@ -76,9 +55,6 @@ export default function HomeLoanCalculatorPage() {
       type: 'number',
       placeholder: '30,00,000',
       unit: currency.symbol,
-      min: 100000,
-      max: 500000000,
-      required: true,
       tooltip: 'Total amount you need to borrow for your home'
     },
     {
@@ -86,10 +62,7 @@ export default function HomeLoanCalculatorPage() {
       name: 'rate',
       type: 'percentage',
       placeholder: '8.5',
-      min: 1,
-      max: 20,
       step: 0.01,
-      required: true,
       tooltip: 'Annual interest rate offered by the bank'
     },
     {
@@ -97,10 +70,7 @@ export default function HomeLoanCalculatorPage() {
       name: 'years',
       type: 'number',
       placeholder: '20',
-      min: 1,
-      max: 30,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years to repay the loan'
     },
     {
@@ -109,8 +79,6 @@ export default function HomeLoanCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 1000000,
       step: 0.01,
       tooltip: 'Additional amount you can pay monthly to reduce tenure'
     }

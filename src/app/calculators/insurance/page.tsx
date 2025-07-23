@@ -4,6 +4,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
   insuranceType: 'life',
@@ -36,20 +37,19 @@ interface InsuranceInputs {
 }
 
 function calculateInsuranceNeeds(inputs: InsuranceInputs) {
-  const {
-    insuranceType,
-    age,
-    annualIncome,
-    dependents,
-    existingCoverage,
-    outstandingLoans,
-    monthlyExpenses,
-    yearsOfCoverage,
-    inflationRate,
-    gender,
-    smokingStatus,
-    healthConditions
-  } = inputs;
+  // Use parseRobustNumber for flexible input handling
+  const insuranceType = inputs.insuranceType || 'life';
+  const age = Math.max(18, Math.min(80, Math.abs(parseRobustNumber(inputs.age)) || 30));
+  const annualIncome = Math.abs(parseRobustNumber(inputs.annualIncome)) || 1000000;
+  const dependents = Math.abs(parseRobustNumber(inputs.dependents)) || 0;
+  const existingCoverage = Math.abs(parseRobustNumber(inputs.existingCoverage)) || 0;
+  const outstandingLoans = Math.abs(parseRobustNumber(inputs.outstandingLoans)) || 0;
+  const monthlyExpenses = Math.abs(parseRobustNumber(inputs.monthlyExpenses)) || 50000;
+  const yearsOfCoverage = Math.max(5, Math.abs(parseRobustNumber(inputs.yearsOfCoverage)) || 20);
+  const inflationRate = Math.max(3, Math.min(15, Math.abs(parseRobustNumber(inputs.inflationRate)) || 6));
+  const gender = inputs.gender || 'male';
+  const smokingStatus = inputs.smokingStatus || 'no';
+  const healthConditions = inputs.healthConditions || 'none';
 
   let recommendedCoverage = 0;
   let estimatedPremium = 0;
@@ -123,7 +123,7 @@ function calculateInsuranceNeeds(inputs: InsuranceInputs) {
   }
 
   const coverageGap = Math.max(0, recommendedCoverage - existingCoverage);
-  const premiumAsPercentOfIncome = (estimatedPremium / annualIncome) * 100;
+  const premiumAsPercentOfIncome = annualIncome > 0 ? (estimatedPremium / annualIncome) * 100 : 0;
   
   return {
     recommendedCoverage,
@@ -133,7 +133,7 @@ function calculateInsuranceNeeds(inputs: InsuranceInputs) {
     existingCoverage,
     totalProtection: existingCoverage + coverageGap,
     monthlyPremium: estimatedPremium / 12,
-    premiumPerLakh: (estimatedPremium / recommendedCoverage) * 100000
+    premiumPerLakh: recommendedCoverage > 0 ? (estimatedPremium / recommendedCoverage) * 100000 : 0
   };
 }
 
@@ -147,21 +147,8 @@ export default function InsuranceCalculatorPage() {
   const insuranceResults = useMemo(() => {
     setCalculationError(undefined);
     try {
-      // Validate inputs
-      if (values.age < 18 || values.age > 80) {
-        throw new Error('Age must be between 18 and 80 years');
-      }
-
-      if (values.annualIncome <= 0) {
-        throw new Error('Annual income must be greater than zero');
-      }
-
-      if (values.monthlyExpenses <= 0) {
-        throw new Error('Monthly expenses must be greater than zero');
-      }
-
+      // Always attempt calculation - let the function handle edge cases gracefully
       const calculation = calculateInsuranceNeeds(values);
-
       return calculation;
     } catch (err: any) {
       console.error('Insurance calculation error:', err);
@@ -180,7 +167,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'health', label: 'Health Insurance' },
         { value: 'vehicle', label: 'Vehicle Insurance' }
       ],
-      required: true,
       tooltip: 'Type of insurance you want to calculate'
     },
     {
@@ -188,9 +174,6 @@ export default function InsuranceCalculatorPage() {
       name: 'age',
       type: 'number',
       placeholder: '30',
-      min: 18,
-      max: 80,
-      required: true,
       tooltip: 'Your current age'
     },
     {
@@ -199,9 +182,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '10,00,000',
       unit: currency.symbol,
-      min: 100000,
-      max: 100000000,
-      required: true,
       tooltip: 'Your total annual income'
     },
     {
@@ -209,9 +189,6 @@ export default function InsuranceCalculatorPage() {
       name: 'dependents',
       type: 'number',
       placeholder: '2',
-      min: 0,
-      max: 10,
-      required: true,
       tooltip: 'Number of people financially dependent on you'
     },
     {
@@ -220,8 +197,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      min: 0,
-      max: 100000000,
       tooltip: 'Current insurance coverage amount'
     },
     {
@@ -230,8 +205,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '5,00,000',
       unit: currency.symbol,
-      min: 0,
-      max: 50000000,
       tooltip: 'Total outstanding loan amounts'
     },
     {
@@ -240,9 +213,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      min: 10000,
-      max: 1000000,
-      required: true,
       tooltip: 'Average monthly household expenses'
     },
     {
@@ -250,10 +220,7 @@ export default function InsuranceCalculatorPage() {
       name: 'yearsOfCoverage',
       type: 'number',
       placeholder: '20',
-      min: 5,
-      max: 50,
       unit: 'years',
-      required: true,
       tooltip: 'Number of years you need coverage for'
     },
     {
@@ -261,10 +228,7 @@ export default function InsuranceCalculatorPage() {
       name: 'inflationRate',
       type: 'percentage',
       placeholder: '6',
-      min: 3,
-      max: 15,
       step: 0.1,
-      required: true,
       tooltip: 'Expected annual inflation rate'
     },
     {
@@ -275,7 +239,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'male', label: 'Male' },
         { value: 'female', label: 'Female' }
       ],
-      required: true,
       tooltip: 'Gender affects premium calculations'
     },
     {
@@ -286,7 +249,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'no', label: 'Non-Smoker' },
         { value: 'yes', label: 'Smoker' }
       ],
-      required: true,
       tooltip: 'Smoking significantly affects insurance premiums'
     },
     {
@@ -298,7 +260,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'minor', label: 'Minor Health Issues' },
         { value: 'major', label: 'Major Health Issues' }
       ],
-      required: true,
       tooltip: 'Pre-existing health conditions affect premiums'
     }
   ];
