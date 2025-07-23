@@ -61,7 +61,7 @@ export default function RootLayout({
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col font-sans">
         <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3402658627618101"
-     crossorigin="anonymous"></script>
+     crossOrigin="anonymous"></script>
         <CurrencyProvider>
         {/* Simple Header */}
         <header className="w-full bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
