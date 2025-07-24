@@ -80,6 +80,7 @@ export function EnhancedCalculatorForm({
       }, 600); // Reset after 600ms to keep button state visible longer
       return () => clearTimeout(timer);
     }
+    return undefined; // Explicit return for when clickedButton is falsy
   }, [clickedButton]);
 
   useEffect(() => {
@@ -89,6 +90,7 @@ export function EnhancedCalculatorForm({
       }, 3500); // Hide tooltip after 3.5 seconds for better visibility
       return () => clearTimeout(timer);
     }
+    return undefined; // Explicit return for when tooltipMessage is falsy
   }, [tooltipMessage]);
 
   // Handle keyboard navigation
@@ -108,6 +110,7 @@ export function EnhancedCalculatorForm({
         (focusableElements[0] as HTMLElement).focus();
       }
     }
+    return undefined; // Explicit return for when showTooltip is falsy
   }, [showTooltip]);
 
   // Handle field change with ultra-flexible validation
