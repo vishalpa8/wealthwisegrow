@@ -69,7 +69,27 @@ export function EnhancedCalculatorForm({
 }: EnhancedCalculatorFormProps) {
   const { formatCurrency, formatNumber } = useCurrency();
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
+  const [clickedButton, setClickedButton] = useState<string | null>(null);
+  const [tooltipMessage, setTooltipMessage] = useState<string | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (clickedButton) {
+      const timer = setTimeout(() => {
+        setClickedButton(null);
+      }, 600); // Reset after 600ms to keep button state visible longer
+      return () => clearTimeout(timer);
+    }
+  }, [clickedButton]);
+
+  useEffect(() => {
+    if (tooltipMessage) {
+      const timer = setTimeout(() => {
+        setTooltipMessage(null);
+      }, 3500); // Hide tooltip after 3.5 seconds for better visibility
+      return () => clearTimeout(timer);
+    }
+  }, [tooltipMessage]);
 
   // Handle keyboard navigation
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
@@ -120,9 +140,12 @@ export function EnhancedCalculatorForm({
     a.href = url;
     a.download = `${title.toLowerCase().replace(/\s+/g, '-')}-results.csv`;
     document.body.appendChild(a);
+    // Perform the download operation immediately
     a.click();
     window.URL.revokeObjectURL(url);
     document.body.removeChild(a);
+    // Show feedback immediately after triggering download
+    setTooltipMessage('Download Started!');
   };
 
   // Copy results to clipboard
@@ -132,10 +155,13 @@ export function EnhancedCalculatorForm({
     ).join('\n');
     
     try {
+      // Perform the copy operation immediately
       await navigator.clipboard.writeText(resultText);
-      // You might want to show a toast notification here
+      // Show feedback immediately after successful operation
+      setTooltipMessage('Copied!');
     } catch (err) {
       console.error('Failed to copy results:', err);
+      setTooltipMessage('Failed to copy');
     }
   };
 
@@ -153,14 +179,21 @@ export function EnhancedCalculatorForm({
 
     try {
       if (navigator.share) {
+        // Perform the share operation immediately
         await navigator.share(shareData);
+        // Show feedback immediately after successful operation
+        setTooltipMessage('Shared!');
       } else {
+        // Fallback to copy if share is not available
         await copyResults();
       }
     } catch (err) {
       console.error('Failed to share results:', err);
+      setTooltipMessage('Failed to share');
     }
   };
+
+
 
   const renderField = (field: EnhancedCalculatorField) => {
     const fieldId = `field-${field.name}`;
@@ -365,34 +398,66 @@ export function EnhancedCalculatorForm({
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-800">Results</h2>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={copyResults}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-                    title="Copy Results"
-                    aria-label="Copy calculation results to clipboard"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={shareResults}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-                    title="Share Results"
-                    aria-label="Share calculation results"
-                  >
-                    <Share2 className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={exportResults}
-                    className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg"
-                    title="Export to CSV"
-                    aria-label="Export calculation results to CSV file"
-                  >
-                    <Download className="w-4 h-4" />
-                  </button>
+                <div className="relative flex space-x-1">
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        copyResults();
+                        setClickedButton('copy');
+                      }}
+                      className={`group relative p-3 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${clickedButton === 'copy' ? 'bg-blue-100 text-blue-600 animate-button-success' : ''}`}
+                      title="Copy Results"
+                      aria-label="Copy calculation results to clipboard"
+                    >
+                      <Copy className="w-4 h-4" />
+                      {clickedButton === 'copy' && tooltipMessage && (
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg animate-tooltip-appear whitespace-nowrap z-10">
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
+                          {tooltipMessage}
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        shareResults();
+                        setClickedButton('share');
+                      }}
+                      className={`group relative p-3 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${clickedButton === 'share' ? 'bg-purple-100 text-purple-600 animate-button-success' : ''}`}
+                      title="Share Results"
+                      aria-label="Share calculation results"
+                    >
+                      <Share2 className="w-4 h-4" />
+                      {clickedButton === 'share' && tooltipMessage && (
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg animate-tooltip-appear whitespace-nowrap z-10">
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
+                          {tooltipMessage}
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <button
+                      onClick={() => {
+                        exportResults();
+                        setClickedButton('download');
+                      }}
+                      className={`group relative p-3 text-gray-500 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 transform hover:scale-105 active:scale-95 ${clickedButton === 'download' ? 'bg-green-100 text-green-600 animate-button-success' : ''}`}
+                      title="Export to CSV"
+                      aria-label="Export calculation results to CSV file"
+                    >
+                      <Download className="w-4 h-4" />
+                      {clickedButton === 'download' && tooltipMessage && (
+                        <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-green-600 text-white text-xs px-3 py-1.5 rounded-lg shadow-lg animate-tooltip-appear whitespace-nowrap z-10">
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-green-600"></div>
+                          {tooltipMessage}
+                        </div>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
-
               <div className={results.length === 3 ? "calculator-results-grid" : "space-y-3"}>
                 {results.length === 3 ? (
                   results.map((result, index) => {

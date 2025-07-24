@@ -1007,11 +1007,9 @@
 @keyframes fade-in {
   from {
     opacity: 0;
-    transform: translateY(16px);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 
@@ -1053,6 +1051,85 @@
   50% {
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
   }
+}
+
+@keyframes button-click {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+@keyframes button-success {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes tooltip-appear {
+  0% { 
+    opacity: 0; 
+    transform: translateX(-50%) translateY(12px) scale(0.8); 
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) translateY(-2px) scale(1.08);
+  }
+  80% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(0.98);
+  }
+  100% { 
+    opacity: 1; 
+    transform: translateX(-50%) translateY(0) scale(1); 
+  }
+}
+
+@keyframes tooltip-pulse {
+  0%, 100% {
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(34, 197, 94, 0.5);
+  }
+}
+
+.animate-button-click {
+  animation: button-click 0.3s ease-out;
+}
+
+.animate-button-success {
+  animation: button-success 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animate-tooltip-appear {
+  animation: tooltip-appear 0.5s cubic-bezier(0.4, 0, 0.2, 1), tooltip-pulse 2s ease-in-out 0.5s infinite;
+}
+
+/* Enhanced button hover effects */
+.group:hover .group-hover\:scale-110 {
+  transform: scale(1.1);
+}
+
+/* Smooth transitions for action buttons */
+.action-button {
+  @apply relative p-3 rounded-xl transition-all duration-200 transform;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.action-button:hover {
+  @apply scale-105;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.action-button:active {
+  @apply scale-95;
+  transition-duration: 0.1s;
+}
+
+/* Success state for buttons */
+.action-button-success {
+  @apply shadow-lg;
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
 }
 
 /* Print styles */

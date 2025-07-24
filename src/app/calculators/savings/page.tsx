@@ -4,6 +4,7 @@ import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } fro
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
 import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
+import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
 import {
   parseRobustNumber,
   safeDivide,
@@ -329,6 +330,16 @@ export default function SavingsCalculatorPage() {
 
   const sidebar = (
     <div className="space-y-4">
+      {savingsResults && values.savingsType === 'goal-based' && (
+        <div className="card">
+          <GoalProgressChart
+            currentValue={savingsResults.totalFutureValue}
+            goalValue={values.savingsGoal}
+            label="Progress to Goal"
+            unit={currency.symbol}
+          />
+        </div>
+      )}
       <div className="card">
         <AdsPlaceholder position="sidebar" size="300x250" />
       </div>
