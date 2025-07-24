@@ -1,8 +1,8 @@
 {
-  "name": "WealthWise Hub - Financial Calculators & Guides",
-  "short_name": "WealthWise Hub",
+  "name": "WealthWiseGrow - Financial Calculators & Investment Tools",
+  "short_name": "WealthWiseGrow",
   "description": "Access financial calculators and guides for mortgages, loans, investments, and more.",
-  "start_url": "https://wealthwise-hub.netlify.app",
+  "start_url": "https://wealthwisegrow.com",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",

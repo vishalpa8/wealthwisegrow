@@ -8,7 +8,7 @@ interface SEOConfig {
 }
 
 export const seoConfig: SEOConfig = {
-  titleTemplate: '%s | WealthWise Hub',
+  titleTemplate: '%s | WealthWiseGrow',
   defaultDescription: 'Comprehensive financial calculators for loans, investments, taxes, and retirement planning in India.',
   defaultKeywords: [
     'financial calculator',
@@ -22,7 +22,7 @@ export const seoConfig: SEOConfig = {
     'personal finance',
     'wealth management'
   ],
-  siteUrl: 'https://wealthwise-hub.com'
+  siteUrl: 'https://wealthwisegrow.com'
 };
 
 interface GenerateMetadataProps {
@@ -43,21 +43,21 @@ export function generateMetadata({
   const url = `${seoConfig.siteUrl}${path}`;
   
   return {
-    title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWise Hub',
+    title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWiseGrow',
     description,
     keywords: keywords.join(', '),
     metadataBase: new URL(seoConfig.siteUrl),
     openGraph: {
-      title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWise Hub',
+      title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWiseGrow',
       description,
       url,
-      siteName: 'WealthWise Hub',
+      siteName: 'WealthWiseGrow',
       locale: 'en_IN',
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
-      title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWise Hub',
+      title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWiseGrow',
       description,
     },
     robots: {

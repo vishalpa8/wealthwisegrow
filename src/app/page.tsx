@@ -168,7 +168,7 @@ export default function Home() {
         <div className="container-narrow">
           <div className="text-center mb-10">
             <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-              Why Choose WealthWise Hub?
+              Why Choose WealthWiseGrow?
             </h2>
             <p className="text-gray-600 text-lg leading-relaxed">
               Professional financial tools designed for everyone, from beginners to experts

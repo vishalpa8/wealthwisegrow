@@ -2,7 +2,7 @@ import React from "react";
 
 export function generateMetadata({ params }: { params: any }) {
   const { type, location } = params;
-  const title = `${capitalize(type)} Calculator for ${formatLocation(location)} | WealthWise Hub`;
+  const title = `${capitalize(type)} Calculator for ${formatLocation(location)} | WealthWiseGrow`;
   const description = `Calculate your ${type} in ${formatLocation(location)}. Get instant results, local rates, and actionable insights for your financial planning.`;
   return {
     title,

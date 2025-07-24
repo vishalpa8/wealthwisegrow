@@ -22,7 +22,7 @@ export function Header() {
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
             <Calculator className="h-7 w-7 text-gray-500" />
-            <span className="text-xl font-extrabold text-gray-800 tracking-tight">WealthWise Hub</span>
+            <span className="text-xl font-extrabold text-gray-800 tracking-tight">WealthWiseGrow</span>
           </Link>
 
           {/* Desktop Navigation */}

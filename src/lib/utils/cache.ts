@@ -19,7 +19,7 @@ interface CalculatorCache extends DBSchema {
   };
 }
 
-const DB_NAME = 'wealthwise-cache';
+const DB_NAME = 'wealthwisegrow-cache';
 const DB_VERSION = 1;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 

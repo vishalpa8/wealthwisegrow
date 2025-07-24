@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
 
 export const metadata: Metadata = {
-  title: "Financial Calculators | WealthWise Hub",
+  title: "Financial Calculators | WealthWiseGrow",
   description: "Explore our collection of financial calculators for loans, investments, retirement planning, and more. Simple, accurate, and free to use.",
   keywords: ["financial calculators", "loan calculator", "investment calculator", "retirement calculator"],
 };

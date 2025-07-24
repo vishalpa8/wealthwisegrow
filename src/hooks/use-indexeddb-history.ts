@@ -14,7 +14,7 @@ export function useIndexedDBHistory() {
   // Open or create the IndexedDB database
   const openDB = useCallback((): Promise<IDBDatabase> => {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open("WealthWiseHistory", 1);
+      const request = indexedDB.open("WealthWiseGrowHistory", 1);
       request.onupgradeneeded = () => {
         const db = request.result;
         if (!db.objectStoreNames.contains(DB_KEY)) {

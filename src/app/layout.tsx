@@ -7,19 +7,19 @@ import { FooterYear } from "@/components/ui/footer-year";
 import { CurrencyProvider } from "@/contexts/currency-context";
 
 export const metadata: Metadata = {
-  title: "WealthWise Hub - Financial Calculators & Guides",
-  description: "Access a comprehensive suite of financial calculators and guides for mortgages, loans, investments, retirement planning, and more. Make smarter financial decisions with WealthWise Hub.",
+  title: "WealthWiseGrow - Financial Calculators & Investment Tools",
+  description: "Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth. Make smarter financial decisions with WealthWiseGrow.",
   keywords: "financial calculator, mortgage calculator, loan calculator, investment calculator, retirement planning, personal finance",
-  authors: [{ name: 'WealthWise Hub' }],
-  metadataBase: new URL('https://wealthwise-hub.netlify.app'),
+  authors: [{ name: 'WealthWiseGrow' }],
+  metadataBase: new URL('https://wealthwisegrow.com'),
   alternates: {
     canonical: '/',
   },
   openGraph: {
-    title: 'WealthWise Hub - Financial Calculators & Guides',
-    description: 'Comprehensive financial calculators and guides for better money management',
-    url: 'https://wealthwise-hub.netlify.app',
-    siteName: 'WealthWise Hub',
+    title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
+    description: 'Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth.',
+    url: 'https://wealthwisegrow.com',
+    siteName: 'WealthWiseGrow',
     images: [
       {
         url: '/og-image.jpg',
@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'WealthWise Hub - Financial Calculators & Guides',
+    title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
     description: 'Comprehensive financial calculators and guides for better money management',
     images: ['/og-image.jpg'],
   },
@@ -70,7 +70,7 @@ export default function RootLayout({
               <span className="text-white font-bold text-sm">W</span>
             </div>
             <div className="text-xl font-bold text-neutral-900">
-              WealthWise Hub
+              WealthWiseGrow
             </div>
           </div>
           <nav className="hidden md:flex gap-8">
@@ -191,10 +191,10 @@ export default function RootLayout({
                 <div className="w-6 h-6 bg-primary-600 rounded-md flex items-center justify-center">
                   <span className="text-white font-bold text-xs">W</span>
                 </div>
-                <span className="text-neutral-700 font-medium">WealthWise Hub</span>
+                <span className="text-neutral-700 font-medium">WealthWiseGrow</span>
               </div>
               <div className="text-sm text-neutral-500">
-                &copy; <FooterYear /> WealthWise Hub. All rights reserved.
+                &copy; <FooterYear /> WealthWiseGrow. All rights reserved.
               </div>
             </div>
             <div className="mt-8">

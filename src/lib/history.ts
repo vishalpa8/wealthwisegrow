@@ -2,7 +2,7 @@
 
 import { HistoryEntry } from '@/types/history';
 
-const HISTORY_STORAGE_KEY = 'wealthwise_calculation_history';
+const HISTORY_STORAGE_KEY = 'wealthwisegrow_calculation_history';
 const MAX_HISTORY_ITEMS = 50;
 
 /**

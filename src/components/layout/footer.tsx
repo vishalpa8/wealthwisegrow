@@ -33,7 +33,7 @@ export function Footer() {
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
               <Calculator className="h-7 w-7 text-gray-500" />
-              <span className="text-xl font-extrabold text-gray-800 tracking-tight">WealthWise Hub</span>
+              <span className="text-xl font-extrabold text-gray-800 tracking-tight">WealthWiseGrow</span>
             </div>
             <p className="text-gray-500 text-sm">
               Your comprehensive financial calculator hub. Make informed decisions with our easy-to-use tools.
@@ -54,7 +54,7 @@ export function Footer() {
                 <Twitter className="h-5 w-5" />
               </a>
               <a
-                href="mailto:contact@wealthwisehub.com"
+                href="mailto:contact@wealthwisegrow.com"
                 className="text-gray-300 hover:text-gray-600 transition-colors duration-200"
                 aria-label="Email"
               >
@@ -117,7 +117,7 @@ export function Footer() {
 
         <div className="border-t border-gray-100 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} WealthWise Hub. All rights reserved.
+            © {new Date().getFullYear()} WealthWiseGrow. All rights reserved.
           </p>
           <p className="text-gray-400 text-sm mt-2 sm:mt-0">
             Made with ❤️ for better financial decisions

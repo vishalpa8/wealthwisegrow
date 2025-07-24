@@ -1,4 +1,4 @@
-# WealthWise Hub - Comprehensive Financial Calculator Platform
+# WealthWiseGrow - Comprehensive Financial Calculator Platform
 
 [![Next.js](https://img.shields.io/badge/Next.js-13+-black?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-18+-blue?style=flat-square&logo=react)](https://reactjs.org/)
@@ -7,7 +7,7 @@
 
 ## 🌟 Overview
 
-WealthWise Hub is a comprehensive financial calculator platform built with modern web technologies. It provides 39+ specialized calculators for financial planning, investment analysis, loan calculations, tax planning, and retirement planning. The platform features clean, elegant UI with advanced visualizations and interactive analysis tools.
+WealthWiseGrow is a comprehensive financial calculator platform built with modern web technologies. It provides 39+ specialized calculators for financial planning, investment analysis, loan calculations, tax planning, and retirement planning. The platform features clean, elegant UI with advanced visualizations and interactive analysis tools.
 
 ## ✨ Key Features
 
@@ -52,7 +52,7 @@ WealthWise Hub is a comprehensive financial calculator platform built with moder
 
 ### **Project Structure**
 ```
-wealthwise-hub/
+wealthwisegrow/
 ├── src/
 │   ├── app/                    # Next.js app router
 │   │   ├── calculators/       # 39+ calculator implementations
@@ -99,8 +99,8 @@ wealthwise-hub/
 ### **Installation**
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/wealthwise-hub.git
-cd wealthwise-hub
+git clone https://github.com/your-username/wealthwisegrow.git
+cd wealthwisegrow
 
 # Install dependencies
 npm install
@@ -469,14 +469,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support, questions, or feature requests:
-- **Issues:** [GitHub Issues](https://github.com/your-username/wealthwise-hub/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/your-username/wealthwise-hub/discussions)
-- **Email:** support@wealthwisehub.com
+- **Issues:** [GitHub Issues](https://github.com/your-username/wealthwisegrow/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/your-username/wealthwisegrow/discussions)
+- **Email:** support@wealthwisegrow.com
 
 ---
 
-**WealthWise Hub** - Empowering financial decisions through comprehensive calculation tools and elegant user experience.
+**WealthWiseGrow** - Empowering financial decisions through comprehensive calculation tools and elegant user experience.
 
-[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red?style=flat-square)](https://github.com/your-username/wealthwise-hub)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red?style=flat-square)](https://github.com/your-username/wealthwisegrow)
 [![TypeScript](https://img.shields.io/badge/Built%20with-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Powered%20by-Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)

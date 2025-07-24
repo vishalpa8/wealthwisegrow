@@ -3,7 +3,7 @@ import { MortgageCalculator } from "@/components/calculators/mortgage-calculator
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Mortgage Calculator | WealthWise Hub",
+  title: "Mortgage Calculator | WealthWiseGrow",
   description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Get detailed payment breakdowns and loan summaries to make informed home buying decisions.",
   keywords: [
     "mortgage calculator", 
@@ -19,15 +19,15 @@ export const metadata: Metadata = {
     "amortization schedule"
   ],
   openGraph: {
-    title: "Mortgage Calculator | WealthWise Hub",
+    title: "Mortgage Calculator | WealthWiseGrow",
     description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Get detailed payment breakdowns and amortization schedules.",
     type: "website",
     url: "/calculators/mortgage",
-    siteName: "WealthWise Hub",
+    siteName: "WealthWiseGrow",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Mortgage Calculator | WealthWise Hub",
+    title: "Mortgage Calculator | WealthWiseGrow",
     description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
   },
   alternates: {
@@ -58,7 +58,7 @@ export default function MortgagePage() {
             "@type": "WebApplication",
             "name": "Mortgage Calculator",
             "description": "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
-            "url": "https://wealthwisehub.com/calculators/mortgage",
+            "url": "https://wealthwisegrow.com/calculators/mortgage",
             "applicationCategory": "FinanceApplication",
             "operatingSystem": "Any",
             "offers": {

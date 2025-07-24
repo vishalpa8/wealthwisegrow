@@ -45,7 +45,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   // Load currency from localStorage or detect from browser locale
   useEffect(() => {
     try {
-      const savedCurrency = localStorage.getItem('wealthwise-currency');
+      const savedCurrency = localStorage.getItem('wealthwisegrow-currency');
       if (savedCurrency) {
         const parsedCurrency = JSON.parse(savedCurrency);
         const foundCurrency = CURRENCIES.find(c => c.code === parsedCurrency.code);
@@ -90,7 +90,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
       if (detectedCurrency) {
         setCurrencyState(detectedCurrency);
         // Also save to localStorage
-        localStorage.setItem('wealthwise-currency', JSON.stringify(detectedCurrency));
+        localStorage.setItem('wealthwisegrow-currency', JSON.stringify(detectedCurrency));
       }
       // If no match found, the default currency (INR) will be used
     } catch (error) {
@@ -102,7 +102,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const setCurrency = (newCurrency: Currency) => {
     setCurrencyState(newCurrency);
     try {
-      localStorage.setItem('wealthwise-currency', JSON.stringify(newCurrency));
+      localStorage.setItem('wealthwisegrow-currency', JSON.stringify(newCurrency));
     } catch (error) {
       console.error('Error saving currency to localStorage:', error);
     }
