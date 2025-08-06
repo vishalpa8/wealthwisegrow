@@ -211,8 +211,10 @@ export function formatCurrencyIndian(value: number, showSymbol: boolean = true):
  */
 export function roundToPrecision(value: number, decimals: number = 2): number {
   const parsed = parseRobustNumber(value);
-  const factor = Math.pow(10, decimals);
-  return Math.round((parsed + Number.EPSILON) * factor) / factor;
+  if (isNaN(parsed)) {
+    return 0;
+  }
+  return parseFloat(parsed.toFixed(decimals));
 }
 
 /**

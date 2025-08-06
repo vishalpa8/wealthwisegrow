@@ -64,8 +64,22 @@ function calculateReturns(inputs: MutualFundInputs) {
     currentValue = units * currentNav * (1 - exitLoad / 100);
     totalInvestment = initialInvestment;
   } else {
-    // Calculate for SIP investment
-    const totalMonths = Math.floor(durationInYears * 12);
+    // Calculate for SIP investment - use more accurate month calculation
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate || Date.now());
+    
+    // Calculate months more accurately
+    let totalMonths = (endDateObj.getFullYear() - startDateObj.getFullYear()) * 12;
+    totalMonths += endDateObj.getMonth() - startDateObj.getMonth();
+    
+    // If the end date's day is before the start date's day, subtract a month
+    if (endDateObj.getDate() < startDateObj.getDate()) {
+      totalMonths--;
+    }
+    
+    // Ensure non-negative months
+    totalMonths = Math.max(0, totalMonths);
+    
     for (let i = 0; i < totalMonths; i++) {
       const monthlyInvestmentAfterLoad = monthlyInvestment * (1 - entryLoad / 100);
       units += monthlyInvestmentAfterLoad / purchaseNav;
@@ -74,8 +88,9 @@ function calculateReturns(inputs: MutualFundInputs) {
     currentValue = units * currentNav * (1 - exitLoad / 100);
   }
 
-  absoluteReturns = ((currentValue - totalInvestment) / totalInvestment) * 100;
-  cagr = (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100;
+  absoluteReturns = totalInvestment > 0 ? ((currentValue - totalInvestment) / totalInvestment) * 100 : 0;
+  cagr = (totalInvestment > 0 && durationInYears > 0) ? 
+    (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100 : 0;
 
   // Calculate tax implications
   const taxRate = parseInt(taxBracket) || 0;

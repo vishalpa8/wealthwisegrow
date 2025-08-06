@@ -101,6 +101,10 @@ function generatePaymentSchedule(
   numberOfPayments: number,
   monthlyPayment: number
 ): PaymentScheduleItem[] {
+  if (isEffectivelyZero(loanAmount)) {
+    return [];
+  }
+
   const schedule: PaymentScheduleItem[] = [];
   let balance = parseRobustNumber(loanAmount);
   let cumulativeInterest = 0;

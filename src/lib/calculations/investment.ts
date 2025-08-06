@@ -1,4 +1,12 @@
 import type { InvestmentInputs } from "../validations/calculator";
+import {
+  parseRobustNumber,
+  safeDivide,
+  safeMultiply,
+  safeAdd,
+  safePower,
+  roundToPrecision,
+} from '../utils/number';
 
 export interface InvestmentResults {
   finalAmount: number;
@@ -20,67 +28,101 @@ export interface InvestmentYearlyBreakdown {
 
 export function calculateInvestment(inputs: InvestmentInputs): InvestmentResults {
   const {
-    initialAmount,
-    monthlyContribution,
-    annualReturn,
-    years,
+    initialAmount: initialAmountInput,
+    monthlyContribution: monthlyContributionInput,
+    annualReturn: annualReturnInput,
+    years: yearsInput,
     compoundingFrequency,
   } = inputs;
 
-  const compoundingPeriods = getCompoundingPeriods(compoundingFrequency);
-  const periodicRate = (annualReturn / 100) / compoundingPeriods;
-  // const totalPeriods = years * compoundingPeriods; // Not used in the calculation
+  const initialAmount = parseRobustNumber(initialAmountInput);
+  const monthlyContribution = parseRobustNumber(monthlyContributionInput);
+  const annualReturn = parseRobustNumber(annualReturnInput);
+  const years = parseRobustNumber(yearsInput);
 
-  // Calculate future value with compound interest
-  let currentBalance = initialAmount;
-  let totalContributions = initialAmount;
-  const yearlyBreakdown: InvestmentYearlyBreakdown[] = [];
+  const compoundingPeriodsPerYear = getCompoundingPeriods(compoundingFrequency);
+  const rate = safeDivide(annualReturn, 100);
 
-  for (let year = 1; year <= years; year++) {
-    const startingBalance = currentBalance;
-    const yearlyContributions = monthlyContribution * 12;
-    
-    // Calculate growth for this year with monthly contributions
-    let yearEndBalance = startingBalance;
-    let yearGrowth = 0;
+  // Future value of initial amount
+  const fvInitial = safeMultiply(initialAmount, safePower(safeAdd(1, safeDivide(rate, compoundingPeriodsPerYear)), safeMultiply(compoundingPeriodsPerYear, years)));
 
-    for (let month = 1; month <= 12; month++) {
-      // Add monthly contribution at the beginning of the month
-      yearEndBalance += monthlyContribution;
-      
-      // Apply monthly growth
-      const monthlyGrowth = yearEndBalance * (periodicRate / (12 / compoundingPeriods));
-      yearEndBalance += monthlyGrowth;
-      yearGrowth += monthlyGrowth;
-    }
-
-    totalContributions += yearlyContributions;
-    currentBalance = yearEndBalance;
-
-    yearlyBreakdown.push({
-      year,
-      startingBalance,
-      contributions: yearlyContributions,
-      growth: yearGrowth,
-      endingBalance: yearEndBalance,
-      cumulativeContributions: totalContributions,
-      cumulativeGrowth: yearEndBalance - totalContributions,
-    });
+  // Future value of monthly contributions
+  const monthlyRate = safeDivide(rate, 12);
+  const totalMonths = safeMultiply(years, 12);
+  
+  let fvContributions;
+  if (rate === 0 || monthlyRate === 0) {
+    // For zero interest rate, monthly contributions just accumulate without growth
+    fvContributions = safeMultiply(monthlyContribution, totalMonths);
+  } else {
+    fvContributions = safeMultiply(monthlyContribution, safeDivide(safePower(safeAdd(1, monthlyRate), totalMonths) - 1, monthlyRate));
   }
 
-  const finalAmount = currentBalance;
+  const finalAmount = safeAdd(fvInitial, fvContributions);
+  const totalContributions = safeAdd(initialAmount, safeMultiply(monthlyContribution, totalMonths));
   const totalGrowth = finalAmount - totalContributions;
-  const annualizedReturn = totalContributions > 0 
-    ? (Math.pow(finalAmount / totalContributions, 1 / years) - 1) * 100
+  const annualizedReturn = totalContributions > 0
+    ? roundToPrecision(safeMultiply(safePower(safeDivide(finalAmount, totalContributions), safeDivide(1, years)) - 1, 100))
     : 0;
 
+  // Generate yearly breakdown
+  const yearlyBreakdown = generateYearlyBreakdown(
+    initialAmount,
+    monthlyContribution,
+    monthlyRate,
+    years
+  );
+
   return {
-    finalAmount,
-    totalContributions,
-    totalGrowth,
+    finalAmount: roundToPrecision(finalAmount),
+    totalContributions: roundToPrecision(totalContributions),
+    totalGrowth: roundToPrecision(totalGrowth),
     annualizedReturn,
     yearlyBreakdown,
   };
+}
+
+function generateYearlyBreakdown(
+  initialAmount: number,
+  monthlyContribution: number,
+  monthlyRate: number,
+  years: number
+): InvestmentYearlyBreakdown[] {
+  const breakdown: InvestmentYearlyBreakdown[] = [];
+  let balance = initialAmount;
+  let cumulativeContributions = initialAmount;
+  let cumulativeGrowth = 0;
+
+  for (let year = 1; year <= years; year++) {
+    const startingBalance = balance;
+    const yearlyContributions = safeMultiply(monthlyContribution, 12);
+    
+    // Calculate growth for each month of the year
+    let yearlyGrowth = 0;
+    let currentBalance = startingBalance;
+    
+    for (let month = 1; month <= 12; month++) {
+      const monthlyGrowth = safeMultiply(currentBalance, monthlyRate);
+      yearlyGrowth = safeAdd(yearlyGrowth, monthlyGrowth);
+      currentBalance = safeAdd(safeAdd(currentBalance, monthlyGrowth), monthlyContribution);
+    }
+    
+    balance = currentBalance;
+    cumulativeContributions = safeAdd(cumulativeContributions, yearlyContributions);
+    cumulativeGrowth = safeAdd(cumulativeGrowth, yearlyGrowth);
+    
+    breakdown.push({
+      year,
+      startingBalance: roundToPrecision(startingBalance),
+      contributions: roundToPrecision(yearlyContributions),
+      growth: roundToPrecision(yearlyGrowth),
+      endingBalance: roundToPrecision(balance),
+      cumulativeContributions: roundToPrecision(cumulativeContributions),
+      cumulativeGrowth: roundToPrecision(cumulativeGrowth),
+    });
+  }
+  
+  return breakdown;
 }
 
 function getCompoundingPeriods(frequency: InvestmentInputs["compoundingFrequency"]): number {

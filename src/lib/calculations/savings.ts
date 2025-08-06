@@ -18,12 +18,6 @@ function safeCalculation<T>(calculation: () => T, fallback: T): T {
   }
 }
 
-// Helper function to check if a number is safe for calculations
-function isSafeNumber(value: any): boolean {
-  const parsed = parseRobustNumber(value);
-  return isFinite(parsed) && !isNaN(parsed);
-}
-
 // SIP (Systematic Investment Plan) Calculator
 export interface SIPInputs {
   monthlyInvestment: number;
@@ -49,71 +43,65 @@ export interface SIPMonthlyBreakdown {
 
 export function calculateSIP(inputs: SIPInputs): SIPResults {
   return safeCalculation(() => {
-    // Use robust parsing and handle edge cases gracefully
-    const monthlyInvestment = Math.abs(parseRobustNumber(inputs.monthlyInvestment) || 0);
-    const annualReturn = Math.abs(parseRobustNumber(inputs.annualReturn) || 0);
-    const years = Math.max(parseRobustNumber(inputs.years) || 1, 1);
-    
-    // Handle zero investment gracefully
+    const monthlyInvestment = parseRobustNumber(inputs.monthlyInvestment) || 0;
+    const annualReturn = parseRobustNumber(inputs.annualReturn) || 0;
+    const years = parseRobustNumber(inputs.years) || 1;
+
     if (monthlyInvestment === 0) {
       return {
         totalInvestment: 0,
         maturityAmount: 0,
         totalGains: 0,
-        monthlyBreakdown: []
-      };
-    }
-    
-    const monthlyRate = safeDivide(annualReturn, safeMultiply(100, 12));
-    const totalMonths = safeMultiply(years, 12);
-    
-    if (totalMonths > 1200) { // Max 100 years
-      return {
-        totalInvestment: 0,
-        maturityAmount: 0,
-        totalGains: 0,
         monthlyBreakdown: [],
-        error: 'Investment period too long'
       };
     }
-    
+
+    const monthlyRate = safeDivide(annualReturn, 1200);
+    const totalMonths = Math.floor(safeMultiply(years, 12));
+
+    // Generate monthly breakdown
+    const monthlyBreakdown: SIPMonthlyBreakdown[] = [];
     let balance = 0;
     let totalInvested = 0;
-    const monthlyBreakdown: SIPMonthlyBreakdown[] = [];
-    
+
     for (let month = 1; month <= totalMonths; month++) {
+      // Add monthly investment
       totalInvested = safeAdd(totalInvested, monthlyInvestment);
-      balance = safeMultiply(
-        safeAdd(balance, monthlyInvestment),
-        safeAdd(1, monthlyRate)
-      );
       
-      // Prevent infinite loops and memory issues
-      if (!isSafeNumber(balance) || month > 1200) {
-        break;
-      }
+      // Calculate interest on previous balance + current investment
+      const interestForMonth = safeMultiply(safeAdd(balance, monthlyInvestment), monthlyRate);
+      
+      // Update balance with investment + interest
+      balance = safeAdd(safeAdd(balance, monthlyInvestment), interestForMonth);
+      
+      const totalGains = Math.max(0, balance - totalInvested);
       
       monthlyBreakdown.push({
         month,
         investment: roundToPrecision(monthlyInvestment),
         balance: roundToPrecision(balance),
         totalInvested: roundToPrecision(totalInvested),
-        totalGains: roundToPrecision(Math.max(0, balance - totalInvested))
+        totalGains: roundToPrecision(totalGains)
       });
     }
-    
+
+    // Use the calculated values from monthly breakdown for consistency
+    const lastMonth = monthlyBreakdown[monthlyBreakdown.length - 1];
+    const maturityAmount = lastMonth ? lastMonth.balance : 0;
+    const totalInvestment = lastMonth ? lastMonth.totalInvested : 0;
+    const totalGains = Math.max(0, maturityAmount - totalInvestment);
+
     return {
-      totalInvestment: roundToPrecision(totalInvested),
-      maturityAmount: roundToPrecision(balance),
-      totalGains: roundToPrecision(Math.max(0, balance - totalInvested)),
-      monthlyBreakdown
+      totalInvestment: roundToPrecision(totalInvestment),
+      maturityAmount: roundToPrecision(maturityAmount),
+      totalGains: roundToPrecision(totalGains),
+      monthlyBreakdown,
     };
   }, {
     totalInvestment: 0,
     maturityAmount: 0,
     totalGains: 0,
     monthlyBreakdown: [],
-    error: 'Calculation failed'
   });
 }
 
@@ -306,8 +294,11 @@ export function calculateRD(inputs: RDInputs): RDResults {
     const monthlyBreakdown: RDMonthlyBreakdown[] = [];
     
     for (let month = 1; month <= totalMonths; month++) {
-      totalDeposited = safeAdd(totalDeposited, monthlyDeposit);
+      // Calculate interest on previous balance first (before adding current deposit)
       const interest = safeMultiply(balance, monthlyRate);
+      
+      // Add the monthly deposit and interest
+      totalDeposited = safeAdd(totalDeposited, monthlyDeposit);
       balance = safeAdd(safeAdd(balance, monthlyDeposit), interest);
       
       monthlyBreakdown.push({
@@ -322,7 +313,7 @@ export function calculateRD(inputs: RDInputs): RDResults {
     return {
       totalDeposits: roundToPrecision(totalDeposited),
       maturityAmount: roundToPrecision(balance),
-      totalInterest: roundToPrecision(Math.max(0, balance - totalDeposited)),
+      totalInterest: roundToPrecision(balance - totalDeposited),
       monthlyBreakdown
     };
   }, {
@@ -360,7 +351,16 @@ export interface EPFYearlyBreakdown {
 
 export function calculateEPF(inputs: EPFInputs): EPFResults {
   return safeCalculation(() => {
-    const { basicSalary, employeeContribution, employerContribution, years } = inputs;
+    // Use robust parsing to handle currency strings and edge cases
+    const basicSalary = Math.abs(parseRobustNumber(inputs.basicSalary) || 0);
+    // Only apply defaults if input is null/undefined, not if it's explicitly 0
+    const employeeContribution = inputs.employeeContribution !== null && inputs.employeeContribution !== undefined 
+      ? Math.abs(parseRobustNumber(inputs.employeeContribution)) 
+      : 12; // Default 12%
+    const employerContribution = inputs.employerContribution !== null && inputs.employerContribution !== undefined 
+      ? Math.abs(parseRobustNumber(inputs.employerContribution)) 
+      : 12; // Default 12%
+    const years = Math.max(1, parseRobustNumber(inputs.years) || 1);
     const epfRate = 0.085; // Current EPF rate ~8.5%
     
     const monthlyEmployeeContrib = safeMultiply(basicSalary, safeDivide(employeeContribution, 100));
@@ -453,41 +453,145 @@ export function calculateDividendYield(inputs: DividendYieldInputs): DividendYie
 // Gold Investment Calculator
 export interface GoldInputs {
   investmentAmount: number;
-  goldPricePerGram: number;
+  currentGoldPrice?: number; // Support both parameter names
+  goldPricePerGram?: number;
   years: number;
-  expectedAnnualReturn: number;
+  expectedAnnualReturn?: number; // Support both parameter names
+  expectedAppreciation?: number;
+}
+
+export interface GoldYearlyBreakdown {
+  year: number;
+  goldPrice: number;
+  value: number;
+  gains: number;
 }
 
 export interface GoldResults {
-  gramsOfGold: number;
+  investmentAmount: number;
+  goldQuantity: number;
+  gramsOfGold: number; // Keep for backward compatibility
   futureGoldPrice: number;
   futureValue: number;
+  maturityAmount: number; // Add this for test compatibility
   totalReturns: number;
+  totalGains: number; // Add this for test compatibility
   annualizedReturn: number;
+  yearlyBreakdown: GoldYearlyBreakdown[];
 }
 
 export function calculateGoldInvestment(inputs: GoldInputs): GoldResults {
   return safeCalculation(() => {
-    const { investmentAmount, goldPricePerGram, years, expectedAnnualReturn } = inputs;
+    // Handle both parameter naming conventions
+    const investmentAmount = parseRobustNumber(inputs.investmentAmount) || 0;
+    const goldPrice = parseRobustNumber(inputs.currentGoldPrice || inputs.goldPricePerGram) || 1;
+    const appreciationRate = parseRobustNumber(inputs.expectedAppreciation || inputs.expectedAnnualReturn) || 0;
+    const years = Math.max(0, parseRobustNumber(inputs.years) || 0); // Allow 0 years
     
-    const gramsOfGold = safeDivide(investmentAmount, goldPricePerGram);
-    const futureGoldPrice = safeMultiply(goldPricePerGram, safePower(safeAdd(1, safeDivide(expectedAnnualReturn, 100)), years));
-    const futureValue = safeMultiply(gramsOfGold, futureGoldPrice);
-    const totalReturns = Math.max(0, futureValue - investmentAmount);
-    const annualizedReturn = safeMultiply(Math.max(0, safePower(safeDivide(futureValue, investmentAmount), safeDivide(1, years)) - 1), 100);
+    // Handle edge cases
+    if (investmentAmount <= 0) {
+      return {
+        investmentAmount: 0,
+        goldQuantity: 0,
+        gramsOfGold: 0,
+        futureGoldPrice: 0,
+        futureValue: 0,
+        maturityAmount: 0,
+        totalReturns: 0,
+        totalGains: 0,
+        annualizedReturn: 0,
+        yearlyBreakdown: Array.from({length: years}, (_, i) => ({
+          year: i + 1,
+          goldPrice: goldPrice * Math.pow(1 + appreciationRate/100, i + 1),
+          value: 0,
+          gains: 0
+        }))
+      };
+    }
+    
+    if (goldPrice <= 0) {
+      return {
+        investmentAmount: roundToPrecision(investmentAmount),
+        goldQuantity: 0,
+        gramsOfGold: 0,
+        futureGoldPrice: 0,
+        futureValue: 0,
+        maturityAmount: 0,
+        totalReturns: -investmentAmount,
+        totalGains: -investmentAmount,
+        annualizedReturn: 0,
+        yearlyBreakdown: []
+      };
+    }
+    
+    const goldQuantity = safeDivide(investmentAmount, goldPrice);
+    
+    // Handle zero years case
+    if (years === 0) {
+      return {
+        investmentAmount: roundToPrecision(investmentAmount),
+        goldQuantity: roundToPrecision(goldQuantity),
+        gramsOfGold: roundToPrecision(goldQuantity),
+        futureGoldPrice: roundToPrecision(goldPrice),
+        futureValue: roundToPrecision(investmentAmount),
+        maturityAmount: roundToPrecision(investmentAmount),
+        totalReturns: 0,
+        totalGains: 0,
+        annualizedReturn: 0,
+        yearlyBreakdown: []
+      };
+    }
+    
+    const futureGoldPrice = safeMultiply(goldPrice, safePower(safeAdd(1, safeDivide(appreciationRate, 100)), years));
+    const maturityAmount = safeMultiply(goldQuantity, futureGoldPrice);
+    
+    // Handle negative appreciation correctly
+    let totalGains;
+    if (appreciationRate < 0) {
+      totalGains = maturityAmount - investmentAmount; // Can be negative
+    } else {
+      totalGains = Math.max(0, maturityAmount - investmentAmount);
+    }
+    
+    const annualizedReturn = years > 0 ? safeMultiply(Math.max(0, safePower(safeDivide(maturityAmount, investmentAmount), safeDivide(1, years)) - 1), 100) : 0;
+    
+    // Generate yearly breakdown
+    const yearlyBreakdown: GoldYearlyBreakdown[] = [];
+    for (let year = 1; year <= years; year++) {
+      const yearlyGoldPrice = safeMultiply(goldPrice, safePower(safeAdd(1, safeDivide(appreciationRate, 100)), year));
+      const yearlyValue = safeMultiply(goldQuantity, yearlyGoldPrice);
+      const yearlyGains = yearlyValue - investmentAmount; // Can be negative
+      
+      yearlyBreakdown.push({
+        year,
+        goldPrice: roundToPrecision(yearlyGoldPrice, 4),
+        value: roundToPrecision(yearlyValue, 2),
+        gains: roundToPrecision(yearlyGains, 2)
+      });
+    }
     
     return {
-      gramsOfGold: roundToPrecision(gramsOfGold),
-      futureGoldPrice: roundToPrecision(futureGoldPrice),
-      futureValue: roundToPrecision(futureValue),
-      totalReturns: roundToPrecision(totalReturns),
-      annualizedReturn: roundToPrecision(annualizedReturn)
+      investmentAmount: roundToPrecision(investmentAmount, 2),
+      goldQuantity: roundToPrecision(goldQuantity, 4),
+      gramsOfGold: roundToPrecision(goldQuantity, 4), // For backward compatibility
+      futureGoldPrice: roundToPrecision(futureGoldPrice, 2),
+      futureValue: roundToPrecision(maturityAmount, 2),
+      maturityAmount: roundToPrecision(maturityAmount, 2),
+      totalReturns: roundToPrecision(totalGains, 2),
+      totalGains: roundToPrecision(totalGains, 2),
+      annualizedReturn: roundToPrecision(annualizedReturn, 2),
+      yearlyBreakdown
     };
   }, {
+    investmentAmount: 0,
+    goldQuantity: 0,
     gramsOfGold: 0,
     futureGoldPrice: 0,
     futureValue: 0,
+    maturityAmount: 0,
     totalReturns: 0,
-    annualizedReturn: 0
+    totalGains: 0,
+    annualizedReturn: 0,
+    yearlyBreakdown: []
   });
 }

@@ -1,12 +1,7 @@
 import type { LoanInputs } from "../validations/calculator";
 import { 
   parseRobustNumber, 
-  safeDivide, 
-  safeMultiply, 
-  safeAdd, 
-  safePower,
-  roundToPrecision,
-  isEffectivelyZero
+  roundToPrecision
 } from "../utils/number";
 
 export interface LoanResults {
@@ -14,8 +9,9 @@ export interface LoanResults {
   totalPayment: number;
   totalInterest: number;
   payoffTime: number; // in months
-  interestSaved: number; // if extra payments are made
+  interestSaved: number;
   paymentSchedule: LoanPaymentScheduleItem[];
+  principal: number;
 }
 
 export interface LoanPaymentScheduleItem {
@@ -29,91 +25,112 @@ export interface LoanPaymentScheduleItem {
 }
 
 export function calculateLoan(inputs: LoanInputs): LoanResults {
-  // Use robust number parsing for all input values
   const principal = parseRobustNumber(inputs.principal);
   const rate = parseRobustNumber(inputs.rate);
   const years = parseRobustNumber(inputs.years);
   const extraPayment = parseRobustNumber(inputs.extraPayment);
 
-  const monthlyRate = safeDivide(rate, 1200); // rate / 100 / 12
-  const numberOfPayments = Math.max(1, years * 12);
-
-  // Calculate standard monthly payment with safe operations
-  let monthlyPayment: number;
-  
-  if (isEffectivelyZero(monthlyRate)) {
-    // Zero interest rate case
-    monthlyPayment = safeDivide(principal, numberOfPayments);
-  } else {
-    // Standard loan formula with safe operations
-    const onePlusRate = 1 + monthlyRate;
-    const powerTerm = safePower(onePlusRate, numberOfPayments);
-    const numerator = safeMultiply(safeMultiply(principal, monthlyRate), powerTerm);
-    const denominator = powerTerm - 1;
-    monthlyPayment = safeDivide(numerator, denominator);
+  if (principal <= 0 || rate < 0 || years <= 0) {
+    return createDefaultLoanResult(principal);
   }
 
-  // Calculate without extra payments using safe operations
-  const standardTotalPayment = safeMultiply(monthlyPayment, numberOfPayments);
+  const monthlyRate = rate / 1200;
+  const numberOfPayments = years * 12;
+
+  const monthlyPayment = calculateMonthlyPayment(principal, monthlyRate, numberOfPayments);
+  const roundedMonthlyPayment = Math.round(monthlyPayment * 100) / 100;
+
+  const standardTotalPayment = roundedMonthlyPayment * numberOfPayments;
   const standardTotalInterest = Math.max(0, standardTotalPayment - principal);
 
-  // Calculate with extra payments
   const paymentSchedule = generateLoanPaymentSchedule(
     principal,
     monthlyRate,
-    monthlyPayment,
+    numberOfPayments,
+    roundedMonthlyPayment,
     extraPayment
   );
 
   const actualPayoffTime = paymentSchedule.length;
   const totalPayment = paymentSchedule.reduce((sum, item) => sum + item.payment + item.extraPayment, 0);
   const totalInterest = paymentSchedule.reduce((sum, item) => sum + item.interest, 0);
-  const interestSaved = standardTotalInterest - totalInterest;
+  const interestSaved = Math.max(0, standardTotalInterest - totalInterest);
 
   return {
-    monthlyPayment: roundToPrecision(monthlyPayment, 2),
+    monthlyPayment: roundedMonthlyPayment,
     totalPayment: roundToPrecision(totalPayment, 2),
     totalInterest: roundToPrecision(totalInterest, 2),
     payoffTime: actualPayoffTime,
-    interestSaved: roundToPrecision(Math.max(0, interestSaved), 2),
+    interestSaved: roundToPrecision(interestSaved, 2),
     paymentSchedule,
+    principal,
   };
+}
+
+function calculateMonthlyPayment(principal: number, monthlyRate: number, numberOfPayments: number): number {
+  if (monthlyRate === 0) {
+    return principal / numberOfPayments;
+  }
+  const powerTerm = Math.pow(1 + monthlyRate, numberOfPayments);
+  return principal * (monthlyRate * powerTerm) / (powerTerm - 1);
 }
 
 function generateLoanPaymentSchedule(
   loanAmount: number,
   monthlyRate: number,
+  numberOfPayments: number,
   monthlyPayment: number,
   extraPayment: number
 ): LoanPaymentScheduleItem[] {
   const schedule: LoanPaymentScheduleItem[] = [];
-  let balance = parseRobustNumber(loanAmount);
+  let balance = loanAmount;
   let cumulativeInterest = 0;
-  let month = 1;
 
-  while (!isEffectivelyZero(balance) && balance > 0) {
-    const interestPayment = safeMultiply(balance, monthlyRate);
-    const principalPayment = Math.min(monthlyPayment - interestPayment, balance);
-    const actualExtraPayment = Math.min(extraPayment, Math.max(0, balance - principalPayment));
+  for (let month = 1; month <= numberOfPayments; month++) {
+    if (balance <= 0.01) break;
+
+    const interestPayment = balance * monthlyRate;
+    let principalPayment = monthlyPayment - interestPayment;
+    let actualPayment = monthlyPayment;
+    let appliedExtraPayment = extraPayment;
+
+    if (balance <= monthlyPayment + extraPayment) {
+      principalPayment = balance;
+      actualPayment = balance + interestPayment;
+      appliedExtraPayment = 0;
+    }
     
-    balance = Math.max(0, balance - principalPayment - actualExtraPayment);
-    cumulativeInterest = safeAdd(cumulativeInterest, interestPayment);
+    const totalPrincipalToPay = principalPayment + appliedExtraPayment;
+    
+    if (totalPrincipalToPay > balance) {
+        principalPayment = balance;
+        appliedExtraPayment = 0;
+    }
+
+    balance -= (principalPayment + appliedExtraPayment);
+    cumulativeInterest += interestPayment;
 
     schedule.push({
       month,
-      payment: roundToPrecision(monthlyPayment, 2),
-      principal: roundToPrecision(principalPayment, 2),
+      payment: roundToPrecision(actualPayment, 2),
+      principal: roundToPrecision(principalPayment + appliedExtraPayment, 2),
       interest: roundToPrecision(interestPayment, 2),
-      extraPayment: roundToPrecision(actualExtraPayment, 2),
-      balance: roundToPrecision(balance, 2),
+      extraPayment: roundToPrecision(appliedExtraPayment, 2),
+      balance: roundToPrecision(Math.max(0, balance), 2),
       cumulativeInterest: roundToPrecision(cumulativeInterest, 2),
     });
-
-    month++;
-
-    // Safety check to prevent infinite loops
-    if (month > 1000) break;
   }
-
   return schedule;
+}
+
+function createDefaultLoanResult(principal: number): LoanResults {
+  return {
+    monthlyPayment: 0,
+    totalPayment: 0,
+    totalInterest: 0,
+    payoffTime: 0,
+    interestSaved: 0,
+    paymentSchedule: [],
+    principal: principal > 0 ? principal : 0,
+  };
 }

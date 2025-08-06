@@ -66,9 +66,9 @@ interface EducationGoalInputs {
 
 function calculateEducationPlan(inputs: EducationGoalInputs) {
   // Use parseRobustNumber for flexible input handling
-  const childAge = Math.max(0, Math.min(17, Math.abs(parseRobustNumber(inputs.childAge)) || 5));
+  const childAge = Math.max(0, Math.min(25, Math.abs(parseRobustNumber(inputs.childAge)) || 5));
   const courseDuration = Math.max(1, Math.abs(parseRobustNumber(inputs.courseDuration)) || 4);
-  const startingAge = Math.max(15, Math.min(25, Math.abs(parseRobustNumber(inputs.startingAge)) || 18));
+  const startingAge = Math.max(15, Math.min(30, Math.abs(parseRobustNumber(inputs.startingAge)) || 18));
   const currentCost = Math.abs(parseRobustNumber(inputs.currentCost)) || 100000;
   const expectedInflation = Math.max(0, Math.abs(parseRobustNumber(inputs.expectedInflation)) || 10);
   const existingSavings = Math.abs(parseRobustNumber(inputs.existingSavings)) || 0;
@@ -98,9 +98,9 @@ function calculateEducationPlan(inputs: EducationGoalInputs) {
     if (monthlyRate === 0) {
       monthlyInvestment = requiredCorpus / totalMonths;
     } else {
-      monthlyInvestment = requiredCorpus / 
-        ((Math.pow(1 + monthlyRate, totalMonths) - 1) / monthlyRate) * 
-        (1 + monthlyRate);
+      // Correct SIP formula: PMT = FV * r / ((1 + r)^n - 1)
+      // This calculates the monthly payment needed to reach the required corpus
+      monthlyInvestment = (requiredCorpus * monthlyRate) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
     }
   }
 

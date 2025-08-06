@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import EducationPlanningCalculatorClient from './client';
+import EducationPlanningCalculatorClient from './calculator-client';
 
 export const metadata: Metadata = {
   title: 'Education Planning Calculator | WealthWiseGrow',

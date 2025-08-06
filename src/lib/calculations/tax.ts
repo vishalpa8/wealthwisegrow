@@ -1,3 +1,5 @@
+import { parseRobustNumber } from '../utils/number';
+
 // Income Tax Calculator (India)
 export interface IncomeTaxInputs {
   annualIncome: number;
@@ -14,6 +16,7 @@ export interface IncomeTaxResults {
   totalTax: number;
   netIncome: number;
   taxBrackets: TaxBracket[];
+  error?: string;
 }
 
 export interface TaxBracket {
@@ -23,17 +26,48 @@ export interface TaxBracket {
   tax: number;
 }
 
+
+function createErrorResult(error: string): IncomeTaxResults {
+  return {
+    grossIncome: 0,
+    taxableIncome: 0,
+    incomeTax: 0,
+    cess: 0,
+    totalTax: 0,
+    netIncome: 0,
+    taxBrackets: [],
+    error,
+  };
+}
+
 export function calculateIncomeTax(inputs: IncomeTaxInputs): IncomeTaxResults {
-  const { annualIncome, age, deductions, regime } = inputs;
+  if (!inputs) {
+    return createErrorResult("Inputs are required.");
+  }
   
-  // Standard deduction
+  const annualIncome = parseRobustNumber(inputs.annualIncome);
+  const age = parseRobustNumber(inputs.age);
+  const deductions = parseRobustNumber(inputs.deductions);
+
+  if (annualIncome < 0) {
+    return createErrorResult("Annual income cannot be negative.");
+  }
+  if (age < 18 || age > 120) {
+    return createErrorResult("Please enter a valid age.");
+  }
+  if (deductions < 0) {
+    return createErrorResult("Deductions cannot be negative.");
+  }
+
+  const regime = inputs.regime || 'new';
+  
   const standardDeduction = regime === 'old' ? 50000 : 75000;
-  const taxableIncome = Math.max(0, annualIncome - deductions - standardDeduction);
   
-  // Tax slabs for FY 2024-25
   let taxSlabs: { min: number; max: number; rate: number }[];
+  let taxableIncome: number;
   
   if (regime === 'new') {
+    taxableIncome = Math.max(0, annualIncome - deductions - standardDeduction);
     taxSlabs = [
       { min: 0, max: 300000, rate: 0 },
       { min: 300000, max: 700000, rate: 5 },
@@ -43,14 +77,14 @@ export function calculateIncomeTax(inputs: IncomeTaxInputs): IncomeTaxResults {
       { min: 1500000, max: Infinity, rate: 30 }
     ];
   } else {
-    // Senior citizen exemption
-    const basicExemption = age >= 60 ? (age >= 80 ? 500000 : 300000) : 250000;
+    taxableIncome = Math.max(0, annualIncome - deductions - standardDeduction);
     
+    const basicExemption = age >= 60 ? (age >= 80 ? 500000 : 300000) : 250000;
     taxSlabs = [
       { min: 0, max: basicExemption, rate: 0 },
-      { min: basicExemption, max: 500000, rate: 5 },
-      { min: 500000, max: 1000000, rate: 20 },
-      { min: 1000000, max: Infinity, rate: 30 }
+      { min: basicExemption, max: basicExemption + 250000, rate: 5 },
+      { min: basicExemption + 250000, max: basicExemption + 500000, rate: 20 },
+      { min: basicExemption + 500000, max: Infinity, rate: 30 }
     ];
   }
   
@@ -72,7 +106,6 @@ export function calculateIncomeTax(inputs: IncomeTaxInputs): IncomeTaxResults {
     }
   }
   
-  // Health and Education Cess (4%)
   const cess = incomeTax * 0.04;
   const totalTax = incomeTax + cess;
   const netIncome = annualIncome - totalTax;
@@ -105,7 +138,9 @@ export interface GSTResults {
 }
 
 export function calculateGST(inputs: GSTInputs): GSTResults {
-  const { amount, gstRate, type } = inputs;
+  const amount = parseRobustNumber(inputs.amount);
+  const gstRate = parseRobustNumber(inputs.gstRate);
+  const { type } = inputs;
   
   let originalAmount: number;
   let gstAmount: number;
@@ -161,21 +196,24 @@ export interface SalaryResults {
 }
 
 export function calculateSalary(inputs: SalaryInputs): SalaryResults {
-  const { ctc, basicPercent, hraPercent, pfContribution, professionalTax, otherAllowances } = inputs;
+  const ctc = parseRobustNumber(inputs.ctc);
+  const basicPercent = parseRobustNumber(inputs.basicPercent);
+  const hraPercent = parseRobustNumber(inputs.hraPercent);
+  const pfContribution = parseRobustNumber(inputs.pfContribution);
+  const annualProfessionalTax = parseRobustNumber(inputs.professionalTax);
+  const otherAllowances = parseRobustNumber(inputs.otherAllowances);
   
   const basicSalary = (ctc * basicPercent) / 100;
   const hra = (basicSalary * hraPercent) / 100;
   const grossSalary = basicSalary + hra + otherAllowances;
   
-  const pfDeduction = (basicSalary * pfContribution) / 100;
+  const annualPfDeduction = (basicSalary * pfContribution) / 100;
   
-  // Simplified income tax calculation
-  const taxableIncome = Math.max(0, grossSalary - 50000 - pfDeduction * 12); // Standard deduction
-  const incomeTax = calculateSimplifiedTax(taxableIncome);
+  const taxableIncome = Math.max(0, grossSalary - 50000 - annualPfDeduction);
+  const annualIncomeTax = calculateSimplifiedTax(taxableIncome);
   
-  const totalDeductions = pfDeduction + professionalTax / 12 + incomeTax / 12;
+  const totalDeductions = annualPfDeduction + annualProfessionalTax + annualIncomeTax;
   const netSalary = grossSalary - totalDeductions;
-  const monthlySalary = netSalary;
   
   return {
     ctc,
@@ -183,12 +221,12 @@ export function calculateSalary(inputs: SalaryInputs): SalaryResults {
     hra,
     otherAllowances,
     grossSalary,
-    pfDeduction,
-    professionalTax: professionalTax / 12,
-    incomeTax: incomeTax / 12,
+    pfDeduction: annualPfDeduction,
+    professionalTax: annualProfessionalTax,
+    incomeTax: annualIncomeTax,
     totalDeductions,
     netSalary,
-    monthlySalary
+    monthlySalary: netSalary / 12
   };
 }
 
@@ -221,7 +259,10 @@ export interface HRAResults {
 }
 
 export function calculateHRA(inputs: HRAInputs): HRAResults {
-  const { basicSalary, hraReceived, rentPaid, cityType } = inputs;
+  const basicSalary = parseRobustNumber(inputs.basicSalary);
+  const hraReceived = parseRobustNumber(inputs.hraReceived);
+  const rentPaid = parseRobustNumber(inputs.rentPaid);
+  const { cityType } = inputs;
   
   const hraPercent = cityType === 'metro' ? 0.50 : 0.40;
   const hraAsPerRule = basicSalary * hraPercent;
@@ -261,7 +302,7 @@ export interface CapitalGainsInputs {
 
 export interface CapitalGainsResults {
   capitalGains: number;
-  holdingPeriod: number;
+  holdingPeriod: number; // in months
   gainType: 'short-term' | 'long-term';
   taxRate: number;
   taxAmount: number;
@@ -269,31 +310,32 @@ export interface CapitalGainsResults {
 }
 
 export function calculateCapitalGains(inputs: CapitalGainsInputs): CapitalGainsResults {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { purchasePrice, salePrice, purchaseDate, saleDate, assetType, indexationBenefit = false } = inputs;
+  const purchasePrice = parseRobustNumber(inputs.purchasePrice);
+  const salePrice = parseRobustNumber(inputs.salePrice);
+  const { purchaseDate, saleDate, assetType } = inputs;
   
   const capitalGains = salePrice - purchasePrice;
-  const holdingPeriodMs = saleDate.getTime() - purchaseDate.getTime();
-  const holdingPeriod = holdingPeriodMs / (1000 * 60 * 60 * 24 * 365.25); // in years
+  const holdingPeriodMonths = (saleDate.getFullYear() - purchaseDate.getFullYear()) * 12 + (saleDate.getMonth() - purchaseDate.getMonth());
+  const holdingPeriod = holdingPeriodMonths / 12;
   
   let isLongTerm = false;
   let taxRate = 0;
   
   switch (assetType) {
     case 'equity':
-      isLongTerm = holdingPeriod >= 1;
+      isLongTerm = holdingPeriodMonths >= 12;
       taxRate = isLongTerm ? 10 : 15; // LTCG 10% above 1L, STCG 15%
       break;
     case 'debt':
-      isLongTerm = holdingPeriod >= 3;
+      isLongTerm = holdingPeriodMonths >= 36;
       taxRate = isLongTerm ? 20 : 30; // With indexation benefit for LTCG
       break;
     case 'property':
-      isLongTerm = holdingPeriod >= 2;
+      isLongTerm = holdingPeriodMonths >= 24;
       taxRate = isLongTerm ? 20 : 30;
       break;
     case 'gold':
-      isLongTerm = holdingPeriod >= 3;
+      isLongTerm = holdingPeriodMonths >= 36;
       taxRate = isLongTerm ? 20 : 30;
       break;
   }
