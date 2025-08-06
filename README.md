@@ -99,7 +99,7 @@ wealthwisegrow/
 ### **Installation**
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/wealthwisegrow.git
+git clone https://github.com/vishalpa8/wealthwisegrow.git
 cd wealthwisegrow
 
 # Install dependencies
@@ -386,7 +386,7 @@ const { currency, formatCurrency, formatNumber } = useCurrency();
 ### **Environment Configuration**
 ```bash
 # Environment variables
-NEXT_PUBLIC_APP_URL=https://your-domain.com
+NEXT_PUBLIC_APP_URL=https://wealthwise.com
 NEXT_PUBLIC_ANALYTICS_ID=your-analytics-id
 ```
 
@@ -469,14 +469,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 For support, questions, or feature requests:
-- **Issues:** [GitHub Issues](https://github.com/your-username/wealthwisegrow/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/your-username/wealthwisegrow/discussions)
+- **Issues:** [GitHub Issues](https://github.com/vishalpa8/wealthwisegrow/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/vishalpa8/wealthwisegrow/discussions)
 - **Email:** support@wealthwisegrow.com
 
 ---
 
 **WealthWiseGrow** - Empowering financial decisions through comprehensive calculation tools and elegant user experience.
 
-[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red?style=flat-square)](https://github.com/your-username/wealthwisegrow)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-❤️-red?style=flat-square)](https://github.com/vishalpa8/wealthwisegrow)
 [![TypeScript](https://img.shields.io/badge/Built%20with-TypeScript-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Powered%20by-Next.js-black?style=flat-square&logo=next.js)](https://nextjs.org/)
