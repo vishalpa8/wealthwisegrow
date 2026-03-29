@@ -42,7 +42,7 @@ function calculateSimpleInterest(inputs: SimpleInterestInputs) {
     simpleInterest: roundToPrecision(simpleInterest),
     totalAmount: roundToPrecision(totalAmount),
     effectiveRate: roundToPrecision(safeDivide(safeMultiply(simpleInterest, 100), principal)),
-    monthlyInterest: roundToPrecision(safeDivide(simpleInterest, safeMultiply(time, 12)))
+    monthlyInterest: roundToPrecision(safeDivide(simpleInterest, 12))
   };
 }
 
