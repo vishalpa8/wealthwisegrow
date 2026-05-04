@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateGoldInvestment, GoldInputs } from '@/lib/calculations/savings';
 import { parseRobustNumber } from '@/lib/utils/number';
@@ -128,21 +127,18 @@ export default function GoldCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Gold Investment Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Gold is often considered a safe-haven asset.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Diversify your portfolio with a small allocation to gold.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Consider digital gold or gold ETFs for convenience.</p>
           </div>
         </div>

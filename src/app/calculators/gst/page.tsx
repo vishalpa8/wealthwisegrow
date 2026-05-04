@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateGST, GSTInputs } from '@/lib/calculations/tax';
 
@@ -121,21 +120,18 @@ export default function GSTCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">GST Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Understand the different GST rates for goods and services.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">File your GST returns on time to avoid penalties.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Maintain proper records for GST compliance.</p>
           </div>
         </div>

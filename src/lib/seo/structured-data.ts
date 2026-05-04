@@ -3,19 +3,15 @@ export const organizationStructuredData = {
   "@type": "Organization",
   "name": "WealthWiseGrow",
   "url": "https://wealthwisegrow.com",
-  "logo": "https://wealthwisegrow.com/logo.png",
-  "description": "Comprehensive financial calculator platform for mortgages, loans, investments, retirement planning, and wealth growth.",
+  "logo": "https://wealthwisegrow.com/favicon.ico",
+  "description": "India-focused financial calculator platform for loans, SIP, tax, salary, retirement, savings, and personal finance planning.",
   "contactPoint": {
     "@type": "ContactPoint",
-    "telephone": "+1-555-WEALTH",
-    "contactType": "customer service",
-    "email": "contact@wealthwisegrow.com"
-  },
-  "sameAs": [
-    "https://twitter.com/wealthwisegrow",
-    "https://facebook.com/wealthwisegrow",
-    "https://linkedin.com/company/wealthwisegrow"
-  ]
+    "contactType": "customer support",
+    "email": "support@wealthwisegrow.com",
+    "areaServed": "IN",
+    "availableLanguage": ["en"]
+  }
 };
 
 export const websiteStructuredData = {
@@ -23,12 +19,7 @@ export const websiteStructuredData = {
   "@type": "WebSite",
   "name": "WealthWiseGrow",
   "url": "https://wealthwisegrow.com",
-  "description": "Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth.",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": "https://wealthwisegrow.com/search?q={search_term_string}",
-    "query-input": "required name=search_term_string"
-  }
+  "description": "Access India-focused financial calculators and personal finance guides for loans, SIP, tax, salary, retirement, savings, and wealth planning."
 };
 
 export const breadcrumbStructuredData = (items: Array<{name: string, url: string}>) => ({
@@ -54,7 +45,7 @@ export const calculatorStructuredData = (calculatorName: string, description: st
   "offers": {
     "@type": "Offer",
     "price": "0",
-    "priceCurrency": "USD"
+    "priceCurrency": "INR"
   },
   "provider": {
     "@type": "Organization",

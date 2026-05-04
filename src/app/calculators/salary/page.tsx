@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateSalary, SalaryInputs } from '@/lib/calculations/tax';
 import { parseRobustNumber } from '@/lib/utils/number';
@@ -95,7 +94,7 @@ export default function SalaryCalculatorPage() {
       type: 'number',
       placeholder: '2,400',
       unit: currency.symbol,
-      tooltip: 'Annual professional tax (varies by state, max ₹2,500)'
+      tooltip: 'Annual professional tax (varies by state, max â‚¹2,500)'
     },
     {
       label: 'Other Allowances (Annual)',
@@ -186,21 +185,18 @@ export default function SalaryCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Salary Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Understand all components of your CTC.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Optimize your tax deductions to maximize take-home pay.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Review your payslip regularly for accuracy.</p>
           </div>
         </div>

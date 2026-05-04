@@ -343,7 +343,7 @@ export function EnhancedCalculatorForm({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
             <Calculator className="w-8 h-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-blue-700">{title}</h1>
+            <h2 className="text-3xl font-bold text-blue-700">{title}</h2>
           </div>
           
           {/* Currency Selector */}

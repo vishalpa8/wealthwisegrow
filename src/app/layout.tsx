@@ -3,8 +3,9 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import Link from "next/link";
 import { AdSenseWrapper } from "@/components/ui/adsense-wrapper";
-import { FooterYear } from "@/components/ui/footer-year";
 import { CurrencyProvider } from "@/contexts/currency-context";
+import { Footer } from "@/components/layout/footer";
+import { organizationStructuredData, websiteStructuredData } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = {
   title: "WealthWiseGrow - Financial Calculators & Investment Tools",
@@ -20,21 +21,13 @@ export const metadata: Metadata = {
     description: 'Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth.',
     url: 'https://wealthwisegrow.com',
     siteName: 'WealthWiseGrow',
-    images: [
-      {
-        url: '/og-image.jpg',
-        width: 1200,
-        height: 630,
-      },
-    ],
-    locale: 'en_US',
+    locale: 'en_IN',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
     description: 'Comprehensive financial calculators and guides for better money management',
-    images: ['/og-image.jpg'],
   },
   robots: {
     index: true,
@@ -47,9 +40,6 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  verification: {
-    google: 'your-google-verification-code',
-  },
 };
 
 export default function RootLayout({
@@ -57,22 +47,34 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
+  const adsenseScriptEnabled = process.env.NEXT_PUBLIC_ADSENSE_SCRIPT_ENABLED !== 'false';
+
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col font-sans">
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3402658627618101"
-     crossOrigin="anonymous"></script>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
+        />
+        {adsenseScriptEnabled && (
+          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3402658627618101"
+       crossOrigin="anonymous"></script>
+        )}
         <CurrencyProvider>
         {/* Simple Header */}
         <header className="w-full bg-white border-b border-neutral-200 px-6 py-4 flex items-center justify-between sticky top-0 z-50">
-          <div className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3" aria-label="WealthWiseGrow home">
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">W</span>
             </div>
             <div className="text-xl font-bold text-neutral-900">
               WealthWiseGrow
             </div>
-          </div>
+          </Link>
           <nav className="hidden md:flex gap-8">
             <Link
               href="/"
@@ -183,25 +185,7 @@ export default function RootLayout({
           </main>
         </div>
         
-        {/* Simple Footer */}
-        <footer className="w-full bg-white border-t border-neutral-200 mt-16">
-          <div className="container-wide py-8">
-            <div className="flex flex-col md:flex-row justify-between items-center">
-              <div className="flex items-center space-x-3 mb-4 md:mb-0">
-                <div className="w-6 h-6 bg-primary-600 rounded-md flex items-center justify-center">
-                  <span className="text-white font-bold text-xs">W</span>
-                </div>
-                <span className="text-neutral-700 font-medium">WealthWiseGrow</span>
-              </div>
-              <div className="text-sm text-neutral-500">
-                &copy; <FooterYear /> WealthWiseGrow. All rights reserved.
-              </div>
-            </div>
-            <div className="mt-8">
-              <AdSenseWrapper adSlot="footer-ad" className="w-full h-[90px] max-w-[728px] mx-auto" />
-            </div>
-          </div>
-        </footer>
+        <Footer />
         </CurrencyProvider>
       </body>
     </html>

@@ -1,7 +1,9 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import type { CalculatorLayoutProps } from '@/types/calculator';
+import { CalculatorSEOContent } from '@/components/seo/calculator-seo-content';
 
 type ContainerSize = 'narrow' | 'medium' | 'wide' | 'extra-wide' | 'full' | 'content-light' | 'content-medium' | 'content-heavy' | 'content-extensive';
 
@@ -32,7 +34,11 @@ export function CalculatorLayout({
   className,
   containerSize = 'wide',
 }: ExtendedCalculatorLayoutProps) {
+  const pathname = usePathname();
   const containerClass = getContainerClass(containerSize);
+  const calculatorSlug = pathname?.startsWith('/calculators/')
+    ? pathname.split('/').filter(Boolean).at(-1)
+    : undefined;
   
   // Determine header container based on content size
   const getHeaderContainer = (size: ContainerSize) => {
@@ -47,16 +53,20 @@ export function CalculatorLayout({
   return (
     <div className={cn(containerClass, "py-6 sm:py-8", className)}>
       {/* Header */}
-      <header className="text-center mb-8 sm:mb-12 animate-fade-in">
-        <div className={headerContainerClass}>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight mb-4 sm:mb-6">{title}</h1>
-          {description && (
-            <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-4xl mx-auto">
-              {description}
-            </p>
-          )}
-        </div>
-      </header>
+      {(title || description) && (
+        <header className="text-center mb-8 sm:mb-12 animate-fade-in">
+          <div className={headerContainerClass}>
+            {title && (
+              <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 tracking-tight mb-4 sm:mb-6">{title}</h1>
+            )}
+            {description && (
+              <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-4xl mx-auto">
+                {description}
+              </p>
+            )}
+          </div>
+        </header>
+      )}
 
       {/* Main Content - Full width container for all content */}
       <div className="w-full">
@@ -71,6 +81,13 @@ export function CalculatorLayout({
           )}>
             <div className="animate-slide-up w-full">
               {children}
+              {calculatorSlug && title && (
+                <CalculatorSEOContent
+                  slug={calculatorSlug}
+                  title={title}
+                  description={description}
+                />
+              )}
             </div>
           </div>
 

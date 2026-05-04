@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateSIP, SIPInputs } from '@/lib/calculations/savings';
 // Removed sipSchema import as we're using flexible validation
@@ -110,21 +109,18 @@ export default function SIPCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">SIP Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">SIPs help in rupee cost averaging and reduce market timing risk.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Longer investment horizons generally yield better returns.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Regularly review your SIP performance and adjust as needed.</p>
           </div>
         </div>

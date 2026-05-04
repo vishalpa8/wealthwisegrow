@@ -1,0 +1,9 @@
+﻿import type { ReactNode } from 'react';
+import { getCalculatorPageMetadata } from '@/lib/seo/calculator-pages';
+
+export const metadata = getCalculatorPageMetadata('budget');
+
+export default function CalculatorRouteLayout({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}
+

@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { parseRobustNumber } from '@/lib/utils/number';
 
@@ -431,21 +430,18 @@ export default function TaxCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Understand both tax regimes before choosing.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Maximize eligible deductions like 80C and 80D.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Keep track of all income sources and TDS.</p>
           </div>
         </div>

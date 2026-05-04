@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { Button } from '@/components/ui/button';
 import { PieChart, FileText, TrendingDown } from 'lucide-react';
@@ -217,7 +216,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '1,50,000',
       unit: currency.symbol,
-      tooltip: 'PPF, ELSS, Life Insurance, etc. (Max: ₹1,50,000)'
+      tooltip: 'PPF, ELSS, Life Insurance, etc. (Max: â‚¹1,50,000)'
     },
     {
       label: 'Section 80D (Health Insurance)',
@@ -225,7 +224,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '25,000',
       unit: currency.symbol,
-      tooltip: 'Health insurance premiums (Max: ₹25,000 for <60 years, ₹50,000 for 60+ years)'
+      tooltip: 'Health insurance premiums (Max: â‚¹25,000 for <60 years, â‚¹50,000 for 60+ years)'
     },
     {
       label: 'Section 24B (Home Loan Interest)',
@@ -233,7 +232,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '2,00,000',
       unit: currency.symbol,
-      tooltip: 'Home loan interest deduction (Max: ₹2,00,000 for self-occupied property)'
+      tooltip: 'Home loan interest deduction (Max: â‚¹2,00,000 for self-occupied property)'
     },
     {
       label: 'Other Deductions',
@@ -309,10 +308,6 @@ export default function TaxPlanningCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Planning Tools</h3>
         <div className="space-y-3">
           <Button
@@ -331,19 +326,19 @@ export default function TaxPlanningCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Saving Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Maximize Section 80C investments early in the year.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Consider health insurance for 80D benefits.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Compare both tax regimes annually.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Plan investments for long-term tax efficiency.</p>
           </div>
         </div>
@@ -447,7 +442,7 @@ export default function TaxPlanningCalculatorPage() {
               : 'bg-green-50 border-green-200'
           }`}>
             <h4 className="font-semibold mb-2">
-              💡 Recommendation: {regimeComparison.betterRegime === 'old' ? 'Old Tax Regime' : 'New Tax Regime'}
+              ðŸ’¡ Recommendation: {regimeComparison.betterRegime === 'old' ? 'Old Tax Regime' : 'New Tax Regime'}
             </h4>
             <p className="text-sm">
               The {regimeComparison.betterRegime === 'old' ? 'old' : 'new'} tax regime gives you{' '}

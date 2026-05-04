@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { SimpleBarChart } from '@/components/ui/enhanced-charts';
 import { parseRobustNumber } from '@/lib/utils/number';
@@ -397,10 +396,6 @@ export default function FinancialHealthCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Score Ranges</h3>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -430,19 +425,19 @@ export default function FinancialHealthCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Review your financial health regularly</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Focus on areas with lowest scores first</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Set specific financial goals</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Seek professional advice if needed</p>
           </div>
         </div>

@@ -1,6 +1,5 @@
-"use client";
+﻿"use client";
 import { useState, useMemo, useCallback } from "react";
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
@@ -290,17 +289,13 @@ export default function BudgetCalculatorPage() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Budget Calculator', icon: '💰' },
-    { id: 'breakdown', label: 'Expense Breakdown', icon: '📊' },
-    { id: 'analysis', label: 'Budget Analysis', icon: '📈' }
+    { id: 'calculator', label: 'Budget Calculator', icon: 'ðŸ’°' },
+    { id: 'breakdown', label: 'Expense Breakdown', icon: 'ðŸ“Š' },
+    { id: 'analysis', label: 'Budget Analysis', icon: 'ðŸ“ˆ' }
   ];
 
   const sidebar = (
     <div className="space-y-4">
-      <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
       <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Budget Guidelines</h3>
         <div className="space-y-3">
@@ -323,19 +318,19 @@ export default function BudgetCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Budgeting Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Track expenses for at least a month</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Automate savings and bill payments</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Review and adjust monthly</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Build an emergency fund first</p>
           </div>
         </div>

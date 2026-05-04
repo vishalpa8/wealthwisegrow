@@ -1,7 +1,6 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState, useCallback } from "react";
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateMortgage } from "@/lib/calculations/mortgage";
 import type { MortgageInputs } from "@/lib/validations/calculator";
@@ -158,22 +157,18 @@ export function MortgageCalculator() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Mortgage Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">20% down payment avoids PMI</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Compare rates from multiple lenders</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Consider 15-year vs 30-year terms</p>
           </div>
         </div>
@@ -201,3 +196,4 @@ export function MortgageCalculator() {
     </CalculatorLayout>
   );
 }
+

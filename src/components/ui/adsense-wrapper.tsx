@@ -15,5 +15,9 @@ export interface AdSenseWrapperProps {
 }
 
 export function AdSenseWrapper({ adSlot, className, style }: AdSenseWrapperProps) {
+  if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED !== 'true') {
+    return null;
+  }
+
   return <AdSense adSlot={adSlot} className={className} style={style} />;
 }

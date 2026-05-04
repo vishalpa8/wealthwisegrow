@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { SimpleBarChart, GoalProgressChart } from '@/components/ui/enhanced-charts';
 import { Tabs } from '@/components/ui/tabs';
@@ -242,34 +241,30 @@ export default function EmergencyFundCalculatorPage() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Calculator', icon: '🧮' },
-    { id: 'scenarios', label: 'Scenarios', icon: '📊' },
-    { id: 'progress', label: 'Progress Tracking', icon: '🎯' }
+    { id: 'calculator', label: 'Calculator', icon: 'ðŸ§®' },
+    { id: 'scenarios', label: 'Scenarios', icon: 'ðŸ“Š' },
+    { id: 'progress', label: 'Progress Tracking', icon: 'ðŸŽ¯' }
   ];
 
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Emergency Fund Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Keep emergency funds in easily accessible accounts</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Aim for 3-6 months of expenses minimum</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Consider high-yield savings accounts</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Review and adjust based on life changes</p>
           </div>
         </div>

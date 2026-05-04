@@ -1,8 +1,7 @@
-"use client";
+﻿"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLoan } from '@/lib/calculations/loan';
 import { 
@@ -78,9 +77,6 @@ export default function CarLoanCalculatorPage() {
 
   const sidebar = (
     <div className="space-y-4">
-      <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
       {createSidebar([
         'Compare interest rates from banks and dealers',
         'Consider down payment to reduce EMI burden',

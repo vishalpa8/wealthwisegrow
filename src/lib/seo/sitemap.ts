@@ -1,3 +1,5 @@
+import { guides } from '@/lib/content/guides';
+
 export interface SitemapUrl {
   url: string;
   lastModified?: Date;
@@ -23,6 +25,12 @@ ${urlElements}
 </urlset>`;
 };
 
+const guideUrls: SitemapUrl[] = Object.values(guides).map((guide) => ({
+  url: `https://wealthwisegrow.com/guides/${guide.slug}`,
+  changeFrequency: 'monthly',
+  priority: 0.65
+}));
+
 export const siteUrls: SitemapUrl[] = [
   // Main Pages
   {
@@ -44,6 +52,36 @@ export const siteUrls: SitemapUrl[] = [
     url: 'https://wealthwisegrow.com/privacy-policy',
     changeFrequency: 'yearly',
     priority: 0.3
+  },
+  {
+    url: 'https://wealthwisegrow.com/terms-of-service',
+    changeFrequency: 'yearly',
+    priority: 0.3
+  },
+  {
+    url: 'https://wealthwisegrow.com/about',
+    changeFrequency: 'yearly',
+    priority: 0.5
+  },
+  {
+    url: 'https://wealthwisegrow.com/contact',
+    changeFrequency: 'yearly',
+    priority: 0.4
+  },
+  {
+    url: 'https://wealthwisegrow.com/editorial-policy',
+    changeFrequency: 'yearly',
+    priority: 0.4
+  },
+  {
+    url: 'https://wealthwisegrow.com/corrections',
+    changeFrequency: 'yearly',
+    priority: 0.4
+  },
+  {
+    url: 'https://wealthwisegrow.com/methodology',
+    changeFrequency: 'yearly',
+    priority: 0.5
   },
   
   // Calculator Pages - Core Financial Tools
@@ -254,31 +292,5 @@ export const siteUrls: SitemapUrl[] = [
     changeFrequency: 'monthly',
     priority: 0.6
   },
-  
-  // Guide Pages
-  {
-    url: 'https://wealthwisegrow.com/guides/investment',
-    changeFrequency: 'weekly',
-    priority: 0.6
-  },
-  {
-    url: 'https://wealthwisegrow.com/guides/mortgage',
-    changeFrequency: 'weekly',
-    priority: 0.6
-  },
-  {
-    url: 'https://wealthwisegrow.com/guides/loan',
-    changeFrequency: 'weekly',
-    priority: 0.6
-  },
-  {
-    url: 'https://wealthwisegrow.com/guides/budget',
-    changeFrequency: 'weekly',
-    priority: 0.6
-  },
-  {
-    url: 'https://wealthwisegrow.com/guides/retirement',
-    changeFrequency: 'weekly',
-    priority: 0.6
-  }
+  ...guideUrls
 ];

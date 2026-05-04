@@ -1,222 +1,51 @@
-"use client";
-import React, { useState, useMemo, useCallback } from "react";
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
-import { CalculatorLayout } from "@/components/layout/calculator-layout";
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
-import { useCurrency } from "@/contexts/currency-context";
-import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
+import type { Metadata } from "next";
+import { RetirementCalculator } from "@/components/calculators/retirement-calculator";
+import { generateCalculatorMetadata } from "@/lib/seo/metadata";
+import { breadcrumbStructuredData, faqStructuredData } from "@/lib/seo/structured-data";
 
-interface RetirementInputs {
-  currentAge: number;
-  retirementAge: number;
-  currentSavings: number;
-  monthlyContribution: number;
-  annualReturnRate: number;
-  retirementGoal: number;
-}
+export const metadata: Metadata = generateCalculatorMetadata(
+  "retirement",
+  "Retirement Calculator | WealthWiseGrow",
+  "Plan for your future with our free retirement calculator. Estimate your savings at retirement, monthly contributions, and see if you're on track to meet your retirement goals."
+);
 
-const initialValues: RetirementInputs = {
-  currentAge: 30,
-  retirementAge: 65,
-  currentSavings: 20000,
-  monthlyContribution: 500,
-  annualReturnRate: 7,
-  retirementGoal: 0, // Will be dynamically set or user-defined
-};
+const breadcrumbs = breadcrumbStructuredData([
+  { name: "Home", url: "https://wealthwisegrow.com" },
+  { name: "Calculators", url: "https://wealthwisegrow.com/calculators" },
+  { name: "Retirement Calculator", url: "https://wealthwisegrow.com/calculators/retirement" },
+]);
 
-function calculateRetirement(inputs: RetirementInputs) {
-  const currentAge = Math.max(Math.abs(inputs.currentAge || 25), 1);
-  const retirementAge = Math.max(Math.abs(inputs.retirementAge || 65), currentAge + 1);
-  const currentSavings = Math.abs(inputs.currentSavings || 0);
-  const monthlyContribution = Math.abs(inputs.monthlyContribution || 0);
-  const annualReturnRate = Math.abs(inputs.annualReturnRate || 0);
-
-  // Handle edge cases gracefully without throwing errors
-
-  const yearsToRetirement = retirementAge - currentAge;
-  const n = yearsToRetirement * 12; // Total months
-  const r = annualReturnRate / 100 / 12; // Monthly rate
-
-  // Future value of current savings
-  const fvCurrentSavings = currentSavings * Math.pow(1 + r, n);
-
-  // Future value of monthly contributions (annuity)
-  let fvMonthlyContributions = 0;
-  if (r === 0) {
-    fvMonthlyContributions = monthlyContribution * n;
-  } else {
-    fvMonthlyContributions = (monthlyContribution * (Math.pow(1 + r, n) - 1)) / r;
+const faqs = faqStructuredData([
+  {
+    question: "How much money do I need to retire comfortably in India?",
+    answer: "The amount depends on your lifestyle, but a general rule is to aim for a corpus that is 25-30 times your annual expenses. For example, if your annual expenses are ₹12 lakhs, you might need ₹3-3.6 crores."
+  },
+  {
+    question: "What is the best age to start retirement planning?",
+    answer: "The best age is as early as possible. Starting in your 20s allows your investments more time to grow through the power of compounding, significantly reducing the monthly savings required compared to starting in your 40s."
+  },
+  {
+    question: "How does inflation affect my retirement savings?",
+    answer: "Inflation reduces the purchasing power of your money over time. A monthly expense of ₹50,000 today could cost over ₹1.5 lakhs in 20 years at a 5% inflation rate. Your retirement plan must account for this by targeting a higher corpus."
+  },
+  {
+    question: "What is the 4% rule in retirement planning?",
+    answer: "The 4% rule is a guideline that suggests you can safely withdraw 4% of your total retirement savings in the first year and adjust for inflation thereafter, with a high probability that your money will last at least 30 years."
   }
+]);
 
-  const projectedSavings = fvCurrentSavings + fvMonthlyContributions;
-
-  return {
-    projectedSavings,
-    yearsToRetirement,
-  };
-}
-
-export default function RetirementCalculatorPage() {
-  const [values, setValues] = useState<RetirementInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
-  const { currency } = useCurrency();
-
-  const retirementResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      return calculateRetirement(values);
-    } catch (err: any) {
-      console.error("Retirement calculation error:", err);
-      setCalculationError(err.message || "An error occurred during calculation.");
-      return null;
-    }
-  }, [values]);
-
-  // Set initial goal to calculated projected savings if not set by user
-  // This useEffect is intentionally kept here as it modifies state based on calculation results
-  // and is specific to the retirement calculator's goal setting.
-  React.useEffect(() => {
-    if (retirementResults && values.retirementGoal === 0) {
-      setValues(prev => ({ ...prev, retirementGoal: retirementResults.projectedSavings }));
-    }
-  }, [retirementResults, values.retirementGoal]);
-
-  const fields: EnhancedCalculatorField[] = [
-    {
-      label: "Current Age",
-      name: "currentAge",
-      type: "number",
-      placeholder: "30",
-      tooltip: "Your current age."
-    },
-    {
-      label: "Retirement Age",
-      name: "retirementAge",
-      type: "number",
-      placeholder: "65",
-      tooltip: "The age at which you plan to retire."
-    },
-    {
-      label: "Current Savings",
-      name: "currentSavings",
-      type: "number",
-      placeholder: "20,000",
-      unit: currency.symbol,
-      tooltip: "Your total current retirement savings."
-    },
-    {
-      label: "Monthly Contribution",
-      name: "monthlyContribution",
-      type: "number",
-      placeholder: "500",
-      unit: currency.symbol,
-      tooltip: "Amount you plan to save monthly towards retirement."
-    },
-    {
-      label: "Annual Return Rate",
-      name: "annualReturnRate",
-      type: "percentage",
-      placeholder: "7",
-      step: 0.1,
-      tooltip: "Expected annual return on your retirement investments."
-    },
-    {
-      label: "Retirement Goal",
-      name: "retirementGoal",
-      type: "number",
-      placeholder: "1,000,000",
-      unit: currency.symbol,
-      tooltip: "Your target savings amount for retirement."
-    },
-  ];
-
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!retirementResults) return [];
-
-    return [
-      {
-        label: "Projected Savings at Retirement",
-        value: retirementResults.projectedSavings,
-        type: "currency",
-        highlight: true,
-        tooltip: "Estimated total savings you will have by your retirement age.",
-      },
-      {
-        label: "Years to Retirement",
-        value: retirementResults.yearsToRetirement,
-        type: "number",
-        tooltip: "Number of years remaining until your planned retirement age.",
-      },
-    ];
-  }, [retirementResults, currency.symbol]);
-
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 600);
-  };
-
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Retirement Planning Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Start saving early to maximize compound growth.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Regularly review and adjust your retirement plan.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider inflation and healthcare costs in retirement.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
+export default function RetirementPage() {
   return (
-    <CalculatorLayout
-      title="Retirement Calculator"
-      description="Plan for your future with our retirement calculator. Estimate your savings, contributions, and see if you're on track to meet your retirement goals."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Retirement Details"
-        description="Enter your retirement planning details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={retirementResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
       />
-      {retirementResults && values.retirementGoal > 0 && (
-        <div className="mt-6 card p-6">
-          <GoalProgressChart 
-            currentValue={retirementResults.projectedSavings} 
-            goalValue={values.retirementGoal} 
-            label="Retirement Savings Progress" 
-            unit={currency.symbol} 
-          />
-        </div>
-      )
-      }
-    </CalculatorLayout>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqs) }}
+      />
+      <RetirementCalculator />
+    </>
   );
 }

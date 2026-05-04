@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from "react";
 import {
@@ -7,7 +7,6 @@ import {
   CalculatorResult,
 } from "@/components/ui/enhanced-calculator-form";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { PieChart, BarChart3 } from "lucide-react";
@@ -300,10 +299,6 @@ export default function AdvancedEMICalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">
           Advanced Features
         </h3>
@@ -338,19 +333,19 @@ export default function AdvancedEMICalculatorPage() {
         </h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">
               Prepayments can significantly reduce total interest.
             </p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">
               Compare different loan offers before deciding.
             </p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">
               Consider your monthly budget while choosing tenure.
             </p>

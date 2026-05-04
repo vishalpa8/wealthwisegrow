@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { Button } from '@/components/ui/button';
 import { Target, Plus, Trash2, TrendingUp, Calendar, DollarSign } from 'lucide-react';
@@ -295,10 +294,6 @@ export default function GoalPlanningCalculatorPage() {
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Goal Management</h3>
         <div className="space-y-3">
           <Button
@@ -345,19 +340,19 @@ export default function GoalPlanningCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Goal Planning Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Set SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound).</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Prioritize goals based on urgency and importance.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Review and adjust goals regularly.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Consider inflation impact on long-term goals.</p>
           </div>
         </div>

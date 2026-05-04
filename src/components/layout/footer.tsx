@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calculator, Github, Twitter, Mail } from "lucide-react";
+import { Calculator, Mail } from "lucide-react";
 
 const footerLinks = {
   calculators: [
@@ -12,15 +12,16 @@ const footerLinks = {
   ],
   resources: [
     { name: "Financial Guides", href: "/guides" },
-    { name: "FAQ", href: "/faq" },
-    { name: "Privacy Policy", href: "/privacy" },
-    { name: "Terms of Service", href: "/terms" },
+    { name: "Methodology", href: "/methodology" },
+    { name: "Editorial Policy", href: "/editorial-policy" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Terms of Service", href: "/terms-of-service" },
   ],
   company: [
     { name: "About Us", href: "/about" },
     { name: "Contact", href: "/contact" },
-    { name: "Blog", href: "/blog" },
-    { name: "Feedback", href: "/feedback" },
+    { name: "Corrections", href: "/corrections" },
+    { name: "Feedback", href: "/contact" },
   ],
 };
 
@@ -40,21 +41,7 @@ export function Footer() {
             </p>
             <div className="flex space-x-4">
               <a
-                href="https://github.com"
-                className="text-gray-300 hover:text-gray-600 transition-colors duration-200"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a
-                href="https://twitter.com"
-                className="text-gray-300 hover:text-gray-600 transition-colors duration-200"
-                aria-label="Twitter"
-              >
-                <Twitter className="h-5 w-5" />
-              </a>
-              <a
-                href="mailto:contact@wealthwisegrow.com"
+                href="mailto:support@wealthwisegrow.com"
                 className="text-gray-300 hover:text-gray-600 transition-colors duration-200"
                 aria-label="Email"
               >

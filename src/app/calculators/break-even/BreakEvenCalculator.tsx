@@ -1,9 +1,8 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
-import { AdsPlaceholder } from "@/components/ui/ads-placeholder";
 import { useCurrency } from "@/contexts/currency-context";
 import { SimpleBarChart } from '@/components/ui/enhanced-charts';
 import { Tabs } from '@/components/ui/tabs';
@@ -215,22 +214,18 @@ export default function BreakEvenCalculator() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Calculator', icon: '🧮' },
-    { id: 'analysis', label: 'Cost Analysis', icon: '📊' },
-    { id: 'scenarios', label: 'Scenario Analysis', icon: '📈' }
+    { id: 'calculator', label: 'Calculator', icon: 'ðŸ§®' },
+    { id: 'analysis', label: 'Cost Analysis', icon: 'ðŸ“Š' },
+    { id: 'scenarios', label: 'Scenario Analysis', icon: 'ðŸ“ˆ' }
   ];
 
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
-        <AdsPlaceholder position="sidebar" size="300x250" />
-      </div>
-      
-      <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Break-even Formula</h3>
         <div className="bg-neutral-50 rounded-lg p-3 text-sm">
           <p className="font-medium mb-2">Break-even Point (Units) =</p>
-          <p className="text-center">Fixed Costs ÷ Contribution Margin</p>
+          <p className="text-center">Fixed Costs Ã· Contribution Margin</p>
           <hr className="my-2" />
           <p className="font-medium mb-2">Contribution Margin =</p>
           <p className="text-center">Selling Price - Variable Cost</p>
@@ -241,19 +236,19 @@ export default function BreakEvenCalculator() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Break-even Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Understand your fixed and variable costs clearly</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Lowering fixed costs reduces the break-even point</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Increasing selling price or reducing variable costs helps</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
+            <span className="text-success-500 text-sm">âœ“</span>
             <p className="text-sm text-neutral-600">Monitor your safety margin regularly</p>
           </div>
         </div>

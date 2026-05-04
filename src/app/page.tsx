@@ -23,7 +23,7 @@ export default function Home() {
               <span className="block text-blue-600">Start Here</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
-              Access 34+ professional financial calculators for mortgages, loans, investments, and retirement planning. 
+              Access 39+ professional financial calculators for mortgages, loans, investments, and retirement planning. 
               Get instant, accurate results to make informed financial decisions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
@@ -89,7 +89,7 @@ export default function Home() {
           {/* Feature Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-10">
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center hover:shadow-md transition-shadow duration-200">
-              <div className="text-2xl font-bold text-blue-600 mb-1">34+</div>
+              <div className="text-2xl font-bold text-blue-600 mb-1">39+</div>
               <div className="text-xs text-gray-600 font-medium">Calculators</div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center hover:shadow-md transition-shadow duration-200">
@@ -115,7 +115,7 @@ export default function Home() {
             Explore by Category
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Discover our complete collection of 34+ financial calculators organized by category to help you make smarter financial decisions.
+            Discover our complete collection of 39+ financial calculators organized by category to help you make smarter financial decisions.
           </p>
         </div>
 
