@@ -1,0 +1,4 @@
+#!/bin/sh
+echo "Running encoding check..."
+npm run check:encoding || { echo "Encoding check failed. Aborting commit."; exit 1; }
+exit 0

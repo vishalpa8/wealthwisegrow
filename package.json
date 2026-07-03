@@ -27,7 +27,9 @@
     "test:coverage": "jest --coverage",
     "test:verbose": "jest --verbose",
     "test:quick": "node test/run-comprehensive-calculator-tests.js --quick",
-    "test:all": "npm run test:comprehensive && npm run test:coverage"
+    "test:all": "npm run test:comprehensive && npm run test:coverage",
+    "check:encoding": "node scripts/check-encoding.cjs"
+    ,"install:git-hooks": "sh scripts/install-git-hooks.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

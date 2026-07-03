@@ -104,9 +104,9 @@ export function InvestmentCalculator() {
       <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Investment Tips</h3>
         <div className="space-y-2 text-sm text-neutral-600">
-          <p>âœ“ Start investing early to leverage compounding.</p>
-          <p>âœ“ Regular contributions can significantly boost returns.</p>
-          <p>âœ“ Diversify your portfolio to manage risk.</p>
+          <p>✓ Start investing early to leverage compounding.</p>
+          <p>✓ Regular contributions can significantly boost returns.</p>
+          <p>✓ Diversify your portfolio to manage risk.</p>
         </div>
       </div>
     </div>

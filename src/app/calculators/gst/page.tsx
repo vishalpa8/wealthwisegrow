@@ -123,15 +123,15 @@ export default function GSTCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">GST Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Understand the different GST rates for goods and services.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">File your GST returns on time to avoid penalties.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Maintain proper records for GST compliance.</p>
           </div>
         </div>

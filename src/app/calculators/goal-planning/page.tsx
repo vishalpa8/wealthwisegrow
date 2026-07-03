@@ -340,19 +340,19 @@ export default function GoalPlanningCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Goal Planning Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Set SMART goals (Specific, Measurable, Achievable, Relevant, Time-bound).</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Prioritize goals based on urgency and importance.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Review and adjust goals regularly.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Consider inflation impact on long-term goals.</p>
           </div>
         </div>

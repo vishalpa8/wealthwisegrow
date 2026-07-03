@@ -107,9 +107,9 @@ export function RetirementCalculator() {
       <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Retirement Planning Tips</h3>
         <div className="space-y-2 text-sm text-neutral-600">
-          <p>âœ“ Start saving early to maximize compound growth.</p>
-          <p>âœ“ Regularly review and adjust your retirement plan.</p>
-          <p>âœ“ Consider inflation and healthcare costs.</p>
+          <p>✓ Start saving early to maximize compound growth.</p>
+          <p>✓ Regularly review and adjust your retirement plan.</p>
+          <p>✓ Consider inflation and healthcare costs.</p>
         </div>
       </div>
     </div>

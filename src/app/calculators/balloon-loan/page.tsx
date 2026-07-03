@@ -241,15 +241,15 @@ export default function BalloonLoanCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Balloon Loan Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Balloon loans have lower monthly payments but a large final payment.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Plan how you will pay the balloon amount at maturity.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Often used for real estate or business financing.</p>
           </div>
         </div>

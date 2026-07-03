@@ -201,15 +201,15 @@ export default function HRACalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">HRA Exemption Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Keep rent receipts as proof for HRA claims.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">HRA exemption is part of your salary structure.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">If you own a house, you cannot claim HRA.</p>
           </div>
         </div>

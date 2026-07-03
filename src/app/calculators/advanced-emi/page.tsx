@@ -333,19 +333,19 @@ export default function AdvancedEMICalculatorPage() {
         </h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">
               Prepayments can significantly reduce total interest.
             </p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">
               Compare different loan offers before deciding.
             </p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">
               Consider your monthly budget while choosing tenure.
             </p>

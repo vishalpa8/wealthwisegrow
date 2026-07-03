@@ -134,15 +134,15 @@ export default function IncomeTaxCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Tax Planning Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Compare old vs new tax regime to save more.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Maximize deductions under Section 80C, 80D.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Plan investments for tax efficiency.</p>
           </div>
         </div>

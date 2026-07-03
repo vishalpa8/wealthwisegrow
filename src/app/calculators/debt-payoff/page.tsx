@@ -240,15 +240,15 @@ export default function DebtPayoffCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Debt Payoff Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Prioritize high-interest debts first (Avalanche method).</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Even small extra payments can save significant interest.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Consider debt consolidation for lower rates.</p>
           </div>
         </div>

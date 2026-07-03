@@ -108,15 +108,15 @@ export default function LumpsumCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Lumpsum Investment Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Lumpsum investments are ideal for one-time large sums.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Consider market conditions before making a lumpsum investment.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Longer investment horizons generally yield better returns.</p>
           </div>
         </div>

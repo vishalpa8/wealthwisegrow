@@ -130,15 +130,15 @@ export default function GoldCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Gold Investment Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Gold is often considered a safe-haven asset.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Diversify your portfolio with a small allocation to gold.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Consider digital gold or gold ETFs for convenience.</p>
           </div>
         </div>

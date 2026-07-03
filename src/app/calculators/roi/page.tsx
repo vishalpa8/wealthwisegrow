@@ -328,15 +328,15 @@ export default function ROICalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">ROI Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Higher ROI indicates a more profitable investment.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Consider both financial and non-financial returns.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">NPV and IRR provide deeper insights than simple ROI.</p>
           </div>
         </div>

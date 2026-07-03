@@ -100,15 +100,15 @@ export default function PPFCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">PPF Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">PPF offers tax-free returns and EEE status.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Long lock-in period makes it suitable for long-term goals.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">You can make partial withdrawals after 7 years.</p>
           </div>
         </div>

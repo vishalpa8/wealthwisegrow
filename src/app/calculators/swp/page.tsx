@@ -186,15 +186,15 @@ export default function SWPCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">SWP Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">SWP helps create a regular income stream from investments.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Adjust withdrawal amounts to account for inflation.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Monitor your corpus regularly to ensure sustainability.</p>
           </div>
         </div>

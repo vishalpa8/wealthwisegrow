@@ -116,15 +116,15 @@ export default function EPFCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">EPF Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">EPF is a mandatory savings scheme for salaried employees.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">It provides tax benefits under Section 80C.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Interest earned on EPF is tax-exempt on maturity.</p>
           </div>
         </div>

@@ -149,15 +149,15 @@ export default function SimpleInterestCalculatorPage() {
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Simple Interest Tips</h3>
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Simple interest is calculated only on the principal amount.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Often used for short-term loans or basic investments.</p>
           </div>
           <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">âœ“</span>
+            <span className="text-success-500 text-sm">✓</span>
             <p className="text-sm text-neutral-600">Compare with compound interest for long-term gains.</p>
           </div>
         </div>
@@ -168,7 +168,7 @@ export default function SimpleInterestCalculatorPage() {
   return (
     <CalculatorLayout
       title="Simple Interest Calculator"
-      description="Calculate simple interest earned on investments or loans using the formula: SI = P Ã— R Ã— T Ã· 100"
+      description="Calculate simple interest earned on investments or loans using the formula: SI = P × R × T ÷ 100"
       sidebar={sidebar}
     >
       <EnhancedCalculatorForm
