@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useMemo, useCallback } from "react";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
@@ -157,7 +157,7 @@ export function RetirementCalculator() {
           },
           {
             title: "The Impact of Inflation",
-            content: "At an average inflation rate of 6%, the cost of living doubles every 12 years. This means â‚¹1 lakh today will feel like â‚¹25,000 in 24 years. Our calculator helps you visualize if your projected savings will be enough to beat inflation."
+            content: "At an average inflation rate of 6%, the cost of living doubles every 12 years. This means ₹1 lakh today will feel like ₹25,000 in 24 years. Our calculator helps you visualize if your projected savings will be enough to beat inflation."
           },
           {
             title: "Diversification Strategy",

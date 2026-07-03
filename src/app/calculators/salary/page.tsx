@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
 import { CalculatorLayout } from '@/components/layout/calculator-layout';
@@ -94,7 +94,7 @@ export default function SalaryCalculatorPage() {
       type: 'number',
       placeholder: '2,400',
       unit: currency.symbol,
-      tooltip: 'Annual professional tax (varies by state, max â‚¹2,500)'
+      tooltip: 'Annual professional tax (varies by state, max ₹2,500)'
     },
     {
       label: 'Other Allowances (Annual)',

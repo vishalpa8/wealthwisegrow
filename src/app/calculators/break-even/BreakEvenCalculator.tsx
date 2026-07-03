@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
@@ -214,9 +214,9 @@ export default function BreakEvenCalculator() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Calculator', icon: 'ðŸ§®' },
-    { id: 'analysis', label: 'Cost Analysis', icon: 'ðŸ“Š' },
-    { id: 'scenarios', label: 'Scenario Analysis', icon: 'ðŸ“ˆ' }
+    { id: 'calculator', label: 'Calculator', icon: '🧮' },
+    { id: 'analysis', label: 'Cost Analysis', icon: '📊' },
+    { id: 'scenarios', label: 'Scenario Analysis', icon: '📈' }
   ];
 
   const sidebar = (

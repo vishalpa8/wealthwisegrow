@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
@@ -23,11 +23,11 @@ const initialValues: LoanInputs = {
 };
 
 const loanTypeConfig = {
-  personal: { min: 10000, max: 5000000, rateRange: "8-30%", termRange: "1-7 years", icon: "ðŸ‘¤", color: "from-blue-500 to-blue-600" },
-  home: { min: 100000, max: 100000000, rateRange: "6-15%", termRange: "5-30 years", icon: "ðŸ ", color: "from-green-500 to-green-600" },
-  car: { min: 50000, max: 10000000, rateRange: "7-20%", termRange: "1-8 years", icon: "ðŸš—", color: "from-purple-500 to-purple-600" },
-  business: { min: 100000, max: 50000000, rateRange: "10-35%", termRange: "1-15 years", icon: "ðŸ¢", color: "from-orange-500 to-orange-600" },
-  education: { min: 50000, max: 20000000, rateRange: "7-15%", termRange: "1-15 years", icon: "ðŸŽ“", color: "from-indigo-500 to-indigo-600" },
+  personal: { min: 10000, max: 5000000, rateRange: "8-30%", termRange: "1-7 years", icon: "👤", color: "from-blue-500 to-blue-600" },
+  home: { min: 100000, max: 100000000, rateRange: "6-15%", termRange: "5-30 years", icon: "🏠", color: "from-green-500 to-green-600" },
+  car: { min: 50000, max: 10000000, rateRange: "7-20%", termRange: "1-8 years", icon: "🚗", color: "from-purple-500 to-purple-600" },
+  business: { min: 100000, max: 50000000, rateRange: "10-35%", termRange: "1-15 years", icon: "🏢", color: "from-orange-500 to-orange-600" },
+  education: { min: 50000, max: 20000000, rateRange: "7-15%", termRange: "1-15 years", icon: "🎓", color: "from-indigo-500 to-indigo-600" },
 };
 
 function calculateLoan(values: LoanInputs) {
@@ -165,7 +165,7 @@ export function LoanCalculator() {
         title="Loan & EMI Planning"
         description={
           <>
-            A loan can be a powerful financial tool for achieving major life goals like buying a home, pursuing education, or expanding a business. However, understanding the <strong>true cost of borrowing</strong>â€”including interest rates, processing fees, and the impact of tenureâ€”is crucial for maintaining long-term financial health.
+            A loan can be a powerful financial tool for achieving major life goals like buying a home, pursuing education, or expanding a business. However, understanding the <strong>true cost of borrowing</strong>—including interest rates, processing fees, and the impact of tenure—is crucial for maintaining long-term financial health.
           </>
         }
         sections={[

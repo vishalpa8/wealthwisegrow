@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useMemo, useCallback } from "react";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
@@ -289,9 +289,9 @@ export default function BudgetCalculatorPage() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Budget Calculator', icon: 'ðŸ’°' },
-    { id: 'breakdown', label: 'Expense Breakdown', icon: 'ðŸ“Š' },
-    { id: 'analysis', label: 'Budget Analysis', icon: 'ðŸ“ˆ' }
+    { id: 'calculator', label: 'Budget Calculator', icon: '💰' },
+    { id: 'breakdown', label: 'Expense Breakdown', icon: '📊' },
+    { id: 'analysis', label: 'Budget Analysis', icon: '📈' }
   ];
 
   const sidebar = (

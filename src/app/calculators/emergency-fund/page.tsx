@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
@@ -241,9 +241,9 @@ export default function EmergencyFundCalculatorPage() {
   };
 
   const tabs = [
-    { id: 'calculator', label: 'Calculator', icon: 'ðŸ§®' },
-    { id: 'scenarios', label: 'Scenarios', icon: 'ðŸ“Š' },
-    { id: 'progress', label: 'Progress Tracking', icon: 'ðŸŽ¯' }
+    { id: 'calculator', label: 'Calculator', icon: '🧮' },
+    { id: 'scenarios', label: 'Scenarios', icon: '📊' },
+    { id: 'progress', label: 'Progress Tracking', icon: '🎯' }
   ];
 
   const sidebar = (

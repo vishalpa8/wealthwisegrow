@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useMemo, useCallback } from 'react';
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
@@ -216,7 +216,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '1,50,000',
       unit: currency.symbol,
-      tooltip: 'PPF, ELSS, Life Insurance, etc. (Max: â‚¹1,50,000)'
+      tooltip: 'PPF, ELSS, Life Insurance, etc. (Max: ₹1,50,000)'
     },
     {
       label: 'Section 80D (Health Insurance)',
@@ -224,7 +224,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '25,000',
       unit: currency.symbol,
-      tooltip: 'Health insurance premiums (Max: â‚¹25,000 for <60 years, â‚¹50,000 for 60+ years)'
+      tooltip: 'Health insurance premiums (Max: ₹25,000 for <60 years, ₹50,000 for 60+ years)'
     },
     {
       label: 'Section 24B (Home Loan Interest)',
@@ -232,7 +232,7 @@ export default function TaxPlanningCalculatorPage() {
       type: 'number',
       placeholder: '2,00,000',
       unit: currency.symbol,
-      tooltip: 'Home loan interest deduction (Max: â‚¹2,00,000 for self-occupied property)'
+      tooltip: 'Home loan interest deduction (Max: ₹2,00,000 for self-occupied property)'
     },
     {
       label: 'Other Deductions',
@@ -442,7 +442,7 @@ export default function TaxPlanningCalculatorPage() {
               : 'bg-green-50 border-green-200'
           }`}>
             <h4 className="font-semibold mb-2">
-              ðŸ’¡ Recommendation: {regimeComparison.betterRegime === 'old' ? 'Old Tax Regime' : 'New Tax Regime'}
+              💡 Recommendation: {regimeComparison.betterRegime === 'old' ? 'Old Tax Regime' : 'New Tax Regime'}
             </h4>
             <p className="text-sm">
               The {regimeComparison.betterRegime === 'old' ? 'old' : 'new'} tax regime gives you{' '}
