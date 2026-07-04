@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AdSenseWrapper } from "@/components/ui/adsense-wrapper";
 import { CurrencyProvider } from "@/contexts/currency-context";
 import { Footer } from "@/components/layout/footer";
+import { GA4 } from "@/components/analytics/ga4";
 import { organizationStructuredData, websiteStructuredData } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = {
@@ -40,6 +41,9 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
+  verification: {
+    google: 'BQbxAlPpr1EKvw8az0zGMf9Yw5rTS19XNb0zBRTIvO8',
+  },
 };
 
 export default function RootLayout({
@@ -52,6 +56,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="scroll-smooth">
       <body className="min-h-screen flex flex-col font-sans">
+        <GA4 />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
