@@ -34,7 +34,6 @@
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
     "@radix-ui/react-select": "^2.2.5",
-    "@types/recharts": "^1.8.29",
     "big.js": "^7.0.1",
     "chart.js": "^4.4.1",
     "class-variance-authority": "^0.7.1",
@@ -62,6 +61,7 @@
     "@types/chart.js": "^2.9.41",
     "@types/crypto-js": "^4.2.2",
     "@types/jest": "^30.0.0",
+    "@types/recharts": "^1.8.29",
     "@types/node": "24.0.15",
     "@types/react": "19.1.8",
     "@typescript-eslint/eslint-plugin": "^7.18.0",

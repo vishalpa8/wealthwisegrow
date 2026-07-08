@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useRef } from "react";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { v4 as uuidv4 } from "uuid";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
@@ -34,13 +34,13 @@ function calculateLoan(values: LoanInputs) {
   const principal = Math.abs(values.amount || 0);
   const annualRate = Math.abs(values.rate || 0);
   const years = Math.abs(values.years || 1);
-  
+
   if (principal === 0) {
     return {
       monthly: 0, totalPayment: 0, totalInterest: 0, interestPercentage: 0, effectiveRate: annualRate, monthlyPrincipal: 0, monthlyInterest: 0
     };
   }
-  
+
   const rate = annualRate / 100 / 12;
   const months = years * 12;
 
@@ -50,7 +50,7 @@ function calculateLoan(values: LoanInputs) {
   } else {
     monthly = (principal * rate * Math.pow(1 + rate, months)) / (Math.pow(1 + rate, months) - 1);
   }
-  
+
   const totalPayment = monthly * months;
   const totalInterest = totalPayment - principal;
   const interestPercentage = principal > 0 ? (totalInterest / principal) * 100 : 0;
@@ -71,24 +71,24 @@ function calculateLoan(values: LoanInputs) {
 
 export function LoanCalculator() {
   const [values, setValues] = useState<LoanInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError] = useState<string | undefined>(undefined);
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
   const { addHistory } = useIndexedDBHistory();
   const { currency } = useCurrency();
 
-  const handleInputChange = useCallback((name: string, value: any) => {
+  // Debounce ref — prevents writing to IndexedDB on every keystroke
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleInputChange = useCallback((name: string, value: unknown) => {
     setValues((prev) => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleCalculate = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 500);
-  };
+  const currentConfig = useMemo(
+    () => loanTypeConfig[values.loanType as keyof typeof loanTypeConfig],
+    [values.loanType]
+  );
 
-  const currentConfig = loanTypeConfig[values.loanType as keyof typeof loanTypeConfig];
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     {
       label: "Loan Type",
       name: "loanType",
@@ -102,12 +102,20 @@ export function LoanCalculator() {
     { label: 'Loan Amount', name: 'amount', type: 'number', placeholder: '5,00,000', unit: currency.symbol },
     { label: 'Interest Rate', name: 'rate', type: 'percentage', placeholder: '10', step: 0.1 },
     { label: 'Loan Term', name: 'years', type: 'number', placeholder: '20', unit: 'years' },
-  ];
+  ], [currency.symbol]);
 
-  const loanResults = useMemo(() => calculateLoan(values), [values]);
+  const loanResults = useMemo(() => {
+    setCalculationError(undefined);
+    try {
+      return calculateLoan(values);
+    } catch (err) {
+      setCalculationError(err instanceof Error ? err.message : "An error occurred during calculation.");
+      return null;
+    }
+  }, [values]);
 
   const results: CalculatorResult[] = useMemo(() => {
-    if (loanResults.monthly <= 0) return [];
+    if (!loanResults || loanResults.monthly <= 0) return [];
     return [
       { label: "Monthly EMI", value: loanResults.monthly, type: "currency", highlight: true },
       { label: "Total Payment", value: loanResults.totalPayment, type: "currency" },
@@ -116,8 +124,12 @@ export function LoanCalculator() {
     ];
   }, [loanResults]);
 
-  useEffect(() => {
-    if (loanResults.monthly > 0) {
+  // Save to history on explicit "Calculate" click, debounced to prevent rapid writes
+  const handleCalculate = useCallback(() => {
+    if (!loanResults || loanResults.monthly <= 0) return;
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
       addHistory({
         id: uuidv4(),
         type: "loan",
@@ -127,18 +139,20 @@ export function LoanCalculator() {
         title: `${values.loanType} Loan Calculator`,
         notes: "",
       });
-    }
-  }, [values, loanResults.monthly, addHistory, results]);
+    }, 300);
+  }, [loanResults, values, results, addHistory]);
 
   const sidebar = (
     <div className="space-y-4">
       <div className="card">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Loan Information</h3>
-        <div className="space-y-3 text-sm text-neutral-700">
-          <p><strong>Type:</strong> {values.loanType} Loan</p>
-          <p><strong>Rate:</strong> {currentConfig.rateRange}</p>
-          <p><strong>Term:</strong> {currentConfig.termRange}</p>
-        </div>
+        {currentConfig && (
+          <div className="space-y-3 text-sm text-neutral-700">
+            <p><strong>Type:</strong> {values.loanType} Loan</p>
+            <p><strong>Rate:</strong> {currentConfig.rateRange}</p>
+            <p><strong>Term:</strong> {currentConfig.termRange}</p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -157,7 +171,6 @@ export function LoanCalculator() {
         onChange={handleInputChange}
         onCalculate={handleCalculate}
         results={results}
-        loading={loading}
         error={calculationError}
       />
 
@@ -209,4 +222,3 @@ export function LoanCalculator() {
     </CalculatorLayout>
   );
 }
-

@@ -175,32 +175,18 @@ export function initializeCache(): void {
   });
 }
 
-// Helper hook for React components
-export function useCachedCalculation<T>(
+// Helper: returns a cached result if available, otherwise computes and caches it.
+// NOTE: This is NOT a React hook — it returns a Promise, not React state.
+export async function getOrComputeCached<T>(
   calculatorType: string,
-  inputs: Record<string, any>,
-  calculate: (inputs: Record<string, any>) => Promise<T>
+  inputs: Record<string, unknown>,
+  compute: (inputs: Record<string, unknown>) => Promise<T>
 ): Promise<T> {
-  return new Promise((resolve, reject) => {
-    // Proper promise chaining instead of async executor
-    getCachedCalculation(calculatorType, inputs)
-      .then(cached => {
-        if (cached) {
-          resolve(cached as T);
-          return null; // Return null to indicate we're done
-        }
-        // No cached result, calculate new one
-        return calculate(inputs);
-      })
-      .then(result => {
-        if (result === null) return; // Skip if we resolved from cache
-        
-        // Cache the new result and resolve
-        return cacheCalculation(calculatorType, inputs, result as any[])
-          .then(() => resolve(result));
-      })
-      .catch(error => {
-        reject(error);
-      });
-  });
+  const cached = await getCachedCalculation(calculatorType, inputs as Record<string, unknown>);
+  if (cached) {
+    return cached as T;
+  }
+  const result = await compute(inputs);
+  await cacheCalculation(calculatorType, inputs as Record<string, unknown>, result as unknown[]);
+  return result;
 }

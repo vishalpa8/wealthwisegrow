@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/ppf/layout,_N_T_/calculators/ppf/page,_N_T_/calculators/ppf"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/ppf/__PAGE__",
+    "/calculators/ppf",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

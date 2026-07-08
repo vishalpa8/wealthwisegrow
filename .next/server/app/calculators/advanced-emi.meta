@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/advanced-emi/layout,_N_T_/calculators/advanced-emi/page,_N_T_/calculators/advanced-emi"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/advanced-emi/__PAGE__",
+    "/calculators/advanced-emi",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

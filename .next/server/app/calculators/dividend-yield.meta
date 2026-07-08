@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/dividend-yield/layout,_N_T_/calculators/dividend-yield/page,_N_T_/calculators/dividend-yield"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/dividend-yield/__PAGE__",
+    "/calculators/dividend-yield",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

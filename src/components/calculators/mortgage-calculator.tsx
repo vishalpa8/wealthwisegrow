@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useCallback } from "react";
 import { useCurrency } from "@/contexts/currency-context";
@@ -20,11 +20,9 @@ const initialValues: MortgageInputs = {
 
 export function MortgageCalculator() {
   const [values, setValues] = useState<MortgageInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  // Removed validationErrors state for more flexible user experience
   const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
-  const { formatCurrency, formatNumber, currency } = useCurrency();
+  const { currency } = useCurrency();
 
   const mortgageResults = useMemo(() => {
     setCalculationError(undefined);
@@ -47,59 +45,18 @@ export function MortgageCalculator() {
     []
   );
 
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
+  // No fake loading — calculation is synchronous via useMemo.
+  const handleCalculate = useCallback(() => {
+    // Intentionally a no-op: results update reactively on input change.
+  }, []);
 
-    // No validation errors - let the calculation handle edge cases gracefully
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
-  };
-
-  const fields: EnhancedCalculatorField[] = [
-    {
-      label: "Home Price",
-      name: "principal",
-      type: "number",
-      placeholder: "500,000",
-      unit: currency.symbol,
-    },
-    {
-      label: "Down Payment",
-      name: "downPayment",
-      type: "number",
-      placeholder: "100,000",
-      unit: currency.symbol,
-    },
-    {
-      label: "Interest Rate",
-      name: "rate",
-      type: "percentage",
-      placeholder: "7.5",
-      step: 0.001,
-    },
-    {
-      label: "Loan Term",
-      name: "years",
-      type: "number",
-      placeholder: "30",
-      unit: "years",
-    },
-    {
-      label: "Annual Property Tax",
-      name: "propertyTax",
-      type: "number",
-      placeholder: "6,000",
-      unit: currency.symbol,
-    },
-    {
-      label: "Annual Home Insurance",
-      name: "insurance",
-      type: "number",
-      placeholder: "1,500",
-      unit: currency.symbol,
-    },
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
+    { label: "Home Price", name: "principal", type: "number", placeholder: "500,000", unit: currency.symbol },
+    { label: "Down Payment", name: "downPayment", type: "number", placeholder: "100,000", unit: currency.symbol },
+    { label: "Interest Rate", name: "rate", type: "percentage", placeholder: "7.5", step: 0.001 },
+    { label: "Loan Term", name: "years", type: "number", placeholder: "30", unit: "years" },
+    { label: "Annual Property Tax", name: "propertyTax", type: "number", placeholder: "6,000", unit: currency.symbol },
+    { label: "Annual Home Insurance", name: "insurance", type: "number", placeholder: "1,500", unit: currency.symbol },
     {
       label: "PMI (Private Mortgage Insurance)",
       name: "pmi",
@@ -108,7 +65,7 @@ export function MortgageCalculator() {
       unit: currency.symbol,
       tooltip: "Required if your down payment is less than 20% of the home's purchase price."
     },
-  ];
+  ], [currency.symbol]);
 
   const results: CalculatorResult[] = useMemo(() => {
     if (!mortgageResults) return [];
@@ -152,7 +109,7 @@ export function MortgageCalculator() {
         tooltip: "Percentage of total payments that go towards interest.",
       },
     ];
-  }, [mortgageResults, values, formatCurrency, formatNumber]);
+  }, [mortgageResults, values]);
 
   const sidebar = (
     <div className="space-y-4">
@@ -190,7 +147,6 @@ export function MortgageCalculator() {
         onChange={handleInputChange}
         onCalculate={handleCalculate}
         results={mortgageResults ? results : []}
-        loading={loading}
         error={calculationError}
       />
     </CalculatorLayout>

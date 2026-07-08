@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/compound-interest/layout,_N_T_/calculators/compound-interest/page,_N_T_/calculators/compound-interest"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/compound-interest/__PAGE__",
+    "/calculators/compound-interest",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

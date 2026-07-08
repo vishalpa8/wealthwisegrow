@@ -3,10 +3,6 @@ import type { CalculatorResult } from "@/types/calculator";
 
 const DB_KEY = "calculator_history";
 
-// function getDB() {
-//   return window.indexedDB;
-//}
-
 export function useIndexedDBHistory() {
   const [history, setHistory] = useState<CalculatorResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,7 +59,9 @@ export function useIndexedDBHistory() {
 
   useEffect(() => {
     loadHistory();
-  // We only want to run this once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Intentionally runs once on mount. `loadHistory` is stable (no changing deps)
+    // and `openDB` always connects to the same static DB name.
   }, []);
 
   return { history, loading, addHistory, clearHistory, reload: loadHistory };

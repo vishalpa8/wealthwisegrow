@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/insurance/layout,_N_T_/calculators/insurance/page,_N_T_/calculators/insurance"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/insurance/__PAGE__",
+    "/calculators/insurance",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

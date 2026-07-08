@@ -31,37 +31,6 @@ export interface CalculatorState {
   history: CalculatorResult[];
 }
 
-export interface FormFieldProps {
-  label: string;
-  name: string;
-  type?: "text" | "number" | "email" | "tel";
-  placeholder?: string;
-  required?: boolean;
-  min?: number;
-  max?: number;
-  step?: number;
-  prefix?: string;
-  suffix?: string;
-  helpText?: string;
-  error?: string | undefined;
-  value: string | number;
-  onChange: (value: string | number) => void;
-  onBlur?: () => void;
-  disabled?: boolean;
-  className?: string;
-  "aria-describedby"?: string;
-}
-
-export interface ResultCardProps {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  prefix?: string;
-  suffix?: string;
-  variant?: "default" | "success" | "warning" | "error" | "primary" | "pricing";
-  className?: string;
-  children?: import('react').ReactNode;
-}
 
 export interface CalculatorLayoutProps {
   title: string;

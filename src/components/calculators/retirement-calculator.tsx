@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { CalculatorLayout } from "@/components/layout/calculator-layout";
 import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from "@/components/ui/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
@@ -21,7 +21,7 @@ const initialValues: RetirementInputs = {
   currentSavings: 20000,
   monthlyContribution: 500,
   annualReturnRate: 7,
-  retirementGoal: 0,
+  retirementGoal: 1000000, // Sensible default instead of 0 to avoid auto-override effect
 };
 
 function calculateRetirement(inputs: RetirementInputs) {
@@ -54,7 +54,6 @@ function calculateRetirement(inputs: RetirementInputs) {
 
 export function RetirementCalculator() {
   const [values, setValues] = useState<RetirementInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
   const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
   const { currency } = useCurrency();
@@ -63,27 +62,21 @@ export function RetirementCalculator() {
     setCalculationError(undefined);
     try {
       return calculateRetirement(values);
-    } catch (err: any) {
-      console.error("Retirement calculation error:", err);
-      setCalculationError(err.message || "An error occurred during calculation.");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An error occurred during calculation.";
+      setCalculationError(msg);
       return null;
     }
   }, [values]);
 
-  React.useEffect(() => {
-    if (retirementResults && values.retirementGoal === 0) {
-      setValues(prev => ({ ...prev, retirementGoal: retirementResults.projectedSavings }));
-    }
-  }, [retirementResults, values.retirementGoal]);
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     { label: "Current Age", name: "currentAge", type: "number", placeholder: "30" },
     { label: "Retirement Age", name: "retirementAge", type: "number", placeholder: "65" },
     { label: "Current Savings", name: "currentSavings", type: "number", placeholder: "20,000", unit: currency.symbol },
     { label: "Monthly Contribution", name: "monthlyContribution", type: "number", placeholder: "500", unit: currency.symbol },
     { label: "Annual Return Rate", name: "annualReturnRate", type: "percentage", placeholder: "7", step: 0.1 },
     { label: "Retirement Goal", name: "retirementGoal", type: "number", placeholder: "1,000,000", unit: currency.symbol },
-  ];
+  ], [currency.symbol]);
 
   const results: CalculatorResult[] = useMemo(() => {
     if (!retirementResults) return [];
@@ -93,14 +86,14 @@ export function RetirementCalculator() {
     ];
   }, [retirementResults]);
 
-  const handleChange = useCallback((name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: unknown) => {
     setValues(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleCalculate = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 600);
-  };
+  // No fake loading — calculations are synchronous via useMemo
+  const handleCalculate = useCallback(() => {
+    // Intentionally a no-op: results update reactively on input change.
+  }, []);
 
   const sidebar = (
     <div className="space-y-4">
@@ -129,16 +122,15 @@ export function RetirementCalculator() {
         onChange={handleChange}
         onCalculate={handleCalculate}
         results={retirementResults ? results : []}
-        loading={loading}
         error={calculationError}
       />
       {retirementResults && values.retirementGoal > 0 && (
         <div className="mt-6 card p-6">
-          <GoalProgressChart 
-            currentValue={retirementResults.projectedSavings} 
-            goalValue={values.retirementGoal} 
-            label="Retirement Savings Progress" 
-            unit={currency.symbol} 
+          <GoalProgressChart
+            currentValue={retirementResults.projectedSavings}
+            goalValue={values.retirementGoal}
+            label="Retirement Savings Progress"
+            unit={currency.symbol}
           />
         </div>
       )}
@@ -191,4 +183,3 @@ export function RetirementCalculator() {
     </CalculatorLayout>
   );
 }
-

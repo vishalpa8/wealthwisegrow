@@ -2,6 +2,7 @@ root = true
 
 [*.{js,jsx,ts,tsx,html,css,json,md}]
 charset = utf-8
+# utf-8-bom causes emoji mojibake in browsers — always use plain utf-8 (no BOM)
 end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true

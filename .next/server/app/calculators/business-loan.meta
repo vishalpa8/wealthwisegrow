@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/business-loan/layout,_N_T_/calculators/business-loan/page,_N_T_/calculators/business-loan"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/business-loan/__PAGE__",
+    "/calculators/business-loan",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

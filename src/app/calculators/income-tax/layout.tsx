@@ -1,4 +1,4 @@
-﻿import type { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { getCalculatorPageMetadata } from '@/lib/seo/calculator-pages';
 
 export const metadata = getCalculatorPageMetadata('income-tax');

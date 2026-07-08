@@ -13,33 +13,6 @@ export type ValidationResult = {
   errors?: Record<string, string>;
 };
 
-// Form Field Types
-export type FieldType = 'text' | 'number' | 'select' | 'date' | 'percentage' | 'currency';
-
-export type FieldOption = {
-  value: string | number;
-  label: string;
-};
-
-export type FieldValidation = {
-  required?: boolean;
-  min?: number;
-  max?: number;
-  pattern?: RegExp;
-  custom?: (value: CalculatorValue) => string | null;
-};
-
-export type FormField = {
-  name: string;
-  label: string;
-  type: FieldType;
-  value?: CalculatorValue;
-  options?: FieldOption[];
-  validation?: FieldValidation;
-  placeholder?: string;
-  disabled?: boolean;
-  tooltip?: string;
-};
 
 // Calculation Types
 export type CalculationInput = {

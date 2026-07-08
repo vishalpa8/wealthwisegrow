@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/tax-planning/layout,_N_T_/calculators/tax-planning/page,_N_T_/calculators/tax-planning"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/tax-planning/__PAGE__",
+    "/calculators/tax-planning",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

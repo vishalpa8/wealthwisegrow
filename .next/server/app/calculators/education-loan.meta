@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/education-loan/layout,_N_T_/calculators/education-loan/page,_N_T_/calculators/education-loan"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/education-loan/__PAGE__",
+    "/calculators/education-loan",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

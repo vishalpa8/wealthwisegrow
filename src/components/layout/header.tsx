@@ -46,8 +46,9 @@ export function Header() {
             type="button"
             className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-gray-300"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-expanded="false"
-            aria-label="Toggle navigation menu"
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            aria-label={mobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
           >
             {mobileMenuOpen ? (
               <X className="h-6 w-6" aria-hidden="true" />
@@ -59,10 +60,12 @@ export function Header() {
       </div>
 
       {/* Mobile Navigation */}
-      <div className={cn(
-        "md:hidden transition-all duration-300 ease-in-out",
-        mobileMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
-      )}>
+      <div
+        id="mobile-navigation"
+        className={cn(
+          "md:hidden transition-all duration-300 ease-in-out",
+          mobileMenuOpen ? "max-h-64 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+        )}>
         <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-t border-gray-100">
           {navigation.map((item) => (
             <Link

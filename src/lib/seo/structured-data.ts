@@ -3,7 +3,12 @@ export const organizationStructuredData = {
   "@type": "Organization",
   "name": "WealthWiseGrow",
   "url": "https://wealthwisegrow.com",
-  "logo": "https://wealthwisegrow.com/favicon.ico",
+  "logo": {
+    "@type": "ImageObject",
+    "url": "https://wealthwisegrow.com/logo.png",
+    "width": 512,
+    "height": 512
+  },
   "description": "India-focused financial calculator platform for loans, SIP, tax, salary, retirement, savings, and personal finance planning.",
   "contactPoint": {
     "@type": "ContactPoint",
@@ -19,7 +24,15 @@ export const websiteStructuredData = {
   "@type": "WebSite",
   "name": "WealthWiseGrow",
   "url": "https://wealthwisegrow.com",
-  "description": "Access India-focused financial calculators and personal finance guides for loans, SIP, tax, salary, retirement, savings, and wealth planning."
+  "description": "Access India-focused financial calculators and personal finance guides for loans, SIP, tax, salary, retirement, savings, and wealth planning.",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://wealthwisegrow.com/calculators?q={search_term_string}"
+    },
+    "query-input": "required name=search_term_string"
+  }
 };
 
 export const breadcrumbStructuredData = (items: Array<{name: string, url: string}>) => ({

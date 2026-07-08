@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/calculators/layout,_N_T_/calculators/mutual-fund/layout,_N_T_/calculators/mutual-fund/page,_N_T_/calculators/mutual-fund"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/calculators/mutual-fund/__PAGE__",
+    "/calculators/mutual-fund",
+    "/calculators",
+    "/_index",
+    "/_head"
+  ]
+}

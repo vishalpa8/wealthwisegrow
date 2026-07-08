@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useMemo, useCallback } from "react";
 import { parseRobustNumber, safeMultiply, safeAdd, safePower, safeDivide, safeSubtract } from "@/lib/utils/number";
 import { GoalProgressChart } from "@/components/ui/goal-progress-chart";
@@ -45,7 +45,7 @@ function calculateInvestment(inputs: InvestmentInputs) {
   const totalContributions = safeAdd(initial, safeMultiply(monthly, n));
   const totalInterestEarned = safeSubtract(totalFutureValue, totalContributions);
 
-  const annualizedReturn = totalContributions > 0 
+  const annualizedReturn = totalContributions > 0
     ? (Math.pow(totalFutureValue / totalContributions, 1 / years) - 1) * 100
     : 0;
 
@@ -58,27 +58,28 @@ function calculateInvestment(inputs: InvestmentInputs) {
 
 export function InvestmentCalculator() {
   const [values, setValues] = useState<InvestmentInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError] = useState<string | undefined>(undefined);
+  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
 
   const { currency } = useCurrency();
 
   const investmentResults = useMemo(() => {
+    setCalculationError(undefined);
     try {
       return calculateInvestment(values);
-    } catch (err: any) {
-      console.error("Investment calculation error:", err);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "An error occurred during calculation.";
+      setCalculationError(msg);
       return null;
     }
   }, [values]);
 
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     { label: "Initial Investment", name: "initialInvestment", type: "number", placeholder: "10,000", unit: currency.symbol },
     { label: "Monthly Contribution", name: "monthlyContribution", type: "number", placeholder: "500", unit: currency.symbol },
     { label: "Annual Return Rate", name: "annualReturnRate", type: "percentage", placeholder: "7", step: 0.1 },
     { label: "Investment Period", name: "years", type: "number", placeholder: "20", unit: "years" },
     { label: "Investment Goal", name: "goal", type: "number", placeholder: "1,000,000", unit: currency.symbol },
-  ];
+  ], [currency.symbol]);
 
   const results: CalculatorResult[] = useMemo(() => {
     if (!investmentResults) return [];
@@ -90,14 +91,15 @@ export function InvestmentCalculator() {
     ];
   }, [investmentResults]);
 
-  const handleChange = useCallback((name: string, value: any) => {
+  const handleChange = useCallback((name: string, value: unknown) => {
     setValues(prev => ({ ...prev, [name]: value }));
   }, []);
 
-  const handleCalculate = () => {
-    setLoading(true);
-    setTimeout(() => setLoading(false), 400);
-  };
+  // No fake loading — calculations are synchronous via useMemo
+  const handleCalculate = useCallback(() => {
+    // Intentionally a no-op: results update reactively on input change.
+    // This callback exists so the Calculate button triggers a UX affordance.
+  }, []);
 
   const sidebar = (
     <div className="space-y-4">
@@ -126,16 +128,15 @@ export function InvestmentCalculator() {
         onChange={handleChange}
         onCalculate={handleCalculate}
         results={investmentResults ? results : []}
-        loading={loading}
         error={calculationError}
       />
       {investmentResults && values.goal > 0 && (
         <div className="mt-6 card p-6">
-          <GoalProgressChart 
-            currentValue={investmentResults.totalFutureValue} 
-            goalValue={values.goal} 
-            label="Investment Growth Progress" 
-            unit={currency.symbol} 
+          <GoalProgressChart
+            currentValue={investmentResults.totalFutureValue}
+            goalValue={values.goal}
+            label="Investment Growth Progress"
+            unit={currency.symbol}
           />
         </div>
       )}
@@ -154,7 +155,7 @@ export function InvestmentCalculator() {
           },
           {
             title: "Consistency Over Quantity",
-            content: "Investing a small amount regularly (SIP) is often more effective than waiting for a large 'perfect' moment to invest a lumpsum. Displined investing helps you navigate market volatility through rupee cost averaging."
+            content: "Investing a small amount regularly (SIP) is often more effective than waiting for a large 'perfect' moment to invest a lumpsum. Disciplined investing helps you navigate market volatility through rupee cost averaging."
           },
           {
             title: "Risk vs. Reward",
@@ -188,4 +189,3 @@ export function InvestmentCalculator() {
     </CalculatorLayout>
   );
 }
-

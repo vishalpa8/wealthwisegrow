@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 export interface Currency {
   code: string;
@@ -99,61 +99,74 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const setCurrency = (newCurrency: Currency) => {
+  const setCurrency = useCallback((newCurrency: Currency) => {
     setCurrencyState(newCurrency);
     try {
       localStorage.setItem('wealthwisegrow-currency', JSON.stringify(newCurrency));
     } catch (error) {
       console.error('Error saving currency to localStorage:', error);
     }
-  };
+  }, []);
 
-  const formatCurrency = (amount: number, options?: Intl.NumberFormatOptions): string => {
+  // Memoize formatters — creates new Intl.NumberFormat only when currency changes
+  const currencyFormatter = useMemo(() => new Intl.NumberFormat(currency.locale, {
+    style: 'currency',
+    currency: currency.code,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }), [currency.locale, currency.code]);
+
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(currency.locale, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }), [currency.locale]);
+
+  const formatCurrency = useCallback((amount: number, options?: Intl.NumberFormatOptions): string => {
     try {
       if (isNaN(amount) || !isFinite(amount)) {
         return `${currency.symbol}0`;
       }
-
-      const formatter = new Intl.NumberFormat(currency.locale, {
-        style: 'currency',
-        currency: currency.code,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-        ...options
-      });
-
-      return formatter.format(amount);
+      // Only create a new formatter when custom options are provided
+      if (options) {
+        return new Intl.NumberFormat(currency.locale, {
+          style: 'currency',
+          currency: currency.code,
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+          ...options
+        }).format(amount);
+      }
+      return currencyFormatter.format(amount);
     } catch (error) {
       console.error('Error formatting currency:', error);
-      // Fallback formatting
-      return `${currency.symbol}${amount.toLocaleString(undefined, { 
-        minimumFractionDigits: 0, 
-        maximumFractionDigits: 2 
+      return `${currency.symbol}${amount.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
       })}`;
     }
-  };
+  }, [currencyFormatter, currency.locale, currency.code, currency.symbol]);
 
-  const formatNumber = (amount: number, options?: Intl.NumberFormatOptions): string => {
+  const formatNumber = useCallback((amount: number, options?: Intl.NumberFormatOptions): string => {
     try {
       if (isNaN(amount) || !isFinite(amount)) {
         return '0';
       }
-
-      const formatter = new Intl.NumberFormat(currency.locale, {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-        ...options
-      });
-
-      return formatter.format(amount);
+      if (options) {
+        return new Intl.NumberFormat(currency.locale, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 2,
+          ...options
+        }).format(amount);
+      }
+      return numberFormatter.format(amount);
     } catch (error) {
       console.error('Error formatting number:', error);
-      return amount.toLocaleString(undefined, { 
-        minimumFractionDigits: 0, 
-        maximumFractionDigits: 2 
+      return amount.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
       });
     }
-  };
+  }, [numberFormatter, currency.locale]);
 
   return (
     <CurrencyContext.Provider value={{ currency, setCurrency, formatCurrency, formatNumber }}>
