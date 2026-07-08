@@ -65,8 +65,8 @@ export default function RootLayout({
   const adsenseScriptEnabled = process.env.NEXT_PUBLIC_ADSENSE_SCRIPT_ENABLED !== 'false';
 
   return (
-    <html lang="en" className="scroll-smooth">
-      <body className="min-h-screen flex flex-col font-sans">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col font-sans" suppressHydrationWarning>
         <GA4 />
         <script
           type="application/ld+json"
