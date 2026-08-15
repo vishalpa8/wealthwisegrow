@@ -1,6 +1,6 @@
 import React from 'react';
-import { MortgageCalculator } from "@/components/calculators/mortgage-calculator";
 import type { Metadata } from "next";
+import { MortgageCalculatorPageContent } from "./page-content";
 
 export const metadata: Metadata = {
   title: "Mortgage Calculator | WealthWiseGrow",
@@ -46,39 +46,36 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Mortgage Calculator",
+  "description": "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "All",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "url": "https://wealthwisegrow.com/calculators/mortgage",
+  "featureList": [
+    "Calculate monthly mortgage payments",
+    "Include property taxes and insurance",
+    "Calculate PMI (Private Mortgage Insurance)",
+    "Generate amortization schedule",
+    "Compare loan scenarios"
+  ]
+};
+
 export default function MortgagePage() {
   return (
     <>
-      {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "WebApplication",
-            "name": "Mortgage Calculator",
-            "description": "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
-            "url": "https://wealthwisegrow.com/calculators/mortgage",
-            "applicationCategory": "FinanceApplication",
-            "operatingSystem": "Any",
-            "offers": {
-              "@type": "Offer",
-              "price": "0",
-              "priceCurrency": "USD"
-            },
-            "featureList": [
-              "Monthly payment calculation",
-              "Amortization schedule",
-              "Interest vs principal breakdown",
-              "PMI calculation",
-              "Property tax and insurance",
-              "Loan-to-value ratio",
-              "Payment breakdown analysis"
-            ]
-          })
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <MortgageCalculator />
+      <MortgageCalculatorPageContent />
     </>
   );
 }

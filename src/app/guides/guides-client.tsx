@@ -2,8 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { CalculatorExplorer } from "@/components/ui/calculator-explorer";
-import { Button } from "@/components/ui/button";
+import { CalculatorExplorer } from "@/components/organisms/calculator-explorer";
+import { Button } from "@/components/atoms/button";
 import { guides as guideContent } from "@/lib/content/guides";
 
 const guideIcons: Record<string, string> = {

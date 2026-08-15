@@ -4,7 +4,7 @@
 
 // Helper functions copied from the test file to ensure self-contained logic.
 // In a real application, these would likely live in a shared utils module.
-const parseRobustNumber = (value: any): number => {
+const parseRobustNumber = (value: unknown): number => {
   if (typeof value === 'number') {
     if (isNaN(value) || !isFinite(value)) return 0;
     return value;

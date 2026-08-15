@@ -89,8 +89,8 @@ export interface CalculatorInput {
   step?: number;
   required?: boolean;
   options?: { value: string | number; label: string }[];
-  defaultValue?: any;
-  validate?: (value: any) => string | null;
+  defaultValue?: unknown;
+  validate?: (value: unknown) => string | null;
 }
 
 export interface CalculatorOutput {

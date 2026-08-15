@@ -12,7 +12,7 @@ export const PRECISION_DECIMAL_PLACES = 10;
  * Robust number parser that handles all possible edge cases
  * Converting any input to a valid number, defaulting invalid or empty inputs to 0
  */
-export function parseRobustNumber(value: any): number {
+export function parseRobustNumber(value: unknown): number {
   // Handle null, undefined, empty string, or falsy values
   if (value === null || value === undefined || value === '' || value === false) {
     return 0;
@@ -87,8 +87,8 @@ export function parseRobustNumber(value: any): number {
       // Try common numeric properties
       const numericProps = ['value', 'amount', 'number', 'val', 'price', 'cost', 'total', 'sum'];
       for (const prop of numericProps) {
-        if (prop in value && value[prop] !== undefined) {
-          return parseRobustNumber(value[prop]);
+        if (prop in value && (value as any)[prop] !== undefined) {
+          return parseRobustNumber((value as any)[prop]);
         }
       }
 
@@ -118,7 +118,7 @@ export function parseRobustNumber(value: any): number {
 /**
  * Safe number validation with range checking
  */
-export function validateSafeNumber(value: any): {
+export function validateSafeNumber(value: unknown): {
   isValid: boolean;
   number: number;
   error?: string;
@@ -228,7 +228,7 @@ export function isEffectivelyZero(value: number, tolerance: number = 1e-10): boo
 /**
  * Safe division that handles division by zero
  */
-export function safeDivide(numerator: any, denominator: any, fallback: number = 0): number {
+export function safeDivide(numerator: (number | string | null | undefined), denominator: (number | string | null | undefined), fallback: number = 0): number {
   const num = parseRobustNumber(numerator);
   const den = parseRobustNumber(denominator);
   
@@ -243,11 +243,11 @@ export function safeDivide(numerator: any, denominator: any, fallback: number = 
 /**
  * Safe multiplication that handles overflow
  */
-export function safeMultiply(a: any, b: any): number {
-  const numA = parseRobustNumber(a);
-  const numB = parseRobustNumber(b);
-  
-  const result = numA * numB;
+export function safeMultiply(...values: (number | string | null | undefined)[]): number {
+  let result = 1;
+  for (const value of values) {
+    result *= parseRobustNumber(value);
+  }
   
   if (!isFinite(result) || result > MAX_SAFE_CALCULATION_VALUE) {
     return MAX_SAFE_CALCULATION_VALUE;
@@ -263,7 +263,7 @@ export function safeMultiply(a: any, b: any): number {
 /**
  * Safe addition that handles overflow
  */
-export function safeAdd(...values: any[]): number {
+export function safeAdd(...values: (number | string | null | undefined)[]): number {
   let result = 0;
   
   for (const value of values) {
@@ -285,11 +285,11 @@ export function safeAdd(...values: any[]): number {
 /**
  * Safe subtraction that handles overflow
  */
-export function safeSubtract(a: any, b: any): number {
-  const numA = parseRobustNumber(a);
-  const numB = parseRobustNumber(b);
-  
-  const result = numA - numB;
+export function safeSubtract(base: (number | string | null | undefined), ...valuesToSubtract: (number | string | null | undefined)[]): number {
+  let result = parseRobustNumber(base);
+  for (const value of valuesToSubtract) {
+    result -= parseRobustNumber(value);
+  }
   
   if (!isFinite(result) || result > MAX_SAFE_CALCULATION_VALUE) {
     return MAX_SAFE_CALCULATION_VALUE;
@@ -305,7 +305,7 @@ export function safeSubtract(a: any, b: any): number {
 /**
  * Safe power calculation with overflow protection
  */
-export function safePower(base: any, exponent: any): number {
+export function safePower(base: (number | string | null | undefined), exponent: (number | string | null | undefined)): number {
   const baseNum = parseRobustNumber(base);
   const expNum = parseRobustNumber(exponent);
   
@@ -338,7 +338,7 @@ export function safePower(base: any, exponent: any): number {
 /**
  * Convert percentage to decimal safely
  */
-export function percentageToDecimal(percentage: any): number {
+export function percentageToDecimal(percentage: unknown): number {
   const parsed = parseRobustNumber(percentage);
   return parsed / 100;
 }
@@ -346,7 +346,7 @@ export function percentageToDecimal(percentage: any): number {
 /**
  * Convert decimal to percentage safely
  */
-export function decimalToPercentage(decimal: any): number {
+export function decimalToPercentage(decimal: unknown): number {
   const parsed = parseRobustNumber(decimal);
   return parsed * 100;
 }
@@ -354,7 +354,7 @@ export function decimalToPercentage(decimal: any): number {
 /**
  * Clamp a number between min and max values
  */
-export function clampNumber(value: any, min: number, max: number): number {
+export function clampNumber(value: unknown, min: number, max: number): number {
   const parsed = parseRobustNumber(value);
   return Math.min(Math.max(parsed, min), max);
 }
@@ -362,7 +362,7 @@ export function clampNumber(value: any, min: number, max: number): number {
 /**
  * Check if a value represents a valid positive number
  */
-export function isPositiveNumber(value: any): boolean {
+export function isPositiveNumber(value: unknown): boolean {
   const parsed = parseRobustNumber(value);
   return parsed > 0 && isFinite(parsed);
 }
@@ -370,7 +370,7 @@ export function isPositiveNumber(value: any): boolean {
 /**
  * Check if a value represents a valid non-negative number (including zero)
  */
-export function isNonNegativeNumber(value: any): boolean {
+export function isNonNegativeNumber(value: unknown): boolean {
   const parsed = parseRobustNumber(value);
   return parsed >= 0 && isFinite(parsed);
 }
@@ -379,7 +379,7 @@ export function isNonNegativeNumber(value: any): boolean {
  * Parse and validate a number input with custom validation rules
  */
 export function parseAndValidate(
-  value: any,
+  value: unknown,
   options: {
     min?: number;
     max?: number;
@@ -454,7 +454,7 @@ export function createNumberParser(options: {
   allowNegative?: boolean;
   decimals?: number;
 } = {}) {
-  return (value: any) => parseAndValidate(value, options);
+  return (value: unknown) => parseAndValidate(value, options);
 }
 
 // Export commonly used parsers

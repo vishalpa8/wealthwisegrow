@@ -8,7 +8,7 @@ import { parseRobustNumber, validateSafeNumber } from './utils/number';
 /**
  * Secure calculation wrapper that validates inputs and handles errors safely
  */
-export function secureCalculation<T extends Record<string, any>, R>(
+export function secureCalculation<T extends Record<string, unknown>, R>(
   inputs: T,
   calculationFn: (validatedInputs: T) => R,
   options: {
@@ -73,7 +73,7 @@ export function secureCalculation<T extends Record<string, any>, R>(
 /**
  * Sanitize user input to prevent injection attacks
  */
-export function sanitizeInput(input: any): any {
+export function sanitizeInput(input: unknown): any {
   if (typeof input === 'string') {
     // Remove potentially dangerous characters
     return input
@@ -92,7 +92,7 @@ export function sanitizeInput(input: any): any {
   }
   
   if (typeof input === 'object' && input !== null) {
-    const sanitized: any = {};
+    const sanitized: Record<string, any> = {};
     for (const [key, value] of Object.entries(input)) {
       sanitized[sanitizeInput(key)] = sanitizeInput(value);
     }
@@ -185,7 +185,7 @@ export function validateCalculationContext(context: {
 /**
  * Secure wrapper for financial calculations with comprehensive validation
  */
-export function secureFinancialCalculation<T extends Record<string, any>, R>(
+export function secureFinancialCalculation<T extends Record<string, unknown>, R>(
   inputs: T,
   calculationFn: (inputs: T) => R,
   validationRules: {

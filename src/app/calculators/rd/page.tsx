@@ -1,10 +1,11 @@
 "use client";
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+
+import { useMemo } from "react";
+import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
+import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateRD, RDInputs } from '@/lib/calculations/savings';
-
+import { parseRobustNumber } from "@/lib/utils/number";
 
 const initialValues = {
   monthlyDeposit: 5000,
@@ -13,34 +14,15 @@ const initialValues = {
 };
 
 export default function RDCalculatorPage() {
-  const [values, setValues] = useState<RDInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const rdResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases
-      const calculation = calculateRD(values);
-
-      return calculation;
-    } catch (err: any) {
-      console.error('RD calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     {
       label: 'Monthly Deposit',
       name: 'monthlyDeposit',
       type: 'number',
       placeholder: '5,000',
       unit: currency.symbol,
-      tooltip: 'Amount you plan to deposit every month'
     },
     {
       label: 'Annual Interest Rate',
@@ -48,7 +30,6 @@ export default function RDCalculatorPage() {
       type: 'percentage',
       placeholder: '6.5',
       step: 0.1,
-      tooltip: 'Annual interest rate offered by the bank'
     },
     {
       label: 'Investment Period',
@@ -56,93 +37,52 @@ export default function RDCalculatorPage() {
       type: 'number',
       placeholder: '5',
       unit: 'years',
-      tooltip: 'Number of years you want to continue the RD'
     }
-  ];
+  ], [currency.symbol]);
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!rdResults) return [];
+  const calculate = (values: typeof initialValues) => {
+    const validatedValues: RDInputs = {
+      monthlyDeposit: Math.abs(parseRobustNumber(values.monthlyDeposit)) || 0,
+      annualRate: Math.abs(parseRobustNumber(values.annualRate)) || 0,
+      years: Math.max(parseRobustNumber(values.years) || 1, 1)
+    };
 
-    return [
+    const calculation = calculateRD(validatedValues);
+
+    const results: CalculatorResult[] = [
       {
         label: 'Maturity Amount',
-        value: rdResults.maturityAmount,
+        value: calculation.maturityAmount,
         type: 'currency',
         highlight: true,
-        tooltip: 'Total amount you will receive at maturity'
       },
       {
         label: 'Total Deposits',
-        value: rdResults.totalDeposits,
+        value: calculation.totalDeposits,
         type: 'currency',
-        tooltip: 'Total amount you will deposit over the period'
       },
       {
         label: 'Interest Earned',
-        value: rdResults.totalInterest,
+        value: calculation.totalInterest,
         type: 'currency',
-        tooltip: 'Interest earned on your deposits'
       },
       {
         label: 'Effective Annual Return',
-        value: ((rdResults.maturityAmount / rdResults.totalDeposits) ** (1 / values.years) - 1) * 100,
+        value: calculation.totalDeposits > 0 ? ((calculation.maturityAmount / calculation.totalDeposits) ** (1 / validatedValues.years) - 1) * 100 : 0,
         type: 'percentage',
-        tooltip: 'Annualized return rate considering compounding'
       }
     ];
-  }, [rdResults, values.years, currency.symbol]);
 
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 500);
+    return { results };
   };
 
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Recurring Deposit Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">R.D.s are a good option for regular, disciplined savings.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Interest rates are usually fixed for the entire tenure.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider laddering R.D.s for liquidity.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<typeof initialValues>
       title="Recurring Deposit Calculator"
       description="Calculate the maturity amount and interest earned on your Recurring Deposit investments."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Recurring Deposit Details"
-        description="Enter your Recurring Deposit details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={rdResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
-      />
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+    />
   );
 }

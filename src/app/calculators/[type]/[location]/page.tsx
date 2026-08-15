@@ -1,6 +1,6 @@
 import React from "react";
 
-export function generateMetadata({ params }: { params: any }) {
+export function generateMetadata({ params }: { params: { type: string, location: string } }) {
   const { type, location } = params;
   const title = `${capitalize(type)} Calculator for ${formatLocation(location)} | WealthWiseGrow`;
   const description = `Calculate your ${type} in ${formatLocation(location)}. Get instant results, local rates, and actionable insights for your financial planning.`;
@@ -29,7 +29,7 @@ function formatLocation(str: string) {
   return str.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
 }
 
-export default function Page({ params }: { params: any }) {
+export default function Page({ params }: { params: { type: string, location: string } }) {
   const { type, location } = params;
   return (
     <section className="max-w-2xl mx-auto p-10 mt-12 bg-white rounded-3xl shadow-xl border border-gray-200 font-sans">

@@ -1,10 +1,10 @@
 "use client";
+import { SEOContent } from "@/components/molecules/seo-content";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { BaseCalculatorTemplate } from '@/components/templates/base-calculator';
+import { EnhancedCalculatorField, CalculatorResult } from '@/components/organisms/enhanced-calculator-form';
 import { useCurrency } from "@/contexts/currency-context";
-import { SimpleBarChart } from '@/components/ui/enhanced-charts';
+import { SimpleBarChart } from '@/components/molecules/enhanced-charts';
 import { parseRobustNumber } from '@/lib/utils/number';
 
 interface FinancialHealthInputs {
@@ -31,492 +31,156 @@ const initialValues: FinancialHealthInputs = {
   creditScore: 750
 };
 
-interface HealthScoreResult {
-  overallScore: number;
-  category: string;
-  categoryColor: string;
-  scores: {
-    savingsRate: { score: number; value: number };
-    debtToIncome: { score: number; value: number };
-    emergencyFund: { score: number; value: number };
-    investmentRatio: { score: number; value: number };
-    creditScore: { score: number; value: number };
-    insurance: { score: number; value: string };
-    retirement: { score: number; value: string };
-  };
-  recommendations: string[];
-}
-
-function calculateFinancialHealth(inputs: FinancialHealthInputs): HealthScoreResult {
-  // Use parseRobustNumber for flexible input handling
-  const monthlyIncome = Math.abs(parseRobustNumber(inputs.monthlyIncome)) || 100000;
-  const monthlyExpenses = Math.abs(parseRobustNumber(inputs.monthlyExpenses)) || 0;
-  const totalDebt = Math.abs(parseRobustNumber(inputs.totalDebt)) || 0;
-  const emergencyFund = Math.abs(parseRobustNumber(inputs.emergencyFund)) || 0;
-  const investments = Math.abs(parseRobustNumber(inputs.investments)) || 0;
-  const age = Math.max(18, Math.min(100, Math.abs(parseRobustNumber(inputs.age)) || 30));
-  const hasInsurance = inputs.hasInsurance || 'no';
-  const hasRetirementPlan = inputs.hasRetirementPlan || 'no';
-  const creditScore = Math.max(300, Math.min(850, Math.abs(parseRobustNumber(inputs.creditScore)) || 750));
-
-  // Calculate individual scores (0-100)
-  const scores = {
-    savingsRate: calculateSavingsRateScore(monthlyIncome, monthlyExpenses),
-    debtToIncome: calculateDebtToIncomeScore(totalDebt, monthlyIncome),
-    emergencyFund: calculateEmergencyFundScore(emergencyFund, monthlyExpenses),
-    investmentRatio: calculateInvestmentScore(investments, monthlyIncome, age),
-    creditScore: calculateCreditScoreScore(creditScore),
-    insurance: calculateInsuranceScore(hasInsurance),
-    retirement: calculateRetirementScore(hasRetirementPlan, age)
-  };
-
-  // Calculate weighted overall score
-  const weights = {
-    savingsRate: 0.20,
-    debtToIncome: 0.20,
-    emergencyFund: 0.15,
-    investmentRatio: 0.15,
-    creditScore: 0.15,
-    insurance: 0.10,
-    retirement: 0.05
-  };
-
-  const overallScore = Object.entries(scores).reduce((total, [key, scoreData]) => {
-    return total + (scoreData.score * weights[key as keyof typeof weights]);
-  }, 0);
-
-  const { category, categoryColor } = getScoreCategory(overallScore);
-  const recommendations = generateRecommendations(scores);
-
-  return {
-    overallScore: Math.round(overallScore),
-    category,
-    categoryColor,
-    scores,
-    recommendations
-  };
-}
-
-function calculateSavingsRateScore(income: number, expenses: number) {
-  const savingsRate = income > 0 ? ((income - expenses) / income) * 100 : 0;
-  let score = 0;
-  
-  if (savingsRate >= 20) score = 100;
-  else if (savingsRate >= 15) score = 80;
-  else if (savingsRate >= 10) score = 60;
-  else if (savingsRate >= 5) score = 40;
-  else if (savingsRate >= 0) score = 20;
-  else score = 0;
-
-  return { score, value: Math.max(0, savingsRate) };
-}
-
-function calculateDebtToIncomeScore(debt: number, monthlyIncome: number) {
-  const annualIncome = monthlyIncome * 12;
-  const debtToIncomeRatio = annualIncome > 0 ? (debt / annualIncome) * 100 : 0;
-  let score = 0;
-
-  if (debtToIncomeRatio <= 20) score = 100;
-  else if (debtToIncomeRatio <= 36) score = 80;
-  else if (debtToIncomeRatio <= 50) score = 60;
-  else if (debtToIncomeRatio <= 75) score = 40;
-  else if (debtToIncomeRatio <= 100) score = 20;
-  else score = 0;
-
-  return { score, value: debtToIncomeRatio };
-}
-
-function calculateEmergencyFundScore(emergencyFund: number, monthlyExpenses: number) {
-  const monthsCovered = monthlyExpenses > 0 ? emergencyFund / monthlyExpenses : 0;
-  let score = 0;
-
-  if (monthsCovered >= 6) score = 100;
-  else if (monthsCovered >= 4) score = 80;
-  else if (monthsCovered >= 3) score = 60;
-  else if (monthsCovered >= 1) score = 40;
-  else if (monthsCovered >= 0.5) score = 20;
-  else score = 0;
-
-  return { score, value: monthsCovered };
-}
-
-function calculateInvestmentScore(investments: number, monthlyIncome: number, age: number) {
-  const annualIncome = monthlyIncome * 12;
-  const investmentRatio = annualIncome > 0 ? (investments / annualIncome) * 100 : 0;
-  const expectedRatio = Math.max(10, age * 2); // Rule of thumb: age * 2% of annual income
-  
-  let score = 0;
-  if (investmentRatio >= expectedRatio) score = 100;
-  else if (investmentRatio >= expectedRatio * 0.8) score = 80;
-  else if (investmentRatio >= expectedRatio * 0.6) score = 60;
-  else if (investmentRatio >= expectedRatio * 0.4) score = 40;
-  else if (investmentRatio >= expectedRatio * 0.2) score = 20;
-  else score = 0;
-
-  return { score, value: investmentRatio };
-}
-
-function calculateCreditScoreScore(creditScore: number) {
-  let score = 0;
-  
-  if (creditScore >= 800) score = 100;
-  else if (creditScore >= 750) score = 90;
-  else if (creditScore >= 700) score = 80;
-  else if (creditScore >= 650) score = 60;
-  else if (creditScore >= 600) score = 40;
-  else if (creditScore >= 550) score = 20;
-  else score = 0;
-
-  return { score, value: creditScore };
-}
-
-function calculateInsuranceScore(hasInsurance: string) {
-  const score = hasInsurance === 'yes' ? 100 : 0;
-  return { score, value: hasInsurance };
-}
-
-function calculateRetirementScore(hasRetirementPlan: string, age: number) {
-  let score = 0;
-  
-  if (hasRetirementPlan === 'yes') {
-    if (age < 30) score = 100;
-    else if (age < 40) score = 90;
-    else if (age < 50) score = 80;
-    else score = 70;
-  } else {
-    score = 0;
-  }
-
-  return { score, value: hasRetirementPlan };
-}
-
-function getScoreCategory(score: number) {
-  if (score >= 80) return { category: 'Excellent', categoryColor: '#10b981' };
-  if (score >= 70) return { category: 'Good', categoryColor: '#3b82f6' };
-  if (score >= 60) return { category: 'Fair', categoryColor: '#f59e0b' };
-  if (score >= 40) return { category: 'Poor', categoryColor: '#f97316' };
-  return { category: 'Critical', categoryColor: '#ef4444' };
-}
-
-function generateRecommendations(scores: any): string[] {
-  const recommendations = [];
-
-  if (scores.savingsRate.score < 60) {
-    recommendations.push('Increase your savings rate to at least 15-20% of income');
-  }
-  
-  if (scores.debtToIncome.score < 60) {
-    recommendations.push('Focus on reducing debt to improve debt-to-income ratio');
-  }
-  
-  if (scores.emergencyFund.score < 80) {
-    recommendations.push('Build emergency fund to cover 3-6 months of expenses');
-  }
-  
-  if (scores.investmentRatio.score < 60) {
-    recommendations.push('Increase investments for long-term wealth building');
-  }
-  
-  if (scores.creditScore.score < 80) {
-    recommendations.push('Work on improving credit score through timely payments');
-  }
-  
-  if (scores.insurance.score < 100) {
-    recommendations.push('Get adequate insurance coverage for financial protection');
-  }
-  
-  if (scores.retirement.score < 100) {
-    recommendations.push('Start retirement planning as early as possible');
-  }
-
-  return recommendations;
-}
-
 export default function FinancialHealthCalculatorPage() {
-  const [values, setValues] = useState<FinancialHealthInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const healthResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases gracefully
-      const calculation = calculateFinancialHealth(values);
-      return calculation;
-    } catch (err: any) {
-      console.error('Financial health calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
   const fields: EnhancedCalculatorField[] = [
+    { label: 'Monthly Income', name: 'monthlyIncome', type: 'number', placeholder: '100,000', unit: currency.symbol, tooltip: 'Your total monthly income after taxes' },
+    { label: 'Monthly Expenses', name: 'monthlyExpenses', type: 'number', placeholder: '70,000', unit: currency.symbol, tooltip: 'Your total monthly living expenses' },
+    { label: 'Total Debt', name: 'totalDebt', type: 'number', placeholder: '500,000', unit: currency.symbol, tooltip: 'Total outstanding debt' },
+    { label: 'Emergency Fund', name: 'emergencyFund', type: 'number', placeholder: '200,000', unit: currency.symbol, tooltip: 'Amount saved for emergencies' },
+    { label: 'Total Investments', name: 'investments', type: 'number', placeholder: '300,000', unit: currency.symbol, tooltip: 'Total value of investments' },
+    { label: 'Age', name: 'age', type: 'number', placeholder: '30', tooltip: 'Your current age' },
+    { label: 'Have Insurance Coverage', name: 'hasInsurance', type: 'select', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }], tooltip: 'Do you have adequate life and health insurance?' },
+    { label: 'Have Retirement Plan', name: 'hasRetirementPlan', type: 'select', options: [{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }], tooltip: 'Do you have a retirement savings plan?' },
+    { label: 'Credit Score', name: 'creditScore', type: 'number', placeholder: '750', tooltip: 'Your current credit score' }
+  ];
+
+  const calculate = (inputs: FinancialHealthInputs) => {
+    const monthlyIncome = Math.abs(parseRobustNumber(inputs.monthlyIncome)) || 100000;
+    const monthlyExpenses = Math.abs(parseRobustNumber(inputs.monthlyExpenses)) || 0;
+    const totalDebt = Math.abs(parseRobustNumber(inputs.totalDebt)) || 0;
+    const emergencyFund = Math.abs(parseRobustNumber(inputs.emergencyFund)) || 0;
+    const investments = Math.abs(parseRobustNumber(inputs.investments)) || 0;
+    const age = Math.max(18, Math.min(100, Math.abs(parseRobustNumber(inputs.age)) || 30));
+    const hasInsurance = inputs.hasInsurance || 'no';
+    const hasRetirementPlan = inputs.hasRetirementPlan || 'no';
+    const creditScore = Math.max(300, Math.min(850, Math.abs(parseRobustNumber(inputs.creditScore)) || 750));
+
+    // Calculate individual scores
+    const savingsRateValue = monthlyIncome > 0 ? ((monthlyIncome - monthlyExpenses) / monthlyIncome) * 100 : 0;
+    const savingsScore = savingsRateValue >= 20 ? 100 : savingsRateValue >= 15 ? 80 : savingsRateValue >= 10 ? 60 : savingsRateValue >= 5 ? 40 : savingsRateValue >= 0 ? 20 : 0;
+
+    const annualIncome = monthlyIncome * 12;
+    const debtRatio = annualIncome > 0 ? (totalDebt / annualIncome) * 100 : 0;
+    const debtScore = debtRatio <= 20 ? 100 : debtRatio <= 36 ? 80 : debtRatio <= 50 ? 60 : debtRatio <= 75 ? 40 : debtRatio <= 100 ? 20 : 0;
+
+    const monthsCovered = monthlyExpenses > 0 ? emergencyFund / monthlyExpenses : 0;
+    const efScore = monthsCovered >= 6 ? 100 : monthsCovered >= 4 ? 80 : monthsCovered >= 3 ? 60 : monthsCovered >= 1 ? 40 : monthsCovered >= 0.5 ? 20 : 0;
+
+    const invRatio = annualIncome > 0 ? (investments / annualIncome) * 100 : 0;
+    const expectedRatio = Math.max(10, age * 2);
+    const invScore = invRatio >= expectedRatio ? 100 : invRatio >= expectedRatio * 0.8 ? 80 : invRatio >= expectedRatio * 0.6 ? 60 : invRatio >= expectedRatio * 0.4 ? 40 : invRatio >= expectedRatio * 0.2 ? 20 : 0;
+
+    const csScore = creditScore >= 800 ? 100 : creditScore >= 750 ? 90 : creditScore >= 700 ? 80 : creditScore >= 650 ? 60 : creditScore >= 600 ? 40 : creditScore >= 550 ? 20 : 0;
+    const insScore = hasInsurance === 'yes' ? 100 : 0;
+    
+    let retScore = 0;
+    if (hasRetirementPlan === 'yes') {
+      if (age < 30) retScore = 100;
+      else if (age < 40) retScore = 90;
+      else if (age < 50) retScore = 80;
+      else retScore = 70;
+    }
+
+    const overallScore = Math.round(savingsScore*0.2 + debtScore*0.2 + efScore*0.15 + invScore*0.15 + csScore*0.15 + insScore*0.1 + retScore*0.05);
+
+    let category = 'Critical', categoryColor = '#ef4444';
+    if (overallScore >= 80) { category = 'Excellent'; categoryColor = '#10b981'; }
+    else if (overallScore >= 70) { category = 'Good'; categoryColor = '#3b82f6'; }
+    else if (overallScore >= 60) { category = 'Fair'; categoryColor = '#f59e0b'; }
+    else if (overallScore >= 40) { category = 'Poor'; categoryColor = '#f97316'; }
+
+    const recommendations = [];
+    if (savingsScore < 60) recommendations.push('Increase your savings rate to at least 15-20% of income');
+    if (debtScore < 60) recommendations.push('Focus on reducing debt to improve debt-to-income ratio');
+    if (efScore < 80) recommendations.push('Build emergency fund to cover 3-6 months of expenses');
+    if (invScore < 60) recommendations.push('Increase investments for long-term wealth building');
+    if (csScore < 80) recommendations.push('Work on improving credit score through timely payments');
+    if (insScore < 100) recommendations.push('Get adequate insurance coverage for financial protection');
+    if (retScore < 100) recommendations.push('Start retirement planning as early as possible');
+
+    const results: CalculatorResult[] = [
+      { label: 'Financial Health Score', value: overallScore, type: 'number', highlight: true },
+      { label: 'Health Category', value: category, type: 'number' },
+      { label: 'Savings Rate', value: savingsRateValue, type: 'percentage' },
+      { label: 'Debt-to-Income Ratio', value: debtRatio, type: 'percentage' },
+      { label: 'Emergency Fund Coverage', value: monthsCovered, type: 'number' }
+    ];
+
+    const chartData = {
+      overallScore,
+      category,
+      categoryColor,
+      recommendations,
+      scoreBreakdownData: [
+        { label: 'Savings Rate', value: savingsScore },
+        { label: 'Debt Management', value: debtScore },
+        { label: 'Emergency Fund', value: efScore },
+        { label: 'Investments', value: invScore },
+        { label: 'Credit Score', value: csScore },
+        { label: 'Insurance', value: insScore },
+        { label: 'Retirement Plan', value: retScore }
+      ]
+    };
+
+    return { results, chartData };
+  };
+
+  const charts = [
     {
-      label: 'Monthly Income',
-      name: 'monthlyIncome',
-      type: 'number',
-      placeholder: '100,000',
-      unit: currency.symbol,
-      tooltip: 'Your total monthly income after taxes'
-    },
-    {
-      label: 'Monthly Expenses',
-      name: 'monthlyExpenses',
-      type: 'number',
-      placeholder: '70,000',
-      unit: currency.symbol,
-      tooltip: 'Your total monthly living expenses'
-    },
-    {
-      label: 'Total Debt',
-      name: 'totalDebt',
-      type: 'number',
-      placeholder: '500,000',
-      unit: currency.symbol,
-      tooltip: 'Total outstanding debt (loans, credit cards, etc.)'
-    },
-    {
-      label: 'Emergency Fund',
-      name: 'emergencyFund',
-      type: 'number',
-      placeholder: '200,000',
-      unit: currency.symbol,
-      tooltip: 'Amount saved for emergencies'
-    },
-    {
-      label: 'Total Investments',
-      name: 'investments',
-      type: 'number',
-      placeholder: '300,000',
-      unit: currency.symbol,
-      tooltip: 'Total value of investments (stocks, mutual funds, etc.)'
-    },
-    {
-      label: 'Age',
-      name: 'age',
-      type: 'number',
-      placeholder: '30',
-      tooltip: 'Your current age'
-    },
-    {
-      label: 'Have Insurance Coverage',
-      name: 'hasInsurance',
-      type: 'select',
-      options: [
-        { value: 'yes', label: 'Yes' },
-        { value: 'no', label: 'No' }
-      ],
-      tooltip: 'Do you have adequate life and health insurance?'
-    },
-    {
-      label: 'Have Retirement Plan',
-      name: 'hasRetirementPlan',
-      type: 'select',
-      options: [
-        { value: 'yes', label: 'Yes' },
-        { value: 'no', label: 'No' }
-      ],
-      tooltip: 'Do you have a retirement savings plan?'
-    },
-    {
-      label: 'Credit Score',
-      name: 'creditScore',
-      type: 'number',
-      placeholder: '750',
-      tooltip: 'Your current credit score'
+      id: "health-summary",
+      render: (results: any, chartData: any) => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-6 text-center flex flex-col justify-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Financial Health Score</h3>
+              <div className="text-6xl font-bold mb-2" style={{ color: chartData.categoryColor }}>{chartData.overallScore}</div>
+              <div className="text-xl font-semibold mb-4" style={{ color: chartData.categoryColor }}>{chartData.category}</div>
+              <div className="w-full bg-gray-200 rounded-full h-4">
+                <div className="h-4 rounded-full transition-all duration-500" style={{ width: `${chartData.overallScore}%`, backgroundColor: chartData.categoryColor }} />
+              </div>
+            </div>
+            <SimpleBarChart data={chartData.scoreBreakdownData} title="Score Breakdown by Category" height={300} formatValue={(value) => `${value}/100`} />
+          </div>
+          {chartData.recommendations.length > 0 && (
+            <div className="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations for Improvement</h3>
+              <div className="space-y-3">
+                {chartData.recommendations.map((recommendation: string, index: number) => (
+                  <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <span className="text-blue-600 font-bold">{index + 1}.</span>
+                    <p className="text-sm text-blue-800">{recommendation}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )
     }
   ];
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!healthResults) return [];
-
-    return [
-      {
-        label: 'Financial Health Score',
-        value: healthResults.overallScore,
-        type: 'number',
-        highlight: true,
-        tooltip: `Your overall financial health rating: ${healthResults.category}`
-      },
-      {
-        label: 'Health Category',
-        value: healthResults.category,
-        type: 'number',
-        tooltip: 'Your financial health category based on the score'
-      },
-      {
-        label: 'Savings Rate',
-        value: healthResults.scores.savingsRate.value,
-        type: 'percentage',
-        tooltip: 'Percentage of income you save monthly'
-      },
-      {
-        label: 'Debt-to-Income Ratio',
-        value: healthResults.scores.debtToIncome.value,
-        type: 'percentage',
-        tooltip: 'Your total debt as percentage of annual income'
-      },
-      {
-        label: 'Emergency Fund Coverage',
-        value: healthResults.scores.emergencyFund.value,
-        type: 'number',
-        tooltip: 'Number of months your emergency fund can cover'
-      }
-    ];
-  }, [healthResults]);
-
-  // Prepare data for score breakdown chart
-  const scoreBreakdownData = useMemo(() => {
-    if (!healthResults) return [];
-    
-    return [
-      { label: 'Savings Rate', value: healthResults.scores.savingsRate.score },
-      { label: 'Debt Management', value: healthResults.scores.debtToIncome.score },
-      { label: 'Emergency Fund', value: healthResults.scores.emergencyFund.score },
-      { label: 'Investments', value: healthResults.scores.investmentRatio.score },
-      { label: 'Credit Score', value: healthResults.scores.creditScore.score },
-      { label: 'Insurance', value: healthResults.scores.insurance.score },
-      { label: 'Retirement Plan', value: healthResults.scores.retirement.score }
-    ];
-  }, [healthResults]);
-
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 500);
-  };
-
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Score Ranges</h3>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Excellent</span>
-            <span className="text-sm font-medium text-green-600">80-100</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Good</span>
-            <span className="text-sm font-medium text-blue-600">70-79</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Fair</span>
-            <span className="text-sm font-medium text-yellow-600">60-69</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Poor</span>
-            <span className="text-sm font-medium text-orange-600">40-59</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Critical</span>
-            <span className="text-sm font-medium text-red-600">0-39</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Review your financial health regularly</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Focus on areas with lowest scores first</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Set specific financial goals</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Seek professional advice if needed</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  const seoContent = (
+      <SEOContent title="Financial Health Tips"
+      description="Assess your overall financial health with a comprehensive score based on key financial metrics."
+      sections={[
+        { title: "Review Regularly", content: "Review your financial health regularly." },
+        { title: "Focus on Weaknesses", content: "Focus on areas with lowest scores first." },
+        { title: "Set Goals", content: "Set specific financial goals." }
+      ]}
+    />
   );
 
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<FinancialHealthInputs>
       title="Financial Health Score Calculator"
       description="Assess your overall financial health with a comprehensive score based on key financial metrics."
-      sidebar={sidebar}
-    >
-      <div className="space-y-6">
-        <EnhancedCalculatorForm
-          title="Financial Health Assessment"
-          description="Enter your financial details to get a comprehensive health score."
-          fields={fields}
-          values={values}
-          onChange={handleChange}
-          onCalculate={handleCalculate}
-          results={healthResults ? results : []}
-          loading={loading}
-          error={calculationError}
-          showComparison={false}
-        />
-
-        {healthResults && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Overall Score Display */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6 text-center">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Your Financial Health Score</h3>
-              <div 
-                className="text-6xl font-bold mb-2"
-                style={{ color: healthResults.categoryColor }}
-              >
-                {healthResults.overallScore}
-              </div>
-              <div 
-                className="text-xl font-semibold mb-4"
-                style={{ color: healthResults.categoryColor }}
-              >
-                {healthResults.category}
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="h-4 rounded-full transition-all duration-500"
-                  style={{ 
-                    width: `${healthResults.overallScore}%`,
-                    backgroundColor: healthResults.categoryColor
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Score Breakdown */}
-            <SimpleBarChart
-              data={scoreBreakdownData}
-              title="Score Breakdown by Category"
-              height={300}
-              formatValue={(value) => `${value}/100`}
-            />
-          </div>
-        )}
-
-        {healthResults && healthResults.recommendations.length > 0 && (
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommendations for Improvement</h3>
-            <div className="space-y-3">
-              {healthResults.recommendations.map((recommendation, index) => (
-                <div key={index} className="flex items-start space-x-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <span className="text-blue-600 font-bold">{index + 1}.</span>
-                  <p className="text-sm text-blue-800">{recommendation}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+      charts={charts}
+      seoContent={seoContent}
+    />
   );
 }

@@ -1,7 +1,8 @@
+import React from 'react';
 import type { Metadata } from "next";
-import { InvestmentCalculator } from "@/components/calculators/investment-calculator";
+import { InvestmentCalculatorPageContent } from "./page-content";
 import { generateCalculatorMetadata } from "@/lib/seo/metadata";
-import { breadcrumbStructuredData, faqStructuredData } from "@/lib/seo/structured-data";
+import { breadcrumbStructuredData, faqStructuredData, calculatorStructuredData } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "investment",
@@ -34,18 +35,19 @@ const faqs = faqStructuredData([
   }
 ]);
 
+const softwareApp = calculatorStructuredData(
+  "Investment Calculator | WealthWiseGrow",
+  "Calculate the future value of your investments with compounding. Plan your financial goals, compare SIP vs lumpsum, and see how your wealth grows over time.",
+  "https://wealthwisegrow.com/calculators/investment"
+);
+
 export default function InvestmentPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqs) }}
-      />
-      <InvestmentCalculator />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqs) }} />
+      <InvestmentCalculatorPageContent />
     </>
   );
 }

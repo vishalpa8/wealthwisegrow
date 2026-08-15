@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CalculatorLayout } from "@/components/layout/calculator-layout";
+import { CalculatorLayout } from "@/components/templates/calculator-layout";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | WealthWiseGrow",

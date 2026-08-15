@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
-import { AdSenseWrapper } from "@/components/ui/adsense-wrapper";
+import { AdSenseWrapper } from "@/components/molecules/adsense-wrapper";
 import { CurrencyProvider } from "@/contexts/currency-context";
-import { Header } from "@/components/layout/header";
-import { Footer } from "@/components/layout/footer";
+import { Header } from "@/components/organisms/header";
+import { Footer } from "@/components/organisms/footer";
 import { GA4 } from "@/components/analytics/ga4";
 import { organizationStructuredData, websiteStructuredData } from "@/lib/seo/structured-data";
 import Link from "next/link";

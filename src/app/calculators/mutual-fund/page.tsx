@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { useMemo } from "react";
+import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
+import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
-
+import { parseRobustNumber } from "@/lib/utils/number";
 
 const initialValues = {
   investmentType: 'lumpsum',
@@ -19,122 +19,10 @@ const initialValues = {
   taxBracket: 'none'
 };
 
-interface MutualFundInputs {
-  investmentType: string;
-  initialInvestment: number;
-  monthlyInvestment: number;
-  startDate: string;
-  endDate: string;
-  purchaseNav: number;
-  currentNav: number;
-  entryLoad: number;
-  exitLoad: number;
-  taxBracket: string;
-}
-
-function calculateReturns(inputs: MutualFundInputs) {
-  const {
-    investmentType,
-    initialInvestment,
-    monthlyInvestment,
-    startDate,
-    endDate,
-    purchaseNav,
-    currentNav,
-    entryLoad,
-    exitLoad,
-    taxBracket
-  } = inputs;
-
-  const startDateTime = new Date(startDate).getTime();
-  const endDateTime = endDate ? new Date(endDate).getTime() : Date.now();
-  const durationInYears = (endDateTime - startDateTime) / (365.25 * 24 * 60 * 60 * 1000);
-
-  let totalInvestment = 0;
-  let units = 0;
-  let currentValue = 0;
-  let absoluteReturns = 0;
-  let cagr = 0;
-
-  if (investmentType === 'lumpsum') {
-    // Calculate for lumpsum investment
-    const investmentAfterLoad = initialInvestment * (1 - entryLoad / 100);
-    units = investmentAfterLoad / purchaseNav;
-    currentValue = units * currentNav * (1 - exitLoad / 100);
-    totalInvestment = initialInvestment;
-  } else {
-    // Calculate for SIP investment - use more accurate month calculation
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate || Date.now());
-    
-    // Calculate months more accurately
-    let totalMonths = (endDateObj.getFullYear() - startDateObj.getFullYear()) * 12;
-    totalMonths += endDateObj.getMonth() - startDateObj.getMonth();
-    
-    // If the end date's day is before the start date's day, subtract a month
-    if (endDateObj.getDate() < startDateObj.getDate()) {
-      totalMonths--;
-    }
-    
-    // Ensure non-negative months
-    totalMonths = Math.max(0, totalMonths);
-    
-    for (let i = 0; i < totalMonths; i++) {
-      const monthlyInvestmentAfterLoad = monthlyInvestment * (1 - entryLoad / 100);
-      units += monthlyInvestmentAfterLoad / purchaseNav;
-      totalInvestment += monthlyInvestment;
-    }
-    currentValue = units * currentNav * (1 - exitLoad / 100);
-  }
-
-  absoluteReturns = totalInvestment > 0 ? ((currentValue - totalInvestment) / totalInvestment) * 100 : 0;
-  cagr = (totalInvestment > 0 && durationInYears > 0) ? 
-    (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100 : 0;
-
-  // Calculate tax implications
-  const taxRate = parseInt(taxBracket) || 0;
-  const gains = currentValue - totalInvestment;
-  const taxAmount = (gains * taxRate) / 100;
-  const postTaxValue = currentValue - taxAmount;
-
-  return {
-    totalInvestment,
-    units,
-    currentValue,
-    absoluteReturns,
-    cagr,
-    gains,
-    taxAmount,
-    postTaxValue,
-    durationInYears
-  };
-}
-
 export default function MutualFundCalculatorPage() {
-  const [values, setValues] = useState<MutualFundInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const mutualFundResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases
-      if (!values.startDate || new Date(values.startDate).toString() === 'Invalid Date') {
-        // Don't throw an error, just return null to indicate no valid calculation yet
-        return null;
-      }
-
-      return calculateReturns(values);
-    } catch (err: any) {
-      console.error('Mutual fund calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     {
       label: 'Investment Type',
       name: 'investmentType',
@@ -143,27 +31,32 @@ export default function MutualFundCalculatorPage() {
         { value: 'lumpsum', label: 'Lumpsum Investment' },
         { value: 'sip', label: 'SIP Investment' }
       ],
-      tooltip: 'Choose between one-time or regular monthly investments'
     },
     {
       label: 'Investment Start Date',
       name: 'startDate',
       type: 'date',
-      tooltip: 'When did you start investing?'
     },
     {
       label: 'Investment End Date',
       name: 'endDate',
       type: 'date',
-      tooltip: 'Leave blank for current date'
     },
     {
-      label: values.investmentType === 'lumpsum' ? 'Investment Amount' : 'Monthly Investment',
-      name: values.investmentType === 'lumpsum' ? 'initialInvestment' : 'monthlyInvestment',
+      label: 'Investment Amount (Lumpsum)',
+      name: 'initialInvestment',
       type: 'number',
-      placeholder: values.investmentType === 'lumpsum' ? '1,00,000' : '10,000',
+      placeholder: '1,00,000',
       unit: currency.symbol,
-      tooltip: values.investmentType === 'lumpsum' ? 'One-time investment amount' : 'Monthly SIP amount'
+      showIf: (values: any) => values.investmentType === 'lumpsum',
+    },
+    {
+      label: 'Monthly Investment (SIP)',
+      name: 'monthlyInvestment',
+      type: 'number',
+      placeholder: '10,000',
+      unit: currency.symbol,
+      showIf: (values: any) => values.investmentType === 'sip',
     },
     {
       label: 'Purchase NAV',
@@ -172,7 +65,6 @@ export default function MutualFundCalculatorPage() {
       placeholder: '10.00',
       unit: currency.symbol,
       step: 0.01,
-      tooltip: 'NAV at which units were purchased'
     },
     {
       label: 'Current NAV',
@@ -181,7 +73,6 @@ export default function MutualFundCalculatorPage() {
       placeholder: '12.00',
       unit: currency.symbol,
       step: 0.01,
-      tooltip: 'Current NAV of the mutual fund'
     },
     {
       label: 'Entry Load (%)',
@@ -189,7 +80,6 @@ export default function MutualFundCalculatorPage() {
       type: 'percentage',
       placeholder: '0',
       step: 0.01,
-      tooltip: 'Entry load charged by the fund (if any)'
     },
     {
       label: 'Exit Load (%)',
@@ -197,7 +87,6 @@ export default function MutualFundCalculatorPage() {
       type: 'percentage',
       placeholder: '0',
       step: 0.01,
-      tooltip: 'Exit load charged by the fund (if any)'
     },
     {
       label: 'Tax Bracket',
@@ -209,124 +98,122 @@ export default function MutualFundCalculatorPage() {
         { value: '20', label: '20%' },
         { value: '30', label: '30%' }
       ],
-      tooltip: 'Your income tax bracket for gain calculation'
     }
-  ];
+  ], [currency.symbol]);
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!mutualFundResults) return [];
+  const calculate = (values: typeof initialValues) => {
+    if (!values.startDate || new Date(values.startDate).toString() === 'Invalid Date') {
+      return { results: [] };
+    }
 
-    const calculatorResults: CalculatorResult[] = [
+    const startDateTime = new Date(values.startDate).getTime();
+    const endDateTime = values.endDate ? new Date(values.endDate).getTime() : Date.now();
+    const durationInYears = (endDateTime - startDateTime) / (365.25 * 24 * 60 * 60 * 1000);
+
+    let totalInvestment = 0;
+    let units = 0;
+    let currentValue = 0;
+
+    const initialInvestment = Math.abs(parseRobustNumber(values.initialInvestment)) || 0;
+    const monthlyInvestment = Math.abs(parseRobustNumber(values.monthlyInvestment)) || 0;
+    const purchaseNav = Math.abs(parseRobustNumber(values.purchaseNav)) || 1;
+    const currentNav = Math.abs(parseRobustNumber(values.currentNav)) || 1;
+    const entryLoad = Math.abs(parseRobustNumber(values.entryLoad)) || 0;
+    const exitLoad = Math.abs(parseRobustNumber(values.exitLoad)) || 0;
+
+    if (values.investmentType === 'lumpsum') {
+      const investmentAfterLoad = initialInvestment * (1 - entryLoad / 100);
+      units = investmentAfterLoad / purchaseNav;
+      currentValue = units * currentNav * (1 - exitLoad / 100);
+      totalInvestment = initialInvestment;
+    } else {
+      const startDateObj = new Date(values.startDate);
+      const endDateObj = new Date(values.endDate || Date.now());
+      
+      let totalMonths = (endDateObj.getFullYear() - startDateObj.getFullYear()) * 12;
+      totalMonths += endDateObj.getMonth() - startDateObj.getMonth();
+      
+      if (endDateObj.getDate() < startDateObj.getDate()) {
+        totalMonths--;
+      }
+      totalMonths = Math.max(0, totalMonths);
+      
+      for (let i = 0; i < totalMonths; i++) {
+        const monthlyInvestmentAfterLoad = monthlyInvestment * (1 - entryLoad / 100);
+        units += monthlyInvestmentAfterLoad / purchaseNav;
+        totalInvestment += monthlyInvestment;
+      }
+      currentValue = units * currentNav * (1 - exitLoad / 100);
+    }
+
+    const absoluteReturns = totalInvestment > 0 ? ((currentValue - totalInvestment) / totalInvestment) * 100 : 0;
+    const cagr = (totalInvestment > 0 && durationInYears > 0) ? 
+      (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100 : 0;
+
+    const taxRate = parseInt(values.taxBracket) || 0;
+    const gains = currentValue - totalInvestment;
+    const taxAmount = (gains * taxRate) / 100;
+    const postTaxValue = currentValue - taxAmount;
+
+    const results: CalculatorResult[] = [
       {
         label: 'Current Value',
-        value: mutualFundResults.currentValue,
+        value: currentValue,
         type: 'currency',
         highlight: true,
-        tooltip: 'Current value of your investment'
       },
       {
         label: 'Total Investment',
-        value: mutualFundResults.totalInvestment,
+        value: totalInvestment,
         type: 'currency',
-        tooltip: 'Total amount invested'
       },
       {
         label: 'Total Units',
-        value: mutualFundResults.units,
+        value: units,
         type: 'number',
-        tooltip: 'Number of units held'
       },
       {
         label: 'Absolute Returns',
-        value: mutualFundResults.absoluteReturns,
+        value: absoluteReturns,
         type: 'percentage',
-        tooltip: 'Total returns without considering time period'
       },
       {
         label: 'CAGR',
-        value: mutualFundResults.cagr,
+        value: cagr,
         type: 'percentage',
-        tooltip: 'Compounded Annual Growth Rate'
       },
       {
         label: 'Total Gains',
-        value: mutualFundResults.gains,
+        value: gains,
         type: 'currency',
-        tooltip: 'Profit earned on investment'
       }
     ];
 
     if (values.taxBracket !== 'none') {
-      calculatorResults.push(
+      results.push(
         {
           label: 'Tax Amount',
-          value: mutualFundResults.taxAmount,
+          value: taxAmount,
           type: 'currency',
-          tooltip: 'Tax payable on gains'
         },
         {
           label: 'Post-tax Value',
-          value: mutualFundResults.postTaxValue,
+          value: postTaxValue,
           type: 'currency',
-          tooltip: 'Investment value after tax'
         }
       );
     }
 
-    return calculatorResults;
-  }, [mutualFundResults, values.taxBracket, currency.symbol]);
-
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 500);
+    return { results };
   };
 
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Mutual Fund Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Understand NAV and its impact on returns.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider expense ratios and loads before investing.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">SIPs help in rupee cost averaging.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<typeof initialValues>
       title="Mutual Fund Returns Calculator"
       description="Calculate your mutual fund returns including CAGR, absolute returns, and tax implications."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Mutual Fund Details"
-        description="Enter your mutual fund investment details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={mutualFundResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
-      />
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+    />
   );
 }

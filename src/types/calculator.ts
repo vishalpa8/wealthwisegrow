@@ -1,8 +1,8 @@
 export interface CalculatorResult {
   id: string;
   type: CalculatorType;
-  inputs: Record<string, any>;
-  results: Record<string, any>;
+  inputs: Record<string, unknown>;
+  results: Record<string, unknown>;
   timestamp: Date;
   title: string;
   notes: string;
@@ -27,7 +27,7 @@ export interface ValidationError {
 export interface CalculatorState {
   isLoading: boolean;
   errors: ValidationError[];
-  results: Record<string, any> | null;
+  results: Record<string, unknown> | null;
   history: CalculatorResult[];
 }
 

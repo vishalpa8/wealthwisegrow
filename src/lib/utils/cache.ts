@@ -4,7 +4,7 @@ interface CalculatorCache extends DBSchema {
   results: {
     key: string;
     value: {
-      data: any;
+      data: unknown;
       timestamp: number;
       expiresAt: number;
     };
@@ -12,7 +12,7 @@ interface CalculatorCache extends DBSchema {
   calculations: {
     key: string;
     value: {
-      inputs: Record<string, any>;
+      inputs: Record<string, unknown>;
       results: any[];
       timestamp: number;
     };
@@ -44,13 +44,13 @@ async function getDB() {
 }
 
 // Cache key generation
-function generateCacheKey(type: string, params: Record<string, any>): string {
+function generateCacheKey(type: string, params: Record<string, unknown>): string {
   const sortedParams = Object.keys(params)
     .sort()
     .reduce((acc, key) => {
       acc[key] = params[key];
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, unknown>);
 
   return `${type}:${JSON.stringify(sortedParams)}`;
 }
@@ -58,7 +58,7 @@ function generateCacheKey(type: string, params: Record<string, any>): string {
 // Cache API responses
 export async function cacheResults<T>(
   type: string,
-  params: Record<string, any>,
+  params: Record<string, unknown>,
   data: T,
   duration = CACHE_DURATION
 ): Promise<void> {
@@ -75,7 +75,7 @@ export async function cacheResults<T>(
 
 export async function getCachedResults<T>(
   type: string,
-  params: Record<string, any>
+  params: Record<string, unknown>
 ): Promise<T | null> {
   const db = await getDB();
   const key = generateCacheKey(type, params);
@@ -97,7 +97,7 @@ export async function getCachedResults<T>(
 // Cache calculator results
 export async function cacheCalculation(
   calculatorType: string,
-  inputs: Record<string, any>,
+  inputs: Record<string, unknown>,
   results: any[]
 ): Promise<void> {
   const db = await getDB();
@@ -112,7 +112,7 @@ export async function cacheCalculation(
 
 export async function getCachedCalculation(
   calculatorType: string,
-  inputs: Record<string, any>
+  inputs: Record<string, unknown>
 ): Promise<any[] | null> {
   const db = await getDB();
   const key = generateCacheKey(calculatorType, inputs);

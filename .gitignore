@@ -61,3 +61,8 @@ Thumbs.db
 # Misc
 *.local
 .github
+
+# Next.js
+.next/
+out/
+next-env.d.ts

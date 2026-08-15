@@ -1,161 +1,64 @@
 "use client";
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { SEOContent } from "@/components/molecules/seo-content";
+
+import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
+import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateFD, FDInputs } from '@/lib/calculations/savings';
 
-
-const initialValues = {
+const initialValues: FDInputs = {
   principal: 100000,
   annualRate: 6.5,
   years: 2,
-  compoundingFrequency: 'quarterly' as const,
+  compoundingFrequency: 'quarterly',
 };
 
 export default function FDCalculatorPage() {
-  const [values, setValues] = useState<FDInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const fdResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases
-      const calculation = calculateFD(values);
-
-      return calculation;
-    } catch (err: any) {
-      console.error('FD calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
   const fields: EnhancedCalculatorField[] = [
-    {
-      label: 'Investment Amount',
-      name: 'principal',
-      type: 'number',
-      placeholder: '1,00,000',
-      unit: currency.symbol,
-      tooltip: 'Amount you want to invest in Fixed Deposit'
-    },
-    {
-      label: 'Annual Interest Rate',
-      name: 'annualRate',
-      type: 'percentage',
-      placeholder: '6.5',
-      step: 0.1,
-      tooltip: 'Annual interest rate offered by the bank'
-    },
-    {
-      label: 'Investment Period',
-      name: 'years',
-      type: 'number',
-      placeholder: '2',
-      step: 0.25,
-      unit: 'years',
-      tooltip: 'Duration for which you want to keep the FD'
-    },
-    {
-      label: 'Compounding Frequency',
-      name: 'compoundingFrequency',
-      type: 'select',
-      options: [
-        { value: 'yearly', label: 'Yearly' },
-        { value: 'quarterly', label: 'Quarterly' },
-        { value: 'monthly', label: 'Monthly' }
-      ],
-      tooltip: 'How often the interest is compounded'
-    }
+    { label: 'Investment Amount', name: 'principal', type: 'number', placeholder: '1,00,000', unit: currency.symbol, tooltip: 'Amount you want to invest in Fixed Deposit' },
+    { label: 'Annual Interest Rate', name: 'annualRate', type: 'percentage', placeholder: '6.5', step: 0.1, tooltip: 'Annual interest rate offered by the bank' },
+    { label: 'Investment Period', name: 'years', type: 'number', placeholder: '2', step: 0.25, unit: 'years', tooltip: 'Duration for which you want to keep the FD' },
+    { label: 'Compounding Frequency', name: 'compoundingFrequency', type: 'select', options: [
+      { value: 'yearly', label: 'Yearly' },
+      { value: 'quarterly', label: 'Quarterly' },
+      { value: 'monthly', label: 'Monthly' }
+    ], tooltip: 'How often the interest is compounded' }
   ];
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!fdResults) return [];
-
-    return [
-      {
-        label: 'Maturity Amount',
-        value: fdResults.maturityAmount,
-        type: 'currency',
-        highlight: true,
-        tooltip: 'Amount you will receive at maturity'
-      },
-      {
-        label: 'Principal Amount',
-        value: fdResults.principal,
-        type: 'currency',
-        tooltip: 'Your initial investment'
-      },
-      {
-        label: 'Interest Earned',
-        value: fdResults.totalInterest,
-        type: 'currency',
-        tooltip: 'Interest earned on your investment'
-      },
-      {
-        label: 'Effective Yield',
-        value: fdResults.effectiveYield,
-        type: 'percentage',
-        tooltip: 'Effective annual yield considering compounding'
-      }
+  const calculate = (values: FDInputs) => {
+    const calculation = calculateFD(values);
+    
+    const results: CalculatorResult[] = [
+      { label: 'Maturity Amount', value: calculation.maturityAmount, type: 'currency', highlight: true, tooltip: 'Amount you will receive at maturity' },
+      { label: 'Principal Amount', value: calculation.principal, type: 'currency', tooltip: 'Your initial investment' },
+      { label: 'Interest Earned', value: calculation.totalInterest, type: 'currency', tooltip: 'Interest earned on your investment' },
+      { label: 'Effective Yield', value: calculation.effectiveYield, type: 'percentage', tooltip: 'Effective annual yield considering compounding' }
     ];
-  }, [fdResults, currency.symbol]);
 
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 500);
+    return { results };
   };
 
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Fixed Deposit Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">FDs offer guaranteed returns and capital safety.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Choose compounding frequency based on your needs.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider tax implications on FD interest.</p>
-          </div>
-        </div>
-      </div>
-    </div>
+  const seoContent = (
+      <SEOContent title="Fixed Deposit Tips"
+      description="Calculate the maturity amount and interest earned on your Fixed Deposit investments."
+      sections={[
+        { title: "Guaranteed Returns", content: "FDs offer guaranteed returns and capital safety." },
+        { title: "Compounding", content: "Choose compounding frequency based on your needs." },
+        { title: "Tax Implications", content: "Consider tax implications on FD interest." }
+      ]}
+    />
   );
 
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<FDInputs>
       title="Fixed Deposit Calculator"
       description="Calculate the maturity amount and interest earned on your Fixed Deposit investments."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Fixed Deposit Details"
-        description="Enter your Fixed Deposit details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={fdResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
-      />
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+      seoContent={seoContent}
+    />
   );
 }

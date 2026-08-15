@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { RetirementCalculator } from "@/components/calculators/retirement-calculator";
+import { RetirementCalculatorContent } from "./page-content";
 import { generateCalculatorMetadata } from "@/lib/seo/metadata";
-import { breadcrumbStructuredData, faqStructuredData } from "@/lib/seo/structured-data";
+import { breadcrumbStructuredData, faqStructuredData, calculatorStructuredData } from "@/lib/seo/structured-data";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "retirement",
@@ -34,9 +34,20 @@ const faqs = faqStructuredData([
   }
 ]);
 
+
+const softwareApp = calculatorStructuredData(
+  "Retirement Calculator | WealthWiseGrow",
+  "Plan for your future with our free retirement calculator. Estimate your savings at retirement, monthly contributions, and see if you're on track to meet your retirement goals.",
+  "https://wealthwisegrow.com/calculators/retirement"
+);
+
 export default function RetirementPage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareApp) }}
+      />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbs) }}
@@ -45,7 +56,7 @@ export default function RetirementPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqs) }}
       />
-      <RetirementCalculator />
+      <RetirementCalculatorContent />
     </>
   );
 }

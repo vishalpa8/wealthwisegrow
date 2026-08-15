@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/organisms/enhanced-calculator-form';
+import { CalculatorLayout } from '@/components/templates/calculator-layout';
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateSIP, SIPInputs } from '@/lib/calculations/savings';
 // Removed sipSchema import as we're using flexible validation

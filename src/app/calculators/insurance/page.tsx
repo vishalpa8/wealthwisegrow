@@ -1,9 +1,11 @@
 "use client";
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+
+import { useMemo } from "react";
+import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
+import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { parseRobustNumber } from '@/lib/utils/number';
+import { calculateFutureValue } from "@/lib/calculations/financial-math";
 
 const initialValues = {
   insuranceType: 'life',
@@ -20,143 +22,10 @@ const initialValues = {
   healthConditions: 'none'
 };
 
-interface InsuranceInputs {
-  insuranceType: string;
-  age: number;
-  annualIncome: number;
-  dependents: number;
-  existingCoverage: number;
-  outstandingLoans: number;
-  monthlyExpenses: number;
-  yearsOfCoverage: number;
-  inflationRate: number;
-  gender: string;
-  smokingStatus: string;
-  healthConditions: string;
-}
-
-function calculateInsuranceNeeds(inputs: InsuranceInputs) {
-  // Use parseRobustNumber for flexible input handling
-  const insuranceType = inputs.insuranceType || 'life';
-  const age = Math.max(18, Math.min(80, Math.abs(parseRobustNumber(inputs.age)) || 30));
-  const annualIncome = Math.abs(parseRobustNumber(inputs.annualIncome)) || 1000000;
-  const dependents = Math.abs(parseRobustNumber(inputs.dependents)) || 0;
-  const existingCoverage = Math.abs(parseRobustNumber(inputs.existingCoverage)) || 0;
-  const outstandingLoans = Math.abs(parseRobustNumber(inputs.outstandingLoans)) || 0;
-  const monthlyExpenses = Math.abs(parseRobustNumber(inputs.monthlyExpenses)) || 50000;
-  const yearsOfCoverage = Math.max(5, Math.abs(parseRobustNumber(inputs.yearsOfCoverage)) || 20);
-  const inflationRate = Math.max(3, Math.min(15, Math.abs(parseRobustNumber(inputs.inflationRate)) || 6));
-  const gender = inputs.gender || 'male';
-  const smokingStatus = inputs.smokingStatus || 'no';
-  const healthConditions = inputs.healthConditions || 'none';
-
-  let recommendedCoverage = 0;
-  let estimatedPremium = 0;
-
-  if (insuranceType === 'life') {
-    // Life Insurance Calculation using Human Life Value method
-    const futureValueOfIncome = annualIncome * yearsOfCoverage * Math.pow(1 + inflationRate / 100, yearsOfCoverage / 2);
-    const dependentMultiplier = Math.max(1, dependents * 0.5);
-    const baseRequirement = futureValueOfIncome * dependentMultiplier;
-    
-    // Add outstanding loans and future expenses
-    const futureExpenses = monthlyExpenses * 12 * yearsOfCoverage * Math.pow(1 + inflationRate / 100, yearsOfCoverage / 2);
-    
-    recommendedCoverage = Math.max(
-      baseRequirement + outstandingLoans + futureExpenses - existingCoverage,
-      annualIncome * 10 // Minimum 10x annual income
-    );
-
-    // Premium calculation (simplified)
-    let basePremiumRate = 0.5; // Base rate per 1000 of coverage
-    
-    // Age factor
-    if (age > 40) basePremiumRate *= 1.5;
-    if (age > 50) basePremiumRate *= 2;
-    if (age > 60) basePremiumRate *= 3;
-    
-    // Gender factor
-    if (gender === 'male') basePremiumRate *= 1.1;
-    
-    // Smoking factor
-    if (smokingStatus === 'yes') basePremiumRate *= 2;
-    
-    // Health conditions factor
-    if (healthConditions === 'minor') basePremiumRate *= 1.2;
-    if (healthConditions === 'major') basePremiumRate *= 1.8;
-    
-    estimatedPremium = (recommendedCoverage / 1000) * basePremiumRate * 12; // Annual premium
-    
-  } else if (insuranceType === 'health') {
-    // Health Insurance Calculation
-    recommendedCoverage = Math.max(
-      annualIncome * 0.5, // 50% of annual income
-      500000, // Minimum 5 lakhs
-      monthlyExpenses * 12 * 2 // 2 years of expenses
-    );
-    
-    // Health insurance premium calculation
-    let basePremiumRate = 8; // Base rate per 1000 of coverage
-    
-    if (age > 35) basePremiumRate *= 1.3;
-    if (age > 45) basePremiumRate *= 1.8;
-    if (age > 55) basePremiumRate *= 2.5;
-    
-    if (smokingStatus === 'yes') basePremiumRate *= 1.5;
-    if (healthConditions === 'minor') basePremiumRate *= 1.3;
-    if (healthConditions === 'major') basePremiumRate *= 2;
-    
-    estimatedPremium = (recommendedCoverage / 1000) * basePremiumRate;
-    
-  } else if (insuranceType === 'vehicle') {
-    // Vehicle Insurance (assuming car worth 10% of annual income)
-    const vehicleValue = annualIncome * 0.1;
-    recommendedCoverage = vehicleValue;
-    
-    // Vehicle insurance premium (2-4% of vehicle value)
-    let premiumRate = 0.03;
-    if (age < 25) premiumRate *= 1.5;
-    if (age > 60) premiumRate *= 1.2;
-    
-    estimatedPremium = vehicleValue * premiumRate;
-  }
-
-  const coverageGap = Math.max(0, recommendedCoverage - existingCoverage);
-  const premiumAsPercentOfIncome = annualIncome > 0 ? (estimatedPremium / annualIncome) * 100 : 0;
-  
-  return {
-    recommendedCoverage,
-    coverageGap,
-    estimatedPremium,
-    premiumAsPercentOfIncome,
-    existingCoverage,
-    totalProtection: existingCoverage + coverageGap,
-    monthlyPremium: estimatedPremium / 12,
-    premiumPerLakh: recommendedCoverage > 0 ? (estimatedPremium / recommendedCoverage) * 100000 : 0
-  };
-}
-
 export default function InsuranceCalculatorPage() {
-  const [values, setValues] = useState<InsuranceInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const insuranceResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases gracefully
-      const calculation = calculateInsuranceNeeds(values);
-      return calculation;
-    } catch (err: any) {
-      console.error('Insurance calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     {
       label: 'Insurance Type',
       name: 'insuranceType',
@@ -166,14 +35,12 @@ export default function InsuranceCalculatorPage() {
         { value: 'health', label: 'Health Insurance' },
         { value: 'vehicle', label: 'Vehicle Insurance' }
       ],
-      tooltip: 'Type of insurance you want to calculate'
     },
     {
       label: 'Age',
       name: 'age',
       type: 'number',
       placeholder: '30',
-      tooltip: 'Your current age'
     },
     {
       label: 'Annual Income',
@@ -181,14 +48,12 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '10,00,000',
       unit: currency.symbol,
-      tooltip: 'Your total annual income'
     },
     {
       label: 'Number of Dependents',
       name: 'dependents',
       type: 'number',
       placeholder: '2',
-      tooltip: 'Number of people financially dependent on you'
     },
     {
       label: 'Existing Coverage',
@@ -196,7 +61,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '0',
       unit: currency.symbol,
-      tooltip: 'Current insurance coverage amount'
     },
     {
       label: 'Outstanding Loans',
@@ -204,7 +68,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '5,00,000',
       unit: currency.symbol,
-      tooltip: 'Total outstanding loan amounts'
     },
     {
       label: 'Monthly Expenses',
@@ -212,7 +75,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '50,000',
       unit: currency.symbol,
-      tooltip: 'Average monthly household expenses'
     },
     {
       label: 'Years of Coverage Needed',
@@ -220,7 +82,6 @@ export default function InsuranceCalculatorPage() {
       type: 'number',
       placeholder: '20',
       unit: 'years',
-      tooltip: 'Number of years you need coverage for'
     },
     {
       label: 'Expected Inflation Rate',
@@ -228,7 +89,6 @@ export default function InsuranceCalculatorPage() {
       type: 'percentage',
       placeholder: '6',
       step: 0.1,
-      tooltip: 'Expected annual inflation rate'
     },
     {
       label: 'Gender',
@@ -238,7 +98,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'male', label: 'Male' },
         { value: 'female', label: 'Female' }
       ],
-      tooltip: 'Gender affects premium calculations'
     },
     {
       label: 'Smoking Status',
@@ -248,7 +107,6 @@ export default function InsuranceCalculatorPage() {
         { value: 'no', label: 'Non-Smoker' },
         { value: 'yes', label: 'Smoker' }
       ],
-      tooltip: 'Smoking significantly affects insurance premiums'
     },
     {
       label: 'Health Conditions',
@@ -259,116 +117,137 @@ export default function InsuranceCalculatorPage() {
         { value: 'minor', label: 'Minor Health Issues' },
         { value: 'major', label: 'Major Health Issues' }
       ],
-      tooltip: 'Pre-existing health conditions affect premiums'
     }
-  ];
+  ], [currency.symbol]);
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!insuranceResults) return [];
+  const calculate = (inputs: typeof initialValues) => {
+    const insuranceType = inputs.insuranceType || 'life';
+    const age = Math.max(18, Math.min(80, Math.abs(parseRobustNumber(inputs.age)) || 30));
+    const annualIncome = Math.abs(parseRobustNumber(inputs.annualIncome)) || 1000000;
+    const dependents = Math.abs(parseRobustNumber(inputs.dependents)) || 0;
+    const existingCoverage = Math.abs(parseRobustNumber(inputs.existingCoverage)) || 0;
+    const outstandingLoans = Math.abs(parseRobustNumber(inputs.outstandingLoans)) || 0;
+    const monthlyExpenses = Math.abs(parseRobustNumber(inputs.monthlyExpenses)) || 50000;
+    const yearsOfCoverage = Math.max(5, Math.abs(parseRobustNumber(inputs.yearsOfCoverage)) || 20);
+    const inflationRate = Math.max(3, Math.min(15, Math.abs(parseRobustNumber(inputs.inflationRate)) || 6));
+    const gender = inputs.gender || 'male';
+    const smokingStatus = inputs.smokingStatus || 'no';
+    const healthConditions = inputs.healthConditions || 'none';
 
-    const calculatorResults: CalculatorResult[] = [
+    let recommendedCoverage = 0;
+    let estimatedPremium = 0;
+
+    if (insuranceType === 'life') {
+      const halfYears = yearsOfCoverage / 2;
+      const futureValueOfIncome = calculateFutureValue(annualIncome * yearsOfCoverage, inflationRate, halfYears);
+      const dependentMultiplier = Math.max(1, dependents * 0.5);
+      const baseRequirement = futureValueOfIncome * dependentMultiplier;
+      
+      const futureExpenses = calculateFutureValue(monthlyExpenses * 12 * yearsOfCoverage, inflationRate, halfYears);
+      
+      recommendedCoverage = Math.max(
+        baseRequirement + outstandingLoans + futureExpenses - existingCoverage,
+        annualIncome * 10
+      );
+
+      let basePremiumRate = 0.5;
+      if (age > 40) basePremiumRate *= 1.5;
+      if (age > 50) basePremiumRate *= 2;
+      if (age > 60) basePremiumRate *= 3;
+      if (gender === 'male') basePremiumRate *= 1.1;
+      if (smokingStatus === 'yes') basePremiumRate *= 2;
+      if (healthConditions === 'minor') basePremiumRate *= 1.2;
+      if (healthConditions === 'major') basePremiumRate *= 1.8;
+      
+      estimatedPremium = (recommendedCoverage / 1000) * basePremiumRate * 12;
+      
+    } else if (insuranceType === 'health') {
+      recommendedCoverage = Math.max(
+        annualIncome * 0.5,
+        500000,
+        monthlyExpenses * 12 * 2
+      );
+      
+      let basePremiumRate = 8;
+      if (age > 35) basePremiumRate *= 1.3;
+      if (age > 45) basePremiumRate *= 1.8;
+      if (age > 55) basePremiumRate *= 2.5;
+      if (smokingStatus === 'yes') basePremiumRate *= 1.5;
+      if (healthConditions === 'minor') basePremiumRate *= 1.3;
+      if (healthConditions === 'major') basePremiumRate *= 2;
+      
+      estimatedPremium = (recommendedCoverage / 1000) * basePremiumRate;
+      
+    } else if (insuranceType === 'vehicle') {
+      const vehicleValue = annualIncome * 0.1;
+      recommendedCoverage = vehicleValue;
+      
+      let premiumRate = 0.03;
+      if (age < 25) premiumRate *= 1.5;
+      if (age > 60) premiumRate *= 1.2;
+      
+      estimatedPremium = vehicleValue * premiumRate;
+    }
+
+    const coverageGap = Math.max(0, recommendedCoverage - existingCoverage);
+    const premiumAsPercentOfIncome = annualIncome > 0 ? (estimatedPremium / annualIncome) * 100 : 0;
+    
+    const totalProtection = existingCoverage + coverageGap;
+    const monthlyPremium = estimatedPremium / 12;
+    const premiumPerLakh = recommendedCoverage > 0 ? (estimatedPremium / recommendedCoverage) * 100000 : 0;
+
+    const results: CalculatorResult[] = [
       {
         label: 'Recommended Coverage',
-        value: insuranceResults.recommendedCoverage,
+        value: recommendedCoverage,
         type: 'currency',
         highlight: true,
-        tooltip: 'Recommended insurance coverage amount based on your profile'
       },
       {
         label: 'Coverage Gap',
-        value: insuranceResults.coverageGap,
+        value: coverageGap,
         type: 'currency',
-        tooltip: 'Additional coverage needed beyond existing coverage'
       },
       {
         label: 'Estimated Annual Premium',
-        value: insuranceResults.estimatedPremium,
+        value: estimatedPremium,
         type: 'currency',
-        tooltip: 'Estimated annual premium for recommended coverage'
       },
       {
         label: 'Monthly Premium',
-        value: insuranceResults.monthlyPremium,
+        value: monthlyPremium,
         type: 'currency',
-        tooltip: 'Estimated monthly premium amount'
       },
       {
         label: 'Premium as % of Income',
-        value: insuranceResults.premiumAsPercentOfIncome,
+        value: premiumAsPercentOfIncome,
         type: 'percentage',
-        tooltip: 'Premium as percentage of annual income'
       },
       {
         label: 'Premium per Lakh Coverage',
-        value: insuranceResults.premiumPerLakh,
+        value: premiumPerLakh,
         type: 'currency',
-        tooltip: 'Premium cost per lakh of coverage'
       }
     ];
 
-    if (values.existingCoverage > 0) {
-      calculatorResults.push({
+    if (existingCoverage > 0) {
+      results.push({
         label: 'Total Protection',
-        value: insuranceResults.totalProtection,
+        value: totalProtection,
         type: 'currency',
-        tooltip: 'Total coverage including existing and recommended'
       });
     }
 
-    return calculatorResults;
-  }, [insuranceResults, values.existingCoverage, currency.symbol]);
-
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 700);
+    return { results };
   };
 
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Insurance Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Review your insurance needs regularly.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Compare quotes from multiple providers.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Understand policy terms and conditions before buying.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<typeof initialValues>
       title="Insurance Calculator"
       description="Calculate your insurance needs for life, health, and vehicle insurance. Get personalized coverage recommendations and premium estimates."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Insurance Details"
-        description="Enter your insurance details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={insuranceResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
-      />
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+    />
   );
 }

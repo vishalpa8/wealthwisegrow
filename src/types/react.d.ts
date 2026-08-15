@@ -19,7 +19,7 @@ declare module 'react' {
 declare global {
   // Add custom window properties
   interface Window {
-    __NEXT_DATA__: any;
+    __NEXT_DATA__: unknown;
     __NEXT_LOADED_PAGES__: string[];
   }
 

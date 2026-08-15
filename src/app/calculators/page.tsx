@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { CalculatorLayout } from "@/components/layout/calculator-layout";
+import { CalculatorLayout } from "@/components/templates/calculator-layout";
 
 // Organize calculators by category
 // All calculator definitions

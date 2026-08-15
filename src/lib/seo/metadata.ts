@@ -42,6 +42,10 @@ export function generateMetadata({
 }: GenerateMetadataProps): Metadata {
   const url = `${seoConfig.siteUrl}${path}`;
   
+  const ogImageUrl = new URL(`${seoConfig.siteUrl}/api/og`);
+  if (title) ogImageUrl.searchParams.set('title', title);
+  ogImageUrl.searchParams.set('description', description);
+  
   return {
     title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWiseGrow',
     description,
@@ -54,11 +58,20 @@ export function generateMetadata({
       siteName: 'WealthWiseGrow',
       locale: 'en_IN',
       type: 'website',
+      images: [
+        {
+          url: ogImageUrl.toString(),
+          width: 1200,
+          height: 630,
+          alt: title || 'WealthWiseGrow',
+        }
+      ]
     },
     twitter: {
       card: 'summary_large_image',
       title: title ? seoConfig.titleTemplate.replace('%s', title) : 'WealthWiseGrow',
       description,
+      images: [ogImageUrl.toString()],
     },
     robots: {
       index: !noIndex,

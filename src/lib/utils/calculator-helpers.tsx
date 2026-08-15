@@ -7,7 +7,7 @@ import React from 'react';
  */
 
 import { parseRobustNumber } from './number';
-import type { EnhancedCalculatorField } from '@/components/ui/enhanced-calculator-form';
+import type { EnhancedCalculatorField } from '@/components/organisms/enhanced-calculator-form';
 
 /**
  * Graceful input validation that never throws errors
@@ -16,7 +16,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes a positive number (converts negative to positive)
    */
-  positiveNumber: (value: any, defaultValue: number = 0): number => {
+  positiveNumber: (value: unknown, defaultValue: number = 0): number => {
     const parsed = parseRobustNumber(value);
     return Math.abs(parsed) || defaultValue;
   },
@@ -24,7 +24,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes a signed number (allows negative values)
    */
-  signedNumber: (value: any, defaultValue: number = 0): number => {
+  signedNumber: (value: unknown, defaultValue: number = 0): number => {
     const parsed = parseRobustNumber(value);
     return isFinite(parsed) ? parsed : defaultValue;
   },
@@ -32,7 +32,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes a percentage (0-100)
    */
-  percentage: (value: any, defaultValue: number = 0): number => {
+  percentage: (value: unknown, defaultValue: number = 0): number => {
     const parsed = parseRobustNumber(value);
     return Math.min(Math.max(Math.abs(parsed) || defaultValue, 0), 100);
   },
@@ -40,7 +40,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes years (minimum 1)
    */
-  years: (value: any, defaultValue: number = 1): number => {
+  years: (value: unknown, defaultValue: number = 1): number => {
     const parsed = parseRobustNumber(value);
     return Math.max(Math.abs(parsed) || defaultValue, 1);
   },
@@ -48,7 +48,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes age (1-120)
    */
-  age: (value: any, defaultValue: number = 25): number => {
+  age: (value: unknown, defaultValue: number = 25): number => {
     const parsed = parseRobustNumber(value);
     return Math.min(Math.max(Math.abs(parsed) || defaultValue, 1), 120);
   },
@@ -56,7 +56,7 @@ export const validateInputs = {
   /**
    * Validates and sanitizes interest rate (0-50%)
    */
-  interestRate: (value: any, defaultValue: number = 0): number => {
+  interestRate: (value: unknown, defaultValue: number = 0): number => {
     const parsed = parseRobustNumber(value);
     return Math.min(Math.max(Math.abs(parsed) || defaultValue, 0), 50);
   }
@@ -135,9 +135,9 @@ export const createFieldConfigs = (currencySymbol: string) => ({
 /**
  * Standard calculation error handler
  */
-export const handleCalculationError = (error: any, calculatorName: string): string => {
+export const handleCalculationError = (error: unknown, calculatorName: string): string => {
   console.error(`${calculatorName} calculation error:`, error);
-  return error.message || 'Calculation failed. Please check your inputs.';
+  return (error as Error)?.message || 'Calculation failed. Please check your inputs.';
 };
 
 /**
@@ -152,7 +152,7 @@ export function safeCalculation<T>(
   try {
     setError(undefined);
     return calculationFn();
-  } catch (error: any) {
+  } catch (error: unknown) {
     const errorMessage = handleCalculationError(error, calculatorName);
     setError(errorMessage);
     return fallbackValue;
@@ -176,8 +176,8 @@ export const createInputChangeHandler = (
   setValues: (updater: (prev: any) => any) => void,
   setError?: (error: string | undefined) => void
 ) => {
-  return (name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
+  return (name: string, value: unknown) => {
+    setValues((prev: any) => ({ ...prev, [name]: value }));
     if (setError) {
       setError(undefined);
     }
@@ -202,9 +202,9 @@ export const validationPatterns = {
    * Investment calculator validation
    */
   investment: (values: any) => ({
-    initialAmount: validateInputs.positiveNumber(values.initialAmount),
-    monthlyContribution: validateInputs.positiveNumber(values.monthlyContribution),
-    annualReturn: validateInputs.percentage(values.annualReturn),
+    initialInvestment: validateInputs.positiveNumber(values.initialInvestment),
+    monthlyInvestment: validateInputs.positiveNumber(values.monthlyInvestment),
+    expectedReturn: validateInputs.interestRate(values.expectedReturn),
     years: validateInputs.years(values.years)
   }),
 
@@ -214,17 +214,18 @@ export const validationPatterns = {
   tax: (values: any) => ({
     income: validateInputs.positiveNumber(values.income),
     deductions: validateInputs.positiveNumber(values.deductions),
-    age: validateInputs.age(values.age)
+    exemptions: validateInputs.positiveNumber(values.exemptions)
   }),
 
   /**
    * Savings calculator validation
    */
   savings: (values: any) => ({
-    principal: validateInputs.positiveNumber(values.principal),
-    rate: validateInputs.interestRate(values.rate),
-    years: validateInputs.years(values.years),
-    monthlyContribution: validateInputs.positiveNumber(values.monthlyContribution)
+    goalAmount: validateInputs.positiveNumber(values.goalAmount),
+    currentSavings: validateInputs.positiveNumber(values.currentSavings),
+    monthlyContribution: validateInputs.positiveNumber(values.monthlyContribution),
+    expectedReturn: validateInputs.interestRate(values.expectedReturn),
+    years: validateInputs.years(values.years)
   })
 };
 

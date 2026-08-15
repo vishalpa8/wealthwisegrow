@@ -1,10 +1,11 @@
 "use client";
-import React, { useState, useMemo, useCallback } from 'react';
-import { EnhancedCalculatorForm, EnhancedCalculatorField, CalculatorResult } from '@/components/ui/enhanced-calculator-form';
-import { CalculatorLayout } from '@/components/layout/calculator-layout';
+
+import { useMemo } from "react";
+import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
+import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateLumpsum, LumpsumInputs } from '@/lib/calculations/savings';
-
+import { parseRobustNumber } from "@/lib/utils/number";
 
 const initialValues = {
   principal: 100000,
@@ -13,41 +14,21 @@ const initialValues = {
 };
 
 export default function LumpsumCalculatorPage() {
-  const [values, setValues] = useState<LumpsumInputs>(initialValues);
-  const [loading, setLoading] = useState(false);
-  const [calculationError, setCalculationError] = useState<string | undefined>(undefined);
-
   const { currency } = useCurrency();
 
-  const lumpsumResults = useMemo(() => {
-    setCalculationError(undefined);
-    try {
-      // Always attempt calculation - let the function handle edge cases
-      const calculation = calculateLumpsum(values);
-      
-      return calculation;
-    } catch (err: any) {
-      console.error('Lumpsum calculation error:', err);
-      setCalculationError(err.message || 'Calculation failed. Please check your inputs.');
-      return null;
-    }
-  }, [values]);
-
-  const fields: EnhancedCalculatorField[] = [
+  const fields: EnhancedCalculatorField[] = useMemo(() => [
     {
       label: 'Investment Amount',
       name: 'principal',
       type: 'number',
       placeholder: '1,00,000',
       unit: currency.symbol,
-      tooltip: 'One-time investment amount'
     },
     {
       label: 'Expected Annual Return',
       name: 'annualReturn',
       type: 'percentage',
       placeholder: '12',
-      tooltip: 'Expected annual return rate from your investment'
     },
     {
       label: 'Investment Period',
@@ -55,93 +36,52 @@ export default function LumpsumCalculatorPage() {
       type: 'number',
       placeholder: '10',
       unit: 'years',
-      tooltip: 'Number of years to keep the investment'
     }
-  ];
+  ], [currency.symbol]);
 
-  const results: CalculatorResult[] = useMemo(() => {
-    if (!lumpsumResults) return [];
+  const calculate = (values: typeof initialValues) => {
+    const validatedValues: LumpsumInputs = {
+      principal: Math.abs(parseRobustNumber(values.principal)) || 0,
+      annualReturn: Math.abs(parseRobustNumber(values.annualReturn)) || 0,
+      years: Math.abs(parseRobustNumber(values.years)) || 0
+    };
 
-    return [
+    const calculation = calculateLumpsum(validatedValues);
+
+    const results: CalculatorResult[] = [
       {
         label: 'Maturity Amount',
-        value: lumpsumResults.maturityAmount,
+        value: calculation.maturityAmount,
         type: 'currency',
         highlight: true,
-        tooltip: 'Total amount you will receive at maturity'
       },
       {
         label: 'Investment Amount',
-        value: lumpsumResults.principal,
+        value: calculation.principal,
         type: 'currency',
-        tooltip: 'Your initial investment'
       },
       {
         label: 'Total Returns',
-        value: lumpsumResults.totalGains,
+        value: calculation.totalGains,
         type: 'currency',
-        tooltip: 'Profit earned from your investment'
       },
       {
         label: 'Return Multiple',
-        value: lumpsumResults.maturityAmount / lumpsumResults.principal,
+        value: calculation.principal > 0 ? calculation.maturityAmount / calculation.principal : 0,
         type: 'number',
-        tooltip: 'How many times your money will grow'
       }
     ];
-  }, [lumpsumResults, currency.symbol]);
 
-  const handleChange = useCallback((name: string, value: any) => {
-    setValues(prev => ({ ...prev, [name]: value }));
-    setCalculationError(undefined);
-  }, []);
-
-  const handleCalculate = () => {
-    setLoading(true);
-    setCalculationError(undefined);
-    setTimeout(() => setLoading(false), 500);
+    return { results };
   };
 
-  const sidebar = (
-    <div className="space-y-4">
-      <div className="card">
-        <h3 className="text-base font-semibold text-neutral-900 mb-4">Lumpsum Investment Tips</h3>
-        <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Lumpsum investments are ideal for one-time large sums.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider market conditions before making a lumpsum investment.</p>
-          </div>
-          <div className="flex items-start space-x-2">
-            <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Longer investment horizons generally yield better returns.</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
-    <CalculatorLayout
+    <BaseCalculatorTemplate<typeof initialValues>
       title="Lumpsum Investment Calculator"
       description="Calculate the future value of your one-time investment with compound interest."
-      sidebar={sidebar}
-    >
-      <EnhancedCalculatorForm
-        title="Lumpsum Investment Details"
-        description="Enter your lumpsum investment details."
-        fields={fields}
-        values={values}
-        onChange={handleChange}
-        onCalculate={handleCalculate}
-        results={lumpsumResults ? results : []}
-        loading={loading}
-        error={calculationError}
-        showComparison={false}
-      />
-    </CalculatorLayout>
+      initialValues={initialValues}
+      fields={fields}
+      calculate={calculate}
+    />
   );
 }

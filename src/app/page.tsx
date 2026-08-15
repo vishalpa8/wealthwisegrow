@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { CalculatorExplorer } from "@/components/ui/calculator-explorer";
-import { Button } from "@/components/ui/button";
+import { CalculatorExplorer } from "@/components/organisms/calculator-explorer";
+import { Button } from "@/components/atoms/button";
 
 export default function Home() {
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
