@@ -76,10 +76,10 @@ export function CalculatorLayout({
         )}>
           {/* Calculator Form - Full width within grid */}
           <div className={cn(
-            "w-full",
+            "w-full min-w-0",
             sidebar ? "xl:col-span-3" : "xl:col-span-5"
           )}>
-            <div className="animate-slide-up w-full">
+            <div className="animate-slide-up w-full min-w-0">
               {children}
               {calculatorSlug && title && (
                 <CalculatorSEOContent

@@ -297,13 +297,13 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
   return (
     <section
       ref={formRef}
-      className="mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 max-w-4xl"
+      className="mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 w-full max-w-5xl min-w-0"
       onKeyDown={handleKeyDown}
       aria-label={`${title} Form`}
     >
       {/* Header */}
       <header className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
           <div className="flex items-center space-x-3">
             <Calculator className="w-8 h-8 text-blue-600" />
             <h2 className="text-3xl font-bold text-blue-700">{title}</h2>
@@ -315,7 +315,7 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
         )}
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 min-w-0">
         {/* Input Form */}
         <form onSubmit={(e) => { e.preventDefault(); onCalculate?.(); }}>
           <div className="space-y-4">
@@ -356,15 +356,15 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
         </form>
 
         {/* Results */}
-        <section aria-label="Calculation Results">
+        <section aria-label="Calculation Results" className="min-w-0">
           {results.length > 0 && (
-            <div>
+            <div className="min-w-0">
               {/* Results header + action buttons */}
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h3 className="text-xl font-semibold text-gray-800">Results</h3>
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <ShareButton title={`${title} - Results`} description={resultText} />
-                  <div className="flex space-x-1 border-l pl-2 border-gray-200">
+                  <div className="flex flex-wrap items-center gap-1 border-l border-gray-200 pl-2">
                     {actionButtons.map(({ id, icon, ariaLabel, onClick, activeColor, hoverColor }) => (
                       <div key={id} className="relative">
                         <button
@@ -396,10 +396,10 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
           {/* Comparison Feature */}
           {showComparison && (
             <article className="mt-8">
-              <header className="flex items-center justify-between mb-4">
+              <header className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h3 className="text-lg font-semibold text-gray-800">Compare Scenarios</h3>
                 {onAddComparison && (
-                  <Button onClick={onAddComparison} variant="outline" size="sm" className="flex items-center" type="button">
+                  <Button onClick={onAddComparison} variant="outline" size="sm" className="flex items-center whitespace-nowrap" type="button">
                     <GitCompare className="w-4 h-4 mr-1" aria-hidden="true" />
                     Add Scenario
                   </Button>
