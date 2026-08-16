@@ -4,7 +4,7 @@ import { generateCalculatorMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "car-loan",
-  "Car Loan EMI Calculator",
+  "Instant Car Loan EMI & Interest Calculator",
   "Calculate car loan EMI, total interest, and understand the true cost of car ownership including depreciation."
 );
 

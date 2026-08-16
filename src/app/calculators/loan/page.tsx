@@ -113,7 +113,7 @@ export default function LoanCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<LoanInputs>
-      title="Loan Calculator"
+      title="Simple EMI & Loan Repayment Calculator"
       description="Calculate EMI, total interest, and payment schedule for personal, home, car, and business loans."
       initialValues={initialValues}
       fields={fields}

@@ -191,7 +191,7 @@ export function DebtPayoffContent() {
 
   return (
     <BaseCalculatorTemplate<DebtPayoffInputs>
-      title="Debt Payoff Calculator"
+      title="Debt Snowball & Payoff Strategy Calculator"
       description="Calculate how long it will take to pay off your debt and how much interest you'll pay. See the impact of extra payments on your debt freedom journey."
       initialValues={initialValues}
       fields={fields}

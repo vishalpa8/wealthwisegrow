@@ -113,7 +113,7 @@ export default function PersonalLoanCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Personal Loan EMI Calculator"
+      title="Instant Personal Loan EMI Calculator"
       description="Calculate EMI for personal loans with detailed breakdown and prepayment options."
       initialValues={initialValues}
       fields={fields}

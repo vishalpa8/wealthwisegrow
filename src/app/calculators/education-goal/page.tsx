@@ -4,7 +4,7 @@ import { generateCalculatorMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "education-goal",
-  "Education Planning Calculator",
+  "Child Future Education Cost Calculator",
   "Plan for your children's education by calculating future costs and required monthly savings."
 );
 

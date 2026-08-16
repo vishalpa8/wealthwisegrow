@@ -122,7 +122,7 @@ export function DividendYieldContent() {
 
   return (
     <BaseCalculatorTemplate<DividendYieldInputs>
-      title="Dividend Yield Calculator"
+      title="Stock Dividend Yield & Income Calculator"
       description="Calculate dividend yield and income from your stock investments."
       initialValues={initialValues}
       fields={fields}

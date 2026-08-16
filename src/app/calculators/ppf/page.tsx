@@ -69,7 +69,7 @@ export default function PPFCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="PPF Calculator"
+      title="PPF Account Maturity & Interest Calculator"
       description="Calculate the maturity amount and returns on your Public Provident Fund (PPF) investment with tax benefits."
       initialValues={initialValues}
       fields={fields}

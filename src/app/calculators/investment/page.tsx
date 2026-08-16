@@ -6,7 +6,7 @@ import { breadcrumbStructuredData, faqStructuredData, calculatorStructuredData }
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "investment",
-  "Investment Calculator | WealthWiseGrow",
+  "Future Value Investment Growth Calculator",
   "Calculate the future value of your investments with compounding. Plan your financial goals, compare SIP vs lumpsum, and see how your wealth grows over time."
 );
 

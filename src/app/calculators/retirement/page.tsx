@@ -5,7 +5,7 @@ import { breadcrumbStructuredData, faqStructuredData, calculatorStructuredData }
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "retirement",
-  "Retirement Calculator | WealthWiseGrow",
+  "Retirement Corpus & Pension Planning Calculator",
   "Plan for your future with our free retirement calculator. Estimate your savings at retirement, monthly contributions, and see if you're on track to meet your retirement goals."
 );
 

@@ -52,7 +52,7 @@ export default function GSTCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<GSTInputs>
-      title="GST Calculator"
+      title="Free GST Inclusive & Exclusive Price Calculator"
       description="Calculate GST amount, CGST, SGST, and IGST for your business transactions."
       initialValues={initialValues}
       fields={fields}

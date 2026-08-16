@@ -58,7 +58,7 @@ export default function GoldCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<GoldInputs>
-      title="Gold Investment Calculator"
+      title="Gold Investment Return & Future Value Calculator"
       description="Calculate the future value and returns from your gold investments."
       initialValues={initialValues}
       fields={fields}

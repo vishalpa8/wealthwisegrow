@@ -88,7 +88,7 @@ export function RetirementCalculatorContent() {
 
   return (
     <BaseCalculatorTemplate<RetirementInputs>
-      title="Retirement Calculator"
+      title="Retirement Corpus & Pension Planning Calculator"
       description="Plan for your future with our retirement calculator. Estimate your savings and contributions."
       initialValues={initialValues}
       fields={fields}

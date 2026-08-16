@@ -75,7 +75,7 @@ export default function SalaryCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<SalaryInputs>
-      title="Salary Calculator"
+      title="In-Hand Salary & CTC Breakdown Calculator"
       description="Convert your CTC to in-hand salary with detailed breakdown of all components and deductions."
       initialValues={initialValues}
       fields={fields}

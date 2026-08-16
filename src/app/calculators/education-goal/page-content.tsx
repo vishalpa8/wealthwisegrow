@@ -215,7 +215,7 @@ export function EducationGoalContent() {
 
   return (
     <BaseCalculatorTemplate<EducationGoalInputs>
-      title="Education Planning Calculator"
+      title="Child Future Education Cost Calculator"
       description="Plan for your children's education by calculating future costs and required monthly savings."
       initialValues={initialValues}
       fields={fields}

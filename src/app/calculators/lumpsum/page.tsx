@@ -77,7 +77,7 @@ export default function LumpsumCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Lumpsum Investment Calculator"
+      title="Mutual Fund Lumpsum Investment Return Calculator"
       description="Calculate the future value of your one-time investment with compound interest."
       initialValues={initialValues}
       fields={fields}

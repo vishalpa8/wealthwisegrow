@@ -55,7 +55,7 @@ export default function SimpleInterestCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<SimpleInterestInputs>
-      title="Simple Interest Calculator"
+      title="Free Simple Interest & Principal Calculator"
       description="Calculate simple interest earned on investments or loans using the formula: SI = P x R x T / 100"
       initialValues={initialValues}
       fields={fields}

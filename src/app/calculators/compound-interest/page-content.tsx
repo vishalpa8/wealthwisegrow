@@ -157,7 +157,7 @@ export function CompoundInterestContent() {
 
   return (
     <BaseCalculatorTemplate<CompoundInterestInputs>
-      title="Compound Interest Calculator"
+      title="Daily Compound Interest & Wealth Growth Calculator"
       description="Calculate compound interest with different compounding frequencies and compare with simple interest."
       initialValues={initialValues}
       fields={fields}

@@ -188,7 +188,7 @@ export function BalloonLoanCalculatorContent() {
 
   return (
     <BaseCalculatorTemplate<BalloonLoanInputs>
-      title="Balloon Loan Calculator"
+      title="Free Balloon Payment Loan Calculator"
       description="Calculate payments for balloon loans with lower regular payments and a large final payment. Compare with traditional loan options."
       initialValues={initialValues}
       fields={fields}

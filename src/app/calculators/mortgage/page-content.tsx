@@ -120,7 +120,7 @@ export function MortgageCalculatorPageContent() {
 
   return (
     <BaseCalculatorTemplate<MortgageInputs>
-      title="Mortgage Calculator"
+      title="Real Estate Mortgage EMI Calculator"
       description="Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI."
       initialValues={initialValues}
       fields={fields}

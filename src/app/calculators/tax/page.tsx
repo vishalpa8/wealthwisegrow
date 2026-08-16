@@ -196,7 +196,7 @@ export default function TaxCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<TaxInputs>
-      title="Tax Calculator"
+      title="Personal Income Tax Liability Calculator"
       description="Calculate your income tax liability under both old and new tax regimes. Get detailed breakdown of taxes, deductions, and take-home income."
       initialValues={initialValues}
       fields={fields}

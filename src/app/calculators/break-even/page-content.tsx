@@ -159,7 +159,7 @@ export function BreakEvenContent() {
 
   return (
     <BaseCalculatorTemplate<BreakEvenInputs>
-      title="Break-even Point Calculator"
+      title="Business Break-Even Point & Profitability Calculator"
       description="Determine the sales volume (units or revenue) needed to cover all your costs and start making a profit."
       initialValues={initialValues}
       fields={fields}

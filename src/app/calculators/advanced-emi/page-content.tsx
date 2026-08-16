@@ -223,7 +223,7 @@ export function AdvancedEMICalculatorContent() {
 
   return (
     <BaseCalculatorTemplate<EMIInputs>
-      title="Advanced EMI Calculator"
+      title="Advanced Loan Prepayment & EMI Calculator"
       description="Calculate EMI with prepayment options, amortization schedule, and scenario comparisons."
       initialValues={initialValues}
       fields={fields}

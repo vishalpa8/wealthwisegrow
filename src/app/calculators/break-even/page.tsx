@@ -4,7 +4,7 @@ import { generateCalculatorMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "break-even",
-  "Break-even Point Calculator",
+  "Business Break-Even Point & Profitability Calculator",
   "Calculate the point at which total revenue equals total costs, indicating when your business becomes profitable."
 );
 

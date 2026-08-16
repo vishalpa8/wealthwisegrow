@@ -209,7 +209,7 @@ export default function MutualFundCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Mutual Fund Returns Calculator"
+      title="Historical Mutual Fund Returns & CAGR Calculator"
       description="Calculate your mutual fund returns including CAGR, absolute returns, and tax implications."
       initialValues={initialValues}
       fields={fields}

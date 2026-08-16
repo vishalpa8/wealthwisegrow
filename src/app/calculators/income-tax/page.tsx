@@ -98,7 +98,7 @@ export default function IncomeTaxCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Income Tax Calculator"
+      title="Old vs New Regime Income Tax Calculator"
       description="Calculate your income tax liability under both old and new tax regimes in India."
       initialValues={initialValues}
       fields={fields}

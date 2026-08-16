@@ -121,7 +121,7 @@ export function CarLoanContent() {
 
   return (
     <BaseCalculatorTemplate<CarLoanInputs>
-      title="Car Loan EMI Calculator"
+      title="Instant Car Loan EMI & Interest Calculator"
       description="Calculate car loan EMI, total interest, and understand the true cost of car ownership including depreciation."
       initialValues={initialValues}
       fields={fields}

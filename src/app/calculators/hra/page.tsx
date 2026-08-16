@@ -131,7 +131,7 @@ export default function HRACalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<HRAInputs>
-      title="HRA Exemption Calculator"
+      title="Income Tax HRA Exemption Calculator"
       description="Calculate your House Rent Allowance (HRA) exemption and determine the taxable portion of your HRA."
       initialValues={initialValues}
       fields={fields}

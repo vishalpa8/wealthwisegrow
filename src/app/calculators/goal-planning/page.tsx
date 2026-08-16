@@ -91,7 +91,7 @@ export default function GoalPlanningCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<GoalInputs>
-      title="Goal Planning Calculator"
+      title="Financial Goal Planning & Investment Calculator"
       description="Plan and track your financial goals with inflation adjustment."
       initialValues={initialValues}
       fields={fields}

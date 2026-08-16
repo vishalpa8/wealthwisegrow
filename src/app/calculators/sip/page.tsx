@@ -130,8 +130,8 @@ export default function SIPCalculatorPage() {
 
   return (
     <CalculatorLayout
-      title="SIP Calculator"
-      description="Calculate the future value of your Systematic Investment Plan (SIP) investments with the power of compounding."
+      title="Free Mutual Fund SIP Return Calculator"
+      description="Calculate the future value of your Systematic Investment Plan (SIP) investments with the power of compounding. Find out exactly how much your mutual fund investments could grow over time."
       sidebar={sidebar}
     >
       <EnhancedCalculatorForm

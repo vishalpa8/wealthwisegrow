@@ -78,7 +78,7 @@ export default function RDCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Recurring Deposit Calculator"
+      title="Recurring Deposit (RD) Maturity Calculator"
       description="Calculate the maturity amount and interest earned on your Recurring Deposit investments."
       initialValues={initialValues}
       fields={fields}

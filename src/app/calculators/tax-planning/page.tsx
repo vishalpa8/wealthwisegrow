@@ -177,7 +177,7 @@ export default function TaxPlanningCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<TaxPlanningInputs>
-      title="Tax Planning Calculator"
+      title="Tax Saving Investment Planning Calculator"
       description="Compare old vs new tax regime, calculate tax liability, and optimize your tax savings with detailed analysis."
       initialValues={initialValues}
       fields={fields}

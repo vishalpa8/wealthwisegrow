@@ -71,7 +71,7 @@ export default function SWPCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<SWPInputs>
-      title="Systematic Withdrawal Plan (SWP) Calculator"
+      title="Mutual Fund SWP (Systematic Withdrawal Plan) Calculator"
       description="Calculate how long your investments will last with regular withdrawals. Plan your post-retirement withdrawals effectively."
       initialValues={initialValues}
       fields={fields}

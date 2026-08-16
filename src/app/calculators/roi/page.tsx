@@ -102,7 +102,7 @@ export default function ROICalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<ROIInputs>
-      title="Return on Investment (ROI) Calculator"
+      title="Simple Return on Investment (ROI) Calculator"
       description="Calculate ROI, payback period, NPV, and other key metrics to evaluate your investment or project."
       initialValues={initialValues}
       fields={fields}

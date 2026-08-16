@@ -113,7 +113,7 @@ export function InvestmentCalculatorPageContent() {
 
   return (
     <BaseCalculatorTemplate<InvestmentInputs>
-      title="Investment Calculator"
+      title="Future Value Investment Growth Calculator"
       description="Estimate the future value of your investments. Plan your financial goals."
       initialValues={initialValues}
       fields={fields}

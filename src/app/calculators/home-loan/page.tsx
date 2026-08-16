@@ -72,7 +72,7 @@ export default function HomeLoanCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<HomeLoanInputs>
-      title="Home Loan EMI Calculator"
+      title="Home Loan EMI & Amortization Calculator"
       description="Calculate your home loan EMI, total payment, and interest. Plan your home purchase with confidence."
       initialValues={initialValues}
       fields={fields}

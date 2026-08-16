@@ -169,7 +169,7 @@ export default function SavingsCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<SavingsInputs>
-      title="Savings Calculator"
+      title="Monthly Savings Goal & Target Calculator"
       description="Plan your savings strategy with goal-based calculations. See how your money will grow over time and plan for inflation and taxes."
       initialValues={initialValues}
       fields={fields}

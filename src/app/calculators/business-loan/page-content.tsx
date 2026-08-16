@@ -315,7 +315,7 @@ export function BusinessLoanContent() {
 
   return (
     <BaseCalculatorTemplate<BusinessLoanInputs>
-      title="Business Loan Calculator"
+      title="Business Loan EMI & Affordability Calculator"
       description="Calculate EMI, eligibility, and total cost for various business loan types. Includes risk assessment and tax benefit analysis."
       initialValues={initialValues}
       fields={fields}

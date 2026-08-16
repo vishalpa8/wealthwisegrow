@@ -53,7 +53,7 @@ export default function FDCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<FDInputs>
-      title="Fixed Deposit Calculator"
+      title="Bank Fixed Deposit (FD) Maturity Calculator"
       description="Calculate the maturity amount and interest earned on your Fixed Deposit investments."
       initialValues={initialValues}
       fields={fields}

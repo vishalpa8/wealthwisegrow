@@ -182,7 +182,7 @@ export default function EmergencyFundCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<EmergencyFundInputs>
-      title="Emergency Fund Calculator"
+      title="Personal Emergency Fund Savings Calculator"
       description="Calculate how much you need in your emergency fund based on your expenses, dependents, and risk factors."
       initialValues={initialValues}
       fields={fields}

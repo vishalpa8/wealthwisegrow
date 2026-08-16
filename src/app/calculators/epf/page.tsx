@@ -49,7 +49,7 @@ export default function EPFCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<EPFInputs>
-      title="EPF Calculator"
+      title="EPF Maturity & Pension Fund Calculator"
       description="Calculate your Employee Provident Fund corpus and plan your retirement savings."
       initialValues={initialValues}
       fields={fields}

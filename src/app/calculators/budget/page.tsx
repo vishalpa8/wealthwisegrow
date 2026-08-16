@@ -113,7 +113,7 @@ export default function BudgetCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<BudgetInputs>
-      title="Budget Calculator"
+      title="Monthly Household Budget & Expense Calculator"
       description="Create a comprehensive monthly budget to track income, expenses, and savings."
       initialValues={initialValues}
       fields={fields}

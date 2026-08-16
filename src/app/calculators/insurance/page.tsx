@@ -243,7 +243,7 @@ export default function InsuranceCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Insurance Calculator"
+      title="Term Life Insurance Cover Need Calculator"
       description="Calculate your insurance needs for life, health, and vehicle insurance. Get personalized coverage recommendations and premium estimates."
       initialValues={initialValues}
       fields={fields}

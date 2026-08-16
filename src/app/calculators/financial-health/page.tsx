@@ -174,7 +174,7 @@ export default function FinancialHealthCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<FinancialHealthInputs>
-      title="Financial Health Score Calculator"
+      title="Personal Financial Health Score Calculator"
       description="Assess your overall financial health with a comprehensive score based on key financial metrics."
       initialValues={initialValues}
       fields={fields}

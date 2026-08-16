@@ -4,7 +4,7 @@ import { generateCalculatorMetadata } from "@/lib/seo/metadata";
 
 export const metadata: Metadata = generateCalculatorMetadata(
   "compound-interest",
-  "Compound Interest Calculator",
+  "Daily Compound Interest & Wealth Growth Calculator",
   "Calculate compound interest with different compounding frequencies and compare with simple interest."
 );
 

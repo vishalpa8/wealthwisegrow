@@ -78,7 +78,7 @@ export default function EducationLoanCalculatorPage() {
 
   return (
     <BaseCalculatorTemplate<EducationLoanInputs>
-      title="Education Loan Calculator"
+      title="Student Education Loan EMI Calculator"
       description="Calculate education loan EMI with tax benefits and career ROI analysis. Plan your educational investment wisely."
       initialValues={initialValues}
       fields={fields}
