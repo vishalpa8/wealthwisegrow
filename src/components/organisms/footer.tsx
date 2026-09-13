@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Calculator, Mail } from "lucide-react";
+import { FooterYear } from "@/components/atoms/footer-year";
 
 const footerLinks = {
   calculators: [
@@ -104,7 +105,7 @@ export function Footer() {
 
         <div className="border-t border-gray-100 mt-8 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © {new Date().getFullYear()} WealthWiseGrow. All rights reserved.
+            © <FooterYear /> WealthWiseGrow. All rights reserved.
           </p>
           <p className="text-gray-400 text-sm mt-2 sm:mt-0">
             Made with ❤️ for better financial decisions

@@ -31,6 +31,7 @@ export interface PaymentScheduleItem {
 }
 
 export function calculateMortgage(inputs: MortgageInputs): MortgageResults {
+  inputs = inputs || ({} as any);
   // Use robust number parsing for all input values
   const principal = parseRobustNumber(inputs.principal);
   const rate = parseRobustNumber(inputs.rate);

@@ -43,9 +43,9 @@ const flexibleYear = z
     if (isNaN(parsed) || !isFinite(parsed) || parsed <= 0) {
       return 1;
     }
-    // Allow any positive value - no upper limit for maximum flexibility
+    // Limit to reasonable max years (e.g. 100) to prevent DoS via infinite loops
     // Round to nearest integer for year calculations
-    return Math.max(Math.round(Math.abs(parsed)), 1);
+    return Math.min(Math.max(Math.round(Math.abs(parsed)), 1), 100);
   });
 
 // Ultra-flexible age validation
@@ -95,7 +95,7 @@ export const loanSchema = z.object({
   principal: flexibleNumber,
   rate: flexiblePercentage,
   years: flexibleYear,
-  extraPayment: flexibleSignedNumber.optional().default(0),
+  extraPayment: flexibleNumber.optional().default(0),
 });
 
 // Investment Calculator Schema
@@ -134,27 +134,27 @@ export const budgetSchema = z.object({
 
 // SIP Calculator Schema
 export const sipSchema = z.object({
-  monthlyInvestment: flexibleSignedNumber,
+  monthlyInvestment: flexibleNumber,
   annualReturn: flexiblePercentage,
   years: flexibleYear,
 });
 
 // Lumpsum Investment Schema
 export const lumpsumSchema = z.object({
-  principal: flexibleSignedNumber,
+  principal: flexibleNumber,
   annualReturn: flexiblePercentage,
   years: flexibleYear,
 });
 
 // PPF Calculator Schema
 export const ppfSchema = z.object({
-  yearlyInvestment: flexibleSignedNumber,
+  yearlyInvestment: flexibleNumber,
   years: flexibleYear,
 });
 
 // FD Calculator Schema
 export const fdSchema = z.object({
-  principal: flexibleSignedNumber,
+  principal: flexibleNumber,
   annualRate: flexiblePercentage,
   years: flexibleYear,
   compoundingFrequency: z.enum(['monthly', 'quarterly', 'yearly']).default('quarterly'),
@@ -162,7 +162,7 @@ export const fdSchema = z.object({
 
 // RD Calculator Schema
 export const rdSchema = z.object({
-  monthlyDeposit: flexibleSignedNumber,
+  monthlyDeposit: flexibleNumber,
   annualRate: flexiblePercentage,
   years: flexibleYear,
 });

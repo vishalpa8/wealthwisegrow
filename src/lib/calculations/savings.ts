@@ -127,11 +127,13 @@ export interface LumpsumYearlyBreakdown {
 
 export function calculateLumpsum(inputs: LumpsumInputs): LumpsumResults {
   return safeCalculation(() => {
-    const { principal, annualReturn, years } = inputs;
+    const principal = parseRobustNumber(inputs.principal);
+    const annualReturn = parseRobustNumber(inputs.annualReturn);
+    const years = parseRobustNumber(inputs.years);
     const rate = safeDivide(annualReturn, 100);
     
     const yearlyBreakdown: LumpsumYearlyBreakdown[] = [];
-    let currentAmount = parseRobustNumber(principal);
+    let currentAmount = principal;
     
     for (let year = 1; year <= years; year++) {
       currentAmount = safeMultiply(currentAmount, safeAdd(1, rate));
@@ -181,7 +183,8 @@ export interface PPFYearlyBreakdown {
 
 export function calculatePPF(inputs: PPFInputs): PPFResults {
   return safeCalculation(() => {
-    const { yearlyInvestment, years } = inputs;
+    const yearlyInvestment = parseRobustNumber(inputs.yearlyInvestment);
+    const years = parseRobustNumber(inputs.years);
     const ppfRate = 0.071; // Current PPF rate ~7.1%
     
     let balance = 0;
@@ -233,7 +236,10 @@ export interface FDResults {
 
 export function calculateFD(inputs: FDInputs): FDResults {
   return safeCalculation(() => {
-    const { principal, annualRate, years, compoundingFrequency } = inputs;
+    const principal = parseRobustNumber(inputs.principal);
+    const annualRate = parseRobustNumber(inputs.annualRate);
+    const years = parseRobustNumber(inputs.years);
+    const compoundingFrequency = inputs.compoundingFrequency;
     const rate = safeDivide(annualRate, 100);
     
     let n: number;
@@ -285,7 +291,9 @@ export interface RDMonthlyBreakdown {
 
 export function calculateRD(inputs: RDInputs): RDResults {
   return safeCalculation(() => {
-    const { monthlyDeposit, annualRate, years } = inputs;
+    const monthlyDeposit = parseRobustNumber(inputs.monthlyDeposit);
+    const annualRate = parseRobustNumber(inputs.annualRate);
+    const years = parseRobustNumber(inputs.years);
     const monthlyRate = safeDivide(annualRate, safeMultiply(100, 12));
     const totalMonths = safeMultiply(years, 12);
     
@@ -428,7 +436,9 @@ export interface DividendYieldResults {
 
 export function calculateDividendYield(inputs: DividendYieldInputs): DividendYieldResults {
   return safeCalculation(() => {
-    const { stockPrice, annualDividend, numberOfShares } = inputs;
+    const stockPrice = parseRobustNumber(inputs.stockPrice);
+    const annualDividend = parseRobustNumber(inputs.annualDividend);
+    const numberOfShares = parseRobustNumber(inputs.numberOfShares);
     
     const dividendYield = safeMultiply(safeDivide(annualDividend, stockPrice), 100);
     const annualDividendIncome = safeMultiply(annualDividend, numberOfShares);
@@ -484,8 +494,9 @@ export function calculateGoldInvestment(inputs: GoldInputs): GoldResults {
   return safeCalculation(() => {
     // Handle both parameter naming conventions
     const investmentAmount = parseRobustNumber(inputs.investmentAmount) || 0;
-    const goldPrice = parseRobustNumber(inputs.currentGoldPrice || inputs.goldPricePerGram) || 1;
-    const appreciationRate = parseRobustNumber(inputs.expectedAppreciation || inputs.expectedAnnualReturn) || 0;
+    const rawGoldPrice = inputs.currentGoldPrice !== undefined ? inputs.currentGoldPrice : inputs.goldPricePerGram;
+    const goldPrice = parseRobustNumber(rawGoldPrice);
+    const appreciationRate = parseRobustNumber(inputs.expectedAppreciation !== undefined ? inputs.expectedAppreciation : inputs.expectedAnnualReturn) || 0;
     const years = Math.max(0, parseRobustNumber(inputs.years) || 0); // Allow 0 years
     
     // Handle edge cases

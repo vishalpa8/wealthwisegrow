@@ -38,7 +38,7 @@ describe('Error Handling and Edge Cases - Comprehensive Test Suite', () => {
           function: calculateLoan,
           inputs: { principal: 100000, rate: 0, years: 10, extraPayment: 0 },
           expectation: (result: any) => {
-            expect(result.monthlyPayment).toBe(100000 / (10 * 12)); // Simple division
+            expect(result.monthlyPayment).toBeCloseTo(100000 / (10 * 12), 2); // Simple division rounded
             expect(result.totalInterest).toBe(0);
           }
         },

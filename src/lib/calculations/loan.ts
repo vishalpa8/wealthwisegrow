@@ -25,6 +25,7 @@ export interface LoanPaymentScheduleItem {
 }
 
 export function calculateLoan(inputs: LoanInputs): LoanResults {
+  inputs = inputs || ({} as any);
   const principal = parseRobustNumber(inputs.principal);
   const rate = parseRobustNumber(inputs.rate);
   const years = parseRobustNumber(inputs.years);
@@ -37,19 +38,29 @@ export function calculateLoan(inputs: LoanInputs): LoanResults {
   const monthlyRate = rate / 1200;
   const numberOfPayments = years * 12;
 
-  const monthlyPayment = calculateMonthlyPayment(principal, monthlyRate, numberOfPayments);
+  const monthlyPayment = calculateMonthlyPaymentWrapper(principal, rate, numberOfPayments);
   const roundedMonthlyPayment = Math.round(monthlyPayment * 100) / 100;
 
-  const standardTotalPayment = roundedMonthlyPayment * numberOfPayments;
-  const standardTotalInterest = Math.max(0, standardTotalPayment - principal);
-
-  const paymentSchedule = generateLoanPaymentSchedule(
+  const standardSchedule = generateLoanPaymentSchedule(
     principal,
     monthlyRate,
     numberOfPayments,
     roundedMonthlyPayment,
-    extraPayment
+    0
   );
+
+  const standardTotalPayment = standardSchedule.reduce((sum, item) => sum + item.payment, 0);
+  const standardTotalInterest = standardSchedule.reduce((sum, item) => sum + item.interest, 0);
+
+  const paymentSchedule = extraPayment > 0 
+    ? generateLoanPaymentSchedule(
+        principal,
+        monthlyRate,
+        numberOfPayments,
+        roundedMonthlyPayment,
+        extraPayment
+      )
+    : standardSchedule;
 
   const actualPayoffTime = paymentSchedule.length;
   const totalPayment = paymentSchedule.reduce((sum, item) => sum + item.payment + item.extraPayment, 0);
@@ -67,12 +78,10 @@ export function calculateLoan(inputs: LoanInputs): LoanResults {
   };
 }
 
-function calculateMonthlyPayment(principal: number, monthlyRate: number, numberOfPayments: number): number {
-  if (monthlyRate === 0) {
-    return principal / numberOfPayments;
-  }
-  const powerTerm = Math.pow(1 + monthlyRate, numberOfPayments);
-  return principal * (monthlyRate * powerTerm) / (powerTerm - 1);
+import { calculateEMI } from "./financial-math";
+
+function calculateMonthlyPaymentWrapper(principal: number, annualRate: number, numberOfPayments: number): number {
+  return calculateEMI(principal, annualRate, numberOfPayments);
 }
 
 function generateLoanPaymentSchedule(
@@ -85,28 +94,37 @@ function generateLoanPaymentSchedule(
   const schedule: LoanPaymentScheduleItem[] = [];
   let balance = loanAmount;
   let cumulativeInterest = 0;
+  
+  const safeExtraPayment = Math.max(0, extraPayment);
 
   for (let month = 1; month <= numberOfPayments; month++) {
-    if (balance <= 0.01) break;
+    if (balance <= 0.005) break;
 
     const interestPayment = balance * monthlyRate;
-    let principalPayment = monthlyPayment - interestPayment;
-    let actualPayment = monthlyPayment;
-    let appliedExtraPayment = extraPayment;
-
-    if (balance <= monthlyPayment + extraPayment) {
-      principalPayment = balance;
-      actualPayment = balance + interestPayment;
+    const requiredTotalPayment = balance + interestPayment;
+    let intendedTotalPayment = monthlyPayment + safeExtraPayment;
+    
+    // If it's the last scheduled payment, we MUST clear the remaining balance, 
+    // even if it's slightly higher due to rounding downwards in previous months.
+    if (month === numberOfPayments) {
+      intendedTotalPayment = Math.max(intendedTotalPayment, requiredTotalPayment);
+    }
+    
+    const actualTotalPayment = Math.min(intendedTotalPayment, requiredTotalPayment);
+    
+    let actualPayment: number;
+    let appliedExtraPayment: number;
+    
+    if (actualTotalPayment <= monthlyPayment) {
+      actualPayment = actualTotalPayment;
       appliedExtraPayment = 0;
+    } else {
+      actualPayment = monthlyPayment;
+      appliedExtraPayment = actualTotalPayment - monthlyPayment;
     }
     
-    const totalPrincipalToPay = principalPayment + appliedExtraPayment;
+    const principalPayment = actualPayment - interestPayment;
     
-    if (totalPrincipalToPay > balance) {
-        principalPayment = balance;
-        appliedExtraPayment = 0;
-    }
-
     balance -= (principalPayment + appliedExtraPayment);
     cumulativeInterest += interestPayment;
 

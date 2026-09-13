@@ -138,6 +138,7 @@ export interface GSTResults {
 }
 
 export function calculateGST(inputs: GSTInputs): GSTResults {
+  inputs = inputs || ({} as any);
   const amount = parseRobustNumber(inputs.amount);
   const gstRate = parseRobustNumber(inputs.gstRate);
   const { type } = inputs;
@@ -196,6 +197,7 @@ export interface SalaryResults {
 }
 
 export function calculateSalary(inputs: SalaryInputs): SalaryResults {
+  inputs = inputs || ({} as any);
   const ctc = parseRobustNumber(inputs.ctc);
   const basicPercent = parseRobustNumber(inputs.basicPercent);
   const hraPercent = parseRobustNumber(inputs.hraPercent);
@@ -259,6 +261,7 @@ export interface HRAResults {
 }
 
 export function calculateHRA(inputs: HRAInputs): HRAResults {
+  inputs = inputs || ({} as any);
   const basicSalary = parseRobustNumber(inputs.basicSalary);
   const hraReceived = parseRobustNumber(inputs.hraReceived);
   const rentPaid = parseRobustNumber(inputs.rentPaid);
@@ -310,12 +313,24 @@ export interface CapitalGainsResults {
 }
 
 export function calculateCapitalGains(inputs: CapitalGainsInputs): CapitalGainsResults {
+  // Check if inputs is truthy
+  if (!inputs) return {
+    capitalGains: 0,
+    holdingPeriod: 0,
+    gainType: 'short-term',
+    taxRate: 0,
+    taxAmount: 0,
+    netGains: 0
+  };
+  
   const purchasePrice = parseRobustNumber(inputs.purchasePrice);
   const salePrice = parseRobustNumber(inputs.salePrice);
   const { purchaseDate, saleDate, assetType } = inputs;
+  const pDate = purchaseDate || new Date();
+  const sDate = saleDate || new Date();
   
   const capitalGains = salePrice - purchasePrice;
-  const holdingPeriodMonths = (saleDate.getFullYear() - purchaseDate.getFullYear()) * 12 + (saleDate.getMonth() - purchaseDate.getMonth());
+  const holdingPeriodMonths = (sDate.getFullYear() - pDate.getFullYear()) * 12 + (sDate.getMonth() - pDate.getMonth());
   const holdingPeriod = holdingPeriodMonths / 12;
   
   let isLongTerm = false;

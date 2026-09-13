@@ -2,6 +2,11 @@
 
 import React from 'react';
 import { useCurrency } from '@/contexts/currency-context';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell,
+  BarChart, Bar, Legend
+} from 'recharts';
 
 interface ChartDataPoint {
   label: string;
@@ -44,186 +49,97 @@ interface AmortizationScheduleProps {
   maxRows?: number;
 }
 
-// Simple Line Chart Component
+const COLORS = [
+  '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
+  '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
+];
+
 export function SimpleLineChart({ 
   data, 
   title, 
-  height = 200, 
-  showValues = false,
+  height = 250,
   formatValue 
 }: LineChartProps) {
   const { formatCurrency, formatNumber } = useCurrency();
   
   if (!data || data.length === 0) return null;
 
-  const maxValue = Math.max(...data.map(d => d.value));
-  const minValue = Math.min(...data.map(d => d.value));
-  const range = maxValue - minValue || 1;
-
-  const points = data.map((point, index) => {
-    const x = (index / (data.length - 1)) * 100;
-    const y = 100 - ((point.value - minValue) / range) * 100;
-    return `${x},${y}`;
-  }).join(' ');
-
   const defaultFormatter = formatValue || ((value: number) => 
     typeof value === 'number' && value > 1000 ? formatCurrency(value) : formatNumber(value)
   );
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 w-full">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className={`relative ${height === 200 ? 'h-52' : height === 300 ? 'h-72' : 'h-64'}`}>
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 100"
-          preserveAspectRatio="none"
-          className="absolute inset-0"
-        >
-          {/* Grid lines */}
-          <defs>
-            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" className="stroke-gray-100" strokeWidth="0.5"/>
-            </pattern>
-          </defs>
-          <rect width="100" height="100" fill="url(#grid)" />
-          
-          {/* Line */}
-          <polyline
-            fill="none"
-            className="stroke-blue-500"
-            strokeWidth="2"
-            points={points}
-            vectorEffect="non-scaling-stroke"
-          />
-          
-          {/* Points */}
-          {showValues && data.map((point, i) => {
-            const x = (i / (data.length - 1)) * 100;
-            const y = 100 - ((point.value - minValue) / range) * 100;
-            return (
-              <g key={i}>
-                <circle cx={x} cy={y} r="1.5" className="fill-blue-500" />
-              </g>
-            );
-          })}
-        </svg>
-        
-        {/* Labels */}
-        <div className="absolute bottom-0 left-0 right-0 flex justify-between text-xs text-gray-500 mt-2">
-          {data.map((point, index) => (
-            <span key={index} className="text-center">
-              {point.label}
-            </span>
-          ))}
-        </div>
+      <div style={{ width: '100%', height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis dataKey="label" tick={{ fill: '#6b7280', fontSize: 12 }} tickLine={false} />
+            <YAxis tickFormatter={(value: any) => defaultFormatter(value as number)} tick={{ fill: '#6b7280', fontSize: 12 }} tickLine={false} axisLine={false} width={80} />
+            <Tooltip 
+              formatter={(value: any) => [defaultFormatter(value as number), 'Value']}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+            />
+            <Line type="monotone" dataKey="value" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
-      
-      {showValues && (
-        <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-          {data.map((point, index) => (
-            <div key={index} className="flex justify-between">
-              <span className="text-gray-600">{point.label}:</span>
-              <span className="font-medium">{defaultFormatter(point.value)}</span>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
 
-// Simple Pie Chart Component
 export function SimplePieChart({ 
   data, 
   title, 
-  size = 200, 
+  size = 250, 
   showPercentages = true 
 }: PieChartProps) {
+  const { formatCurrency } = useCurrency();
   if (!data || data.length === 0) return null;
 
   const total = data.reduce((sum, item) => sum + item.value, 0);
-  let currentAngle = 0;
-
-  const colors = [
-    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', 
-    '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'
-  ];
+  if (total === 0) return null;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className="flex items-center justify-center">
-        <div className="relative" style={{ width: size, height: size }}>
-          <svg width={size} height={size} className="transform -rotate-90">
-            {data.map((item, index) => {
-              
-              const angle = (item.value / total) * 360;
-              const radius = size / 2 - 10;
-              const centerX = size / 2;
-              const centerY = size / 2;
-              
-              const startAngle = currentAngle;
-              const endAngle = currentAngle + angle;
-              currentAngle += angle;
-              
-              const x1 = centerX + radius * Math.cos((startAngle * Math.PI) / 180);
-              const y1 = centerY + radius * Math.sin((startAngle * Math.PI) / 180);
-              const x2 = centerX + radius * Math.cos((endAngle * Math.PI) / 180);
-              const y2 = centerY + radius * Math.sin((endAngle * Math.PI) / 180);
-              
-              const largeArcFlag = angle > 180 ? 1 : 0;
-              
-              const pathData = [
-                `M ${centerX} ${centerY}`,
-                `L ${x1} ${y1}`,
-                `A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2}`,
-                'Z'
-              ].join(' ');
-              
-              return (
-                <path
-                  key={index}
-                  d={pathData}
-                  fill={item.color || colors[index % colors.length]}
-                  stroke="white"
-                  strokeWidth="2"
-                />
-              );
-            })}
-          </svg>
-        </div>
-      </div>
-      
-      <div className="mt-4 space-y-2">
-        {data.map((item, index) => {
-          
-          return (
-            <div key={index} className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div 
-                  className="w-3 h-3 rounded-full mr-2"
-                  style={{ backgroundColor: item.color || colors[index % colors.length] }}
-                />
-                <span className="text-sm text-gray-600">{item.label}</span>
-              </div>
-              <span className="text-sm font-medium">
-                {showPercentages ? `${((item.value / total) * 100).toFixed(1)}%` : item.value.toLocaleString()}
-              </span>
-            </div>
-          );
-        })}
+    <div className="bg-white rounded-lg border border-gray-200 p-4 w-full flex flex-col items-center">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4 w-full text-left">{title}</h3>
+      <div style={{ width: '100%', height: size }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              innerRadius={size / 4}
+              outerRadius={size / 2 - 20}
+              paddingAngle={5}
+              dataKey="value"
+              nameKey="label"
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip 
+              formatter={(value: any, name: any) => {
+                const percentage = (((value as number) / total) * 100).toFixed(1);
+                return [`${formatCurrency(value as number)} (${percentage}%)`, String(name)];
+              }}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+            />
+            <Legend verticalAlign="bottom" height={36} iconType="circle" />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
-// Simple Bar Chart Component
 export function SimpleBarChart({ 
   data, 
   title, 
-  height = 200, 
+  height = 300, 
   formatValue 
 }: BarChartProps) {
   const { formatCurrency, formatNumber } = useCurrency();
@@ -235,35 +151,27 @@ export function SimpleBarChart({
   );
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 w-full">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className="space-y-3" style={{ height: `${height}px`, overflowY: 'auto' }}>
-        {data.map((item, index) => {
-          return (
-            <div key={index} className="flex items-center">
-              <div className="w-20 text-sm text-gray-600 mr-3 text-right">
-                {item.label}
-              </div>
-              <div className="flex-1 relative">
-                <div className="bg-gray-200 rounded-full h-6">
-                  <div
-                    className="bg-blue-600 h-6 rounded-full flex items-center justify-end pr-2 transition-all duration-500"
-                  >
-                    <span className="text-xs text-white font-medium">
-                      {defaultFormatter(item.value)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      <div style={{ width: '100%', height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e5e7eb" />
+            <XAxis type="number" tickFormatter={(value: any) => defaultFormatter(value as number)} tick={{ fill: '#6b7280', fontSize: 12 }} />
+            <YAxis type="category" dataKey="label" tick={{ fill: '#4b5563', fontSize: 13 }} width={100} />
+            <Tooltip 
+              formatter={(value: any) => [defaultFormatter(value as number), '']}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+              cursor={{ fill: '#f3f4f6' }}
+            />
+            <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={24} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
-// Amortization Schedule Component
 export function AmortizationSchedule({ 
   schedule, 
   title = "Payment Schedule", 
@@ -314,10 +222,8 @@ export function AmortizationSchedule({
   );
 }
 
-// Goal Progress Chart (enhanced version)
 export { GoalProgressChart } from './goal-progress-chart';
 
-// Investment Growth Chart
 export function InvestmentGrowthChart({ 
   yearlyData, 
   title = "Investment Growth Over Time" 
@@ -329,54 +235,25 @@ export function InvestmentGrowthChart({
   
   if (!yearlyData || yearlyData.length === 0) return null;
 
-  const maxValue = Math.max(...yearlyData.map(d => d.total));
-
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white rounded-lg border border-gray-200 p-4 w-full">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">{title}</h3>
-      <div className="space-y-2">
-        {yearlyData.map((data, index) => {
-          const totalPercentage = (data.total / maxValue) * 100;
-          const principalPercentage = (data.principal / maxValue) * 100;
-          
-          return (
-            <div key={index} className="flex items-center">
-              <div className="w-16 text-sm text-gray-600 mr-3 text-right">
-                Year {data.year}
-              </div>
-              <div className="flex-1 relative">
-                <div className="bg-gray-200 rounded-full h-6 relative overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-6 rounded-full absolute left-0 top-0"
-                    style={{ width: `${principalPercentage}%` }}
-                  />
-                  <div
-                    className="bg-green-500 h-6 rounded-full absolute left-0 top-0"
-                    style={{ 
-                      width: `${totalPercentage}%`,
-                      marginLeft: `${principalPercentage}%`
-                    }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-end pr-2">
-                    <span className="text-xs text-white font-medium">
-                      {formatCurrency(data.total)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-blue-600 rounded-full mr-2" />
-          <span className="text-gray-600">Principal</span>
-        </div>
-        <div className="flex items-center">
-          <div className="w-3 h-3 bg-green-500 rounded-full mr-2" />
-          <span className="text-gray-600">Interest/Growth</span>
-        </div>
+      <div style={{ width: '100%', height: 350 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={yearlyData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
+            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 12 }} tickLine={false} />
+            <YAxis tickFormatter={(value: any) => formatCurrency(value as number)} tick={{ fill: '#6b7280', fontSize: 12 }} width={80} tickLine={false} axisLine={false} />
+            <Tooltip 
+              formatter={(value: any) => formatCurrency(value as number)}
+              contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+              cursor={{ fill: '#f3f4f6' }}
+            />
+            <Legend verticalAlign="bottom" height={36} iconType="circle" />
+            <Bar dataKey="principal" name="Principal" stackId="a" fill="#3b82f6" />
+            <Bar dataKey="interest" name="Interest/Growth" stackId="a" fill="#10b981" radius={[4, 4, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

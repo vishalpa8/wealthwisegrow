@@ -27,6 +27,7 @@ export interface InvestmentYearlyBreakdown {
 }
 
 export function calculateInvestment(inputs: InvestmentInputs): InvestmentResults {
+  inputs = inputs || ({} as any);
   const {
     initialAmount: initialAmountInput,
     monthlyContribution: monthlyContributionInput,

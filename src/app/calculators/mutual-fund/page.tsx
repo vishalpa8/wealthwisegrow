@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { differenceInMonths } from "date-fns";
 import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
@@ -130,13 +131,7 @@ export default function MutualFundCalculatorPage() {
       const startDateObj = new Date(values.startDate);
       const endDateObj = new Date(values.endDate || Date.now());
       
-      let totalMonths = (endDateObj.getFullYear() - startDateObj.getFullYear()) * 12;
-      totalMonths += endDateObj.getMonth() - startDateObj.getMonth();
-      
-      if (endDateObj.getDate() < startDateObj.getDate()) {
-        totalMonths--;
-      }
-      totalMonths = Math.max(0, totalMonths);
+      const totalMonths = Math.max(0, differenceInMonths(endDateObj, startDateObj));
       
       for (let i = 0; i < totalMonths; i++) {
         const monthlyInvestmentAfterLoad = monthlyInvestment * (1 - entryLoad / 100);
