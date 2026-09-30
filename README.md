@@ -378,8 +378,7 @@ const { currency, formatCurrency, formatNumber } = useCurrency();
 ## 🚀 Deployment
 
 ### **Deployment Options**
-- **Vercel (Recommended):** Optimized for Next.js applications
-- **Netlify:** Static site deployment with edge functions
+- **Vercel (Production):** wealthwisegrow.com is deployed on Vercel from the `master` branch. Build settings live in `vercel.json`; set the variables from `.env.example` in the Vercel project settings.
 - **Custom Servers:** Docker containerization support
 - **CDN Integration:** Global content delivery
 
