@@ -73,7 +73,7 @@ export default function BudgetCalculatorPage() {
       { label: "Total Expenses", value: totalExpenses, type: "currency" },
       { label: "Savings Rate", value: savingsRate, type: "percentage" },
       { label: "Expense Ratio", value: expenseRatio, type: "percentage" },
-      { label: "Budget Health", value: budgetHealth, type: "number" },
+      { label: "Budget Health", value: budgetHealth },
     ];
 
     const chartData = {

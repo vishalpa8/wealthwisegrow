@@ -13,9 +13,11 @@ interface ShareButtonProps {
 export function ShareButton({ title, description, className = '' }: ShareButtonProps) {
   const [copied, setCopied] = useState(false);
   const [url, setUrl] = useState('');
+  const [canNativeShare, setCanNativeShare] = useState(false);
 
   useEffect(() => {
     setUrl(window.location.href);
+    setCanNativeShare(typeof navigator.share === 'function');
   }, []);
 
   const handleNativeShare = async () => {
@@ -54,7 +56,7 @@ export function ShareButton({ title, description, className = '' }: ShareButtonP
   
   return (
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      {typeof navigator !== 'undefined' && typeof navigator.share === 'function' ? (
+      {canNativeShare ? (
         <Button onClick={handleNativeShare} variant="outline" className="flex items-center gap-2 whitespace-nowrap">
           <Share2 className="w-4 h-4" />
           Share Results

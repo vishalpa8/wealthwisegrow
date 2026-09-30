@@ -152,6 +152,7 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
   /** Single source of truth for result value formatting */
   const formatValue = useCallback(
     (result: CalculatorResult): string => {
+      if (typeof result.value === 'string' && !/\d/.test(result.value)) return result.value;
       const num = parseRobustNumber(result.value as string | number);
       switch (result.type) {
         case 'currency':    return formatCurrency(num);
@@ -180,13 +181,15 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
             display = `${display}%`;
           }
 
-          if (field.unit && field.type !== 'select' && field.type !== 'percentage') {
-            display = `${display} ${field.unit}`;
+          if (field.unit && field.type !== 'select' && field.type !== 'percentage' && raw != null && raw !== '') {
+            display = /[a-z]/i.test(field.unit)
+              ? `${display} ${field.unit}`
+              : formatCurrency(parseRobustNumber(raw as string | number));
           }
 
           return { label: field.label, value: display };
         }),
-    [fields, values]
+    [fields, values, formatCurrency]
   );
 
   const exportResults = useMemo(

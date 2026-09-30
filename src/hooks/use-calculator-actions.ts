@@ -54,7 +54,8 @@ export function useCalculatorActions(
   }, [exportDocument.text, showFeedback]);
 
   const exportResults = useCallback(() => {
-    const url = URL.createObjectURL(new Blob([exportDocument.csv], { type: 'text/csv;charset=utf-8' }));
+    // Excel needs the UTF-8 byte-order mark to decode symbols such as ₹ correctly.
+    const url = URL.createObjectURL(new Blob(['\uFEFF', exportDocument.csv], { type: 'text/csv;charset=utf-8' }));
     const a = Object.assign(document.createElement('a'), {
       href: url,
       download: `${title.toLowerCase().replace(/\s+/g, '-')}-inputs-and-results.csv`,

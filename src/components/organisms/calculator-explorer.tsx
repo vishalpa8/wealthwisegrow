@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ArrowLeft, Search, X } from 'lucide-react';
 import { Button } from '../atoms/button';
@@ -114,7 +115,7 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || typeof document === 'undefined') return null;
 
   const query = searchTerm.trim().toLowerCase();
   const filteredCalculators = calculators.filter((calc) => {
@@ -144,7 +145,7 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
     setPreviewKey((key) => key + 1);
   };
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-stretch justify-center bg-black/50 sm:items-center sm:p-4"
       role="dialog"
@@ -361,6 +362,7 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
