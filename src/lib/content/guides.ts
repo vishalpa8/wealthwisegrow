@@ -16,7 +16,7 @@ export const guides = {
     slug: "investment",
     title: "Investment Planning Guide for Indian Beginners",
     description: "Learn how to set goals, choose investment types, understand risk, and use calculators before investing.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Start with goals, not products",
@@ -57,7 +57,7 @@ export const guides = {
     slug: "loan",
     title: "Loan and EMI Planning Guide India",
     description: "Understand EMI, total interest, tenure, prepayment, and affordability before taking a loan.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "EMI is only one part of loan cost",
@@ -98,7 +98,7 @@ export const guides = {
     slug: "budget",
     title: "Monthly Budgeting Guide India",
     description: "Build a practical monthly budget around income, fixed expenses, goals, savings, and debt control.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Budgeting is cash-flow control",
@@ -139,7 +139,7 @@ export const guides = {
     slug: "retirement",
     title: "Retirement Planning Guide India",
     description: "Estimate retirement corpus, inflation-adjusted expenses, monthly investing, and withdrawal needs.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Retirement planning starts with expenses",
@@ -180,7 +180,7 @@ export const guides = {
     slug: "mortgage",
     title: "Home Loan and Mortgage Guide India",
     description: "Understand home loan EMI, tenure, down payment, prepayment, affordability, and total property cost.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Look beyond the property price",
@@ -221,7 +221,7 @@ export const guides = {
     slug: "sip",
     title: "SIP Planning Guide India",
     description: "Understand SIP returns, step-up investing, time horizon, and realistic mutual fund planning.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "SIP works best with time and consistency",
@@ -262,7 +262,7 @@ export const guides = {
     slug: "emi",
     title: "EMI Planning Guide India",
     description: "Learn how EMI, tenure, interest rate, and prepayment affect the real cost of a loan.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "EMI comfort can hide total cost",
@@ -303,7 +303,7 @@ export const guides = {
     slug: "income-tax",
     title: "Income Tax Planning Guide India",
     description: "Compare old and new tax regimes, deductions, HRA, salary structure, and tax-saving decisions.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Do not choose a regime by guesswork",
@@ -344,7 +344,7 @@ export const guides = {
     slug: "mutual-funds",
     title: "Mutual Fund Investing Guide India",
     description: "Understand SIP, lumpsum, CAGR, XIRR, risk, taxation, and goal-based mutual fund investing.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Match fund category to time horizon",
@@ -385,7 +385,7 @@ export const guides = {
     slug: "ppf",
     title: "PPF Planning Guide India",
     description: "Understand PPF maturity, yearly deposits, lock-in, tax benefits, and long-term safe savings.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "PPF is built for long-term disciplined saving",
@@ -426,7 +426,7 @@ export const guides = {
     slug: "fd-rd",
     title: "FD vs RD Guide India",
     description: "Compare fixed deposits and recurring deposits for short-term and medium-term savings goals.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "FD suits lump sum money",
@@ -467,7 +467,7 @@ export const guides = {
     slug: "salary",
     title: "Salary Planning Guide India",
     description: "Understand CTC, in-hand salary, deductions, tax, EPF, and monthly money allocation.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "CTC is not the same as take-home salary",
@@ -508,7 +508,7 @@ export const guides = {
     slug: "emergency-fund",
     title: "Emergency Fund Guide India",
     description: "Calculate emergency savings based on expenses, dependents, job stability, and insurance coverage.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Emergency fund protects decisions",
@@ -549,7 +549,7 @@ export const guides = {
     slug: "fire",
     title: "FIRE Planning Guide India",
     description: "Understand Financial Independence Retire Early planning, corpus needs, savings rate, inflation, and withdrawal risk.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "FIRE depends on expenses, not ego numbers",
@@ -590,7 +590,7 @@ export const guides = {
     slug: "insurance",
     title: "Insurance Planning Guide India",
     description: "Estimate term insurance, health insurance, and protection needs before focusing on investments.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Insurance protects the plan",
@@ -631,7 +631,7 @@ export const guides = {
     slug: "gold-investment",
     title: "Gold Investment Guide India",
     description: "Compare physical gold, digital gold, gold ETF, and sovereign gold bond planning for Indian investors.",
-    lastReviewed: "May 4, 2026",
+    lastReviewed: "September 30, 2026",
     sections: [
       {
         heading: "Gold is a diversifier, not a complete plan",

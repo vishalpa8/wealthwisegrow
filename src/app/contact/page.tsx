@@ -55,53 +55,23 @@ export default function ContactPage() {
 
         <div className="card p-8">
           <h2 className="text-2xl font-bold text-neutral-900 mb-6">Send a Message</h2>
-          <form className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-neutral-700 mb-1">Name</label>
-              <input 
-                type="text" 
-                id="name" 
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-                placeholder="Your Name"
-              />
-            </div>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">Email</label>
-              <input 
-                type="email" 
-                id="email" 
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-                placeholder="your@email.com"
-              />
-            </div>
-            <div>
-              <label htmlFor="subject" className="block text-sm font-medium text-neutral-700 mb-1">Subject</label>
-              <select 
-                id="subject" 
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-              >
-                <option>General Inquiry</option>
-                <option>Bug Report</option>
-                <option>Feature Suggestion</option>
-                <option>Partnership</option>
-              </select>
-            </div>
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-neutral-700 mb-1">Message</label>
-              <textarea 
-                id="message" 
-                rows={4} 
-                className="w-full px-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
-                placeholder="How can we help you?"
-              ></textarea>
-            </div>
-            <button 
-              type="submit" 
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-            >
-              Send Message
-            </button>
-          </form>
+          <p className="text-neutral-600 leading-relaxed mb-4">
+            The fastest way to reach us is by email. To help us respond quickly, please include:
+          </p>
+          <ul className="list-disc pl-6 space-y-2 text-neutral-600 mb-6">
+            <li><strong>Calculation issues:</strong> the calculator link, the inputs you used, and the result you expected.</li>
+            <li><strong>Content corrections:</strong> the page, the statement, and a source such as an official circular or notification.</li>
+            <li><strong>Suggestions:</strong> the calculator or guide you would like us to add or improve.</li>
+          </ul>
+          <a
+            href="mailto:support@wealthwisegrow.com?subject=WealthWiseGrow%20feedback"
+            className="block w-full text-center bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+          >
+            Email support@wealthwisegrow.com
+          </a>
+          <p className="text-neutral-500 text-sm mt-4">
+            See our <a href="/corrections" className="text-primary-600 hover:underline">corrections policy</a> for how reported errors are reviewed and fixed.
+          </p>
         </div>
       </div>
     </CalculatorLayout>

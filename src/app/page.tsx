@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useState } from "react";
 import { CalculatorExplorer } from "@/components/organisms/calculator-explorer";
 import { Button } from "@/components/atoms/button";
+import { guides } from "@/lib/content/guides";
+
+const featuredGuides = Object.values(guides);
 
 export default function Home() {
   const [isExplorerOpen, setIsExplorerOpen] = useState(false);
@@ -210,6 +213,58 @@ export default function Home() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* How to use */}
+      <section className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+          How to make a money decision with WealthWiseGrow
+        </h2>
+        <p className="text-gray-600 leading-relaxed mb-6">
+          A calculator gives you a number, but a good decision needs context. Every tool on WealthWiseGrow comes with the formula it uses, the assumptions behind it, a worked example with Indian numbers, and the common mistakes people make. We suggest a simple three-step approach.
+        </p>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">1. Understand the decision</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Start with a guide. Our guides explain how loans, SIPs, taxes, insurance and retirement planning work in India, so you know which numbers actually matter before you calculate anything.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">2. Test more than one scenario</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Run a conservative case and an optimistic case. A home loan at 1% higher interest, or a SIP at 8% instead of 12%, shows whether your plan still works when things do not go perfectly.
+            </p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">3. Verify before you commit</h3>
+            <p className="text-gray-600 leading-relaxed">
+              Results are educational estimates. Confirm the final numbers with your bank quote, fund documents, Form 16 or a qualified advisor. Our <Link href="/methodology" className="text-blue-600 hover:underline">methodology page</Link> explains exactly how each result is calculated.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Guides */}
+      <section className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">Personal finance guides</h2>
+          <p className="text-gray-600 leading-relaxed">
+            Practical, India-focused explanations with worked examples, checklists and answers to common questions.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-2 gap-4">
+          {featuredGuides.map((guide) => (
+            <Link
+              key={guide.slug}
+              href={`/guides/${guide.slug}`}
+              className="block rounded-lg border border-gray-200 p-5 hover:border-blue-300 hover:shadow-md transition-all duration-200"
+            >
+              <h3 className="font-semibold text-gray-900 mb-1">{guide.title}</h3>
+              <p className="text-sm text-gray-600 leading-relaxed">{guide.description}</p>
+            </Link>
+          ))}
         </div>
       </section>
 

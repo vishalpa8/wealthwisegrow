@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { calculatorDetails } from "@/lib/content/calculator-details";
 
 type CalculatorSEOContentProps = {
   slug: string;
@@ -178,6 +179,7 @@ export function CalculatorSEOContent({ slug, title, description }: CalculatorSEO
   const fallbackTopic = topicDefaults.planning as CalculatorTopic;
   const topic: CalculatorTopic = topicDefaults[topicKey] ?? fallbackTopic;
   const displayName = title || `${humanizeSlug(slug)} Calculator`;
+  const detail = calculatorDetails[slug];
 
   return (
     <section className="mt-12 space-y-8 rounded-xl border border-neutral-200 bg-white p-6 sm:p-8">
@@ -192,6 +194,30 @@ export function CalculatorSEOContent({ slug, title, description }: CalculatorSEO
           {description || `Use this ${displayName.toLowerCase()} to make a clearer financial decision.`} This tool is designed for Indian users who want a quick estimate before comparing options, speaking with an advisor, or committing money. It helps you {topic.intent}
         </p>
       </div>
+
+      {detail && (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-900">What this calculator answers</h3>
+            <p className="mt-3 text-neutral-600 leading-relaxed">{detail.answers}</p>
+            <h3 className="mt-6 text-lg font-semibold text-neutral-900">Practical tip</h3>
+            <p className="mt-3 text-neutral-600 leading-relaxed">{detail.tip}</p>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-neutral-900">Worked example</h3>
+            <p className="mt-3 text-neutral-600 leading-relaxed">{detail.example}</p>
+            {detail.guide && (
+              <p className="mt-3 text-neutral-600 leading-relaxed">
+                Want the full picture first? Read our{" "}
+                <Link href={detail.guide.href} className="font-medium text-primary-600 hover:underline">
+                  {detail.guide.label}
+                </Link>
+                .
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <div>
