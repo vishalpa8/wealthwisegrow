@@ -191,7 +191,7 @@ export function CalculatorSEOContent({ slug, title, description }: CalculatorSEO
           How to use the {displayName}
         </h2>
         <p className="mt-4 text-neutral-600 leading-relaxed">
-          {description || `Use this ${displayName.toLowerCase()} to make a clearer financial decision.`} This tool is designed for Indian users who want a quick estimate before comparing options, speaking with an advisor, or committing money. It helps you {topic.intent}
+          {description || `Use this ${displayName.toLowerCase()} to make a clearer financial decision.`} {slug === "mortgage" ? "This country-neutral tool uses the currency and costs you enter; lender rules still need to be checked locally." : "This tool is designed for Indian users who want a quick estimate before comparing options, speaking with an advisor, or committing money."} It helps you {topic.intent}
         </p>
       </div>
 
@@ -276,7 +276,7 @@ export function CalculatorSEOContent({ slug, title, description }: CalculatorSEO
       </div>
 
       <div className="rounded-lg bg-neutral-50 p-4 text-sm text-neutral-600">
-        <strong className="text-neutral-900">Editorial note:</strong> Calculators on WealthWiseGrow are for education and planning. They are reviewed for formula accuracy, but they do not replace professional financial, tax, legal, or investment advice.
+        <strong className="text-neutral-900">Editorial note:</strong> Calculators on WealthWiseGrow are educational estimates covered by automated checks and documented assumptions. They do not replace professional financial, tax, legal, or investment advice.
       </div>
     </section>
   );

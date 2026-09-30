@@ -132,8 +132,7 @@ export function AdvancedEMICalculatorContent() {
     const totalAmount = loanAmount + totalInterestPaid;
     const interestToLoanRatio = loanAmount > 0 ? (totalInterestPaid / loanAmount) * 100 : 0;
 
-    const actualTenure = totalMonths; // Wait, actually I should count the loops.
-    // Let's recalculate accurately to get actual months
+    // Recalculate to count the actual months after prepayments.
     balance = loanAmount;
     let monthsTaken = 0;
     for (let month = 1; month <= totalMonths; month++) {

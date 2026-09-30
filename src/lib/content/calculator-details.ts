@@ -20,9 +20,9 @@ export const calculatorDetails: Record<string, CalculatorDetail> = {
   },
   mortgage: {
     answers: "How a mortgage payment splits between principal and interest over time, and how the loan amount, rate and term change the full amortization schedule.",
-    example: "On a Rs 50 lakh loan at 8.5% for 20 years, the first EMI of about Rs 43,390 includes roughly Rs 35,400 of interest and only about Rs 8,000 of principal. The principal share grows every month as the outstanding balance falls.",
+    example: "On a 500,000 mortgage with a 100,000 down payment, the financed principal is 400,000. The calculator combines principal and interest with any optional annual property tax, insurance, and monthly mortgage-insurance amount you enter.",
     tip: "Because early payments are mostly interest, part-prepayments in the first few years usually save far more than the same prepayment made late in the loan.",
-    guide: { label: "Home loan and mortgage guide", href: "/guides/mortgage" },
+    guide: { label: "Mortgage planning guide", href: "/guides/mortgage" },
   },
   "personal-loan": {
     answers: "The real monthly cost of an unsecured personal loan, including the effect of higher interest rates and short tenures.",

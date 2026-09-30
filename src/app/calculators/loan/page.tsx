@@ -8,7 +8,6 @@ import { EnhancedCalculatorField, CalculatorResult } from "@/components/organism
 import { useCurrency } from "@/contexts/currency-context";
 import { useIndexedDBHistory } from "@/hooks/use-indexeddb-history";
 import { calculateEMI } from "@/lib/calculations/financial-math";
-import { breadcrumbStructuredData, faqStructuredData, calculatorStructuredData } from "@/lib/seo/structured-data";
 
 type LoanInputs = {
   loanType: string;

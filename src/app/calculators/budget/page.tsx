@@ -1,5 +1,4 @@
 "use client";
-import { useMemo } from "react";
 import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";

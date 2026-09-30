@@ -5,9 +5,13 @@ export const metadata: Metadata = {
   title: 'Financial Calculators | WealthWiseGrow',
   description: 'Explore our collection of 39+ financial calculators for loans, investments, retirement planning, and more. Simple, accurate, and free to use.',
   keywords: ['financial calculators', 'loan calculator', 'investment calculator', 'retirement calculator', 'mortgage calculator', 'budget calculator'],
+  alternates: {
+    canonical: '/calculators',
+  },
   openGraph: {
     title: 'Financial Calculators | WealthWiseGrow',
     description: 'Explore our collection of 39+ financial calculators for loans, investments, retirement planning, and more.',
+    url: 'https://wealthwisegrow.com/calculators',
     type: 'website',
   },
 }

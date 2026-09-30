@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Calculator, Mail } from "lucide-react";
 import { FooterYear } from "@/components/atoms/footer-year";
+import { siteConfig } from "@/lib/site";
 
 const footerLinks = {
   calculators: [
@@ -40,15 +41,15 @@ export function Footer() {
             <p className="text-gray-500 text-sm">
               Your comprehensive financial calculator hub. Make informed decisions with our easy-to-use tools.
             </p>
-            <div className="flex space-x-4">
+            {siteConfig.contactEmail && <div className="flex space-x-4">
               <a
-                href="mailto:support@wealthwisegrow.com"
+                href={`mailto:${siteConfig.contactEmail}`}
                 className="text-gray-300 hover:text-gray-600 transition-colors duration-200"
                 aria-label="Email"
               >
                 <Mail className="h-5 w-5" />
               </a>
-            </div>
+            </div>}
           </div>
 
           {/* Calculators */}

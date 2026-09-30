@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Link from 'next/link';
 import { CalculatorLayout } from "@/components/templates/calculator-layout";
 
@@ -253,7 +253,13 @@ const calculatorsByCategory = {
   ]
 };
 
-
+function categoryAnchor(category: string) {
+  return category
+    .toLowerCase()
+    .replace(/&/g, ' ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
 export default function CalculatorsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -302,6 +308,13 @@ export default function CalculatorsPage() {
   const categories = ['All', ...Object.keys(calculatorsByCategory)];
 
   const totalResults = Object.values(filteredCalculators).flat().length;
+
+  useEffect(() => {
+    const id = window.location.hash.replace('#', '');
+    if (!id) return;
+    const target = document.getElementById(id);
+    if (target) target.scrollIntoView({ block: 'start' });
+  }, []);
 
   return (
     <div className="container-wide py-4">
@@ -388,7 +401,7 @@ export default function CalculatorsPage() {
             {Object.entries(filteredCalculators).map(([category, calculators]) => (
               <section 
                 key={category} 
-                id={category.toLowerCase().replace(/\s+/g, '-')}
+                id={categoryAnchor(category)}
                 className="scroll-mt-8"
               >
                 <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">

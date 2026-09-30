@@ -80,8 +80,6 @@ export function BalloonLoanCalculatorContent() {
     
     const periodsPerYear = paymentFrequency === 'monthly' ? 12 : 4;
     const totalPeriods = loanTerm * periodsPerYear;
-    const periodRate = interestRate / 100 / periodsPerYear;
-    
     const pvBalloon = calculatePresentValue(balloonPayment, interestRate, totalPeriods, periodsPerYear);
     const amortizedAmount = Math.max(0, loanAmount - pvBalloon);
     

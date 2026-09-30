@@ -25,6 +25,8 @@ interface NumericInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
   labelClassName?: string;
   helpTextClassName?: string;
   errorClassName?: string;
+  min?: number;
+  max?: number;
 }
 
 export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
@@ -47,6 +49,8 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       labelClassName = '',
       helpTextClassName = '',
       errorClassName = '',
+      min = Number.NEGATIVE_INFINITY,
+      max = Number.POSITIVE_INFINITY,
       ...props
     },
     ref
@@ -98,7 +102,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
       // Let parseRobustNumber handle all edge cases gracefully
       // Remove strict validation rules to allow users to input any value
       
-      const finalValue = parsedValue;
+      const finalValue = Math.min(max, Math.max(min, parsedValue));
       
       // Remove min/max constraints for maximum flexibility
       // Let the parent component handle any validation if needed
@@ -122,7 +126,7 @@ export const NumericInput = forwardRef<HTMLInputElement, NumericInputProps>(
         return;
       }
       
-      const parsedValue = parseRobustNumber(inputValue);
+      const parsedValue = Math.min(max, Math.max(min, parseRobustNumber(inputValue)));
       
       // Ultra-flexible approach - no constraints on blur
       // Accept any value the user enters for maximum user-friendliness

@@ -44,7 +44,7 @@ export default function FDCalculatorPage() {
       <SEOContent title="Fixed Deposit Tips"
       description="Calculate the maturity amount and interest earned on your Fixed Deposit investments."
       sections={[
-        { title: "Guaranteed Returns", content: "FDs offer guaranteed returns and capital safety." },
+        { title: "Contracted Returns", content: "Bank FDs generally state a fixed rate for the term, but access, tax, premature-withdrawal penalties, and deposit-insurance limits still matter." },
         { title: "Compounding", content: "Choose compounding frequency based on your needs." },
         { title: "Tax Implications", content: "Consider tax implications on FD interest." }
       ]}

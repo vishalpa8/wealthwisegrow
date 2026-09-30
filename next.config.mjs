@@ -1,4 +1,20 @@
 /** @type {import('next').NextConfig} */
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self' mailto:",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net",
+  "frame-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net",
+  "worker-src 'self' blob:",
+  "upgrade-insecure-requests",
+].join('; ');
+
 const nextConfig = {
   // TypeScript error checking during builds
   typescript: {
@@ -12,6 +28,16 @@ const nextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
+  },
+
+  async redirects() {
+    return [
+      {
+        source: "/calculators/tax",
+        destination: "/calculators/income-tax",
+        permanent: true,
+      },
+    ];
   },
 
   // Security & performance headers applied to all routes
@@ -33,6 +59,7 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), payment=()',
           },
+          { key: 'Content-Security-Policy', value: contentSecurityPolicy },
         ],
       },
       {

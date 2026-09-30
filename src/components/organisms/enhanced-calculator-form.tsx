@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useCallback, useRef, KeyboardEvent } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef, KeyboardEvent } from 'react';
 import { useCurrency } from '@/contexts/currency-context';
 import { CurrencySelector } from '@/components/molecules/currency-selector';
 import { NumericInput } from '@/components/atoms/numeric-input';
@@ -26,6 +26,7 @@ export interface EnhancedCalculatorField {
   required?: boolean;
   tooltip?: string;
   unit?: string;
+  showIf?: (values: Record<string, unknown>) => boolean;
 }
 
 export interface CalculatorResult {
@@ -146,10 +147,6 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
     [onChange]
   );
 
-  // ── Action handlers ────────────────────────────────────────────────────────
-
-  const { copyResults, exportResults, resultText } = useCalculatorActions(title, results, showFeedback);
-
   // ── Format helpers ─────────────────────────────────────────────────────────
 
   /** Single source of truth for result value formatting */
@@ -166,11 +163,64 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
     [formatCurrency, formatNumber]
   );
 
+  // ── Action handlers ────────────────────────────────────────────────────────
+
+  const exportInputs = useMemo(
+    () =>
+      fields
+        .filter((field) => !field.showIf || field.showIf(values))
+        .map((field) => {
+          const raw = values[field.name];
+          let display = raw == null || raw === '' ? 'Not entered' : String(raw);
+
+          if (field.type === 'select') {
+            const match = field.options?.find((option) => String(option.value) === String(raw));
+            display = match?.label ?? display;
+          } else if (field.type === 'percentage') {
+            display = `${display}%`;
+          }
+
+          if (field.unit && field.type !== 'select' && field.type !== 'percentage') {
+            display = `${display} ${field.unit}`;
+          }
+
+          return { label: field.label, value: display };
+        }),
+    [fields, values]
+  );
+
+  const exportResults = useMemo(
+    () => results.map((result) => ({ label: result.label, value: formatValue(result) })),
+    [results, formatValue]
+  );
+
+  const { copyResults, exportResults: downloadInputsAndResults, resultText } = useCalculatorActions(
+    title,
+    exportInputs,
+    exportResults,
+    showFeedback
+  );
+
   // ── Renderers ──────────────────────────────────────────────────────────────
 
   const renderField = (field: EnhancedCalculatorField) => {
     const fieldId = `field-${field.name}`;
     const currentValue = values[field.name];
+
+    const normalizedName = field.name.toLowerCase();
+    const inferredMax =
+      field.max ??
+      (normalizedName.includes('year') ||
+      normalizedName.includes('tenure') ||
+      normalizedName.includes('period')
+        ? 100
+        : normalizedName.includes('month')
+          ? 1200
+          : field.type === 'percentage' ||
+              normalizedName.includes('rate') ||
+              normalizedName.includes('percent')
+            ? 1000
+            : 1_000_000_000_000);
 
     return (
       <div key={field.name} className="relative">
@@ -217,8 +267,10 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
             onValueChange={(value) => handleFieldChange(field, value)}
             placeholder={field.placeholder}
             step={field.step}
+            min={field.min ?? 0}
+            max={inferredMax}
             decimalPlaces={2}
-            allowNegative={true}
+            allowNegative={(field.min ?? 0) < 0}
             allowZero={true}
             showCurrencySymbol={field.type === 'number' && Boolean(field.unit)}
             errorText=""
@@ -275,8 +327,8 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
     {
       id: 'copy',
       icon: <Copy className="w-4 h-4" />,
-      label: 'Copy Results',
-      ariaLabel: 'Copy calculation results to clipboard',
+      label: 'Copy inputs & results',
+      ariaLabel: 'Copy the entered inputs and calculation results',
       onClick: copyResults,
       activeColor: 'bg-blue-100 text-blue-600',
       hoverColor: 'hover:text-blue-600 hover:bg-blue-50',
@@ -284,9 +336,9 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
     {
       id: 'download',
       icon: <Download className="w-4 h-4" />,
-      label: 'Export to CSV',
-      ariaLabel: 'Export calculation results to CSV file',
-      onClick: exportResults,
+      label: 'Download inputs & results',
+      ariaLabel: 'Download the entered inputs and calculation results as a CSV file',
+      onClick: downloadInputsAndResults,
       activeColor: 'bg-green-100 text-green-600',
       hoverColor: 'hover:text-green-600 hover:bg-green-50',
     },
@@ -297,16 +349,16 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
   return (
     <section
       ref={formRef}
-      className="mx-auto bg-white rounded-2xl shadow-lg p-6 sm:p-8 mt-8 border border-gray-100 w-full max-w-5xl min-w-0"
+      className="mx-auto bg-white rounded-2xl shadow-lg p-4 sm:p-8 mt-6 sm:mt-8 border border-gray-100 w-full max-w-5xl min-w-0"
       onKeyDown={handleKeyDown}
       aria-label={`${title} Form`}
     >
       {/* Header */}
       <header className="mb-6">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-          <div className="flex items-center space-x-3">
-            <Calculator className="w-8 h-8 text-blue-600" />
-            <h2 className="text-3xl font-bold text-blue-700">{title}</h2>
+          <div className="flex min-w-0 items-center space-x-3">
+            <Calculator className="w-7 h-7 shrink-0 text-blue-600 sm:w-8 sm:h-8" />
+            <h2 className="min-w-0 text-2xl font-bold text-blue-700 sm:text-3xl">{title}</h2>
           </div>
           <CurrencySelector />
         </div>
@@ -319,13 +371,13 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
         {/* Input Form */}
         <form onSubmit={(e) => { e.preventDefault(); onCalculate?.(); }}>
           <div className="space-y-4">
-            {fields.map(renderField)}
+            {fields.filter((field) => !field.showIf || field.showIf(values)).map(renderField)}
           </div>
 
           {/* Calculate Button */}
           <div className="mt-6">
             <Button
-              onClick={onCalculate}
+              type="submit"
               disabled={loading}
               className="w-full py-3 text-lg font-semibold"
             >
@@ -365,17 +417,18 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
                 <div className="flex flex-wrap items-center gap-2">
                   <ShareButton title={`${title} - Results`} description={resultText} />
                   <div className="flex flex-wrap items-center gap-1 border-l border-gray-200 pl-2">
-                    {actionButtons.map(({ id, icon, ariaLabel, onClick, activeColor, hoverColor }) => (
+                    {actionButtons.map(({ id, icon, label, ariaLabel, onClick, activeColor, hoverColor }) => (
                       <div key={id} className="relative">
                         <button
                           type="button"
                           onClick={() => onClick()}
-                          className={`relative p-3 text-gray-500 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${hoverColor} ${
+                          className={`relative inline-flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 ${hoverColor} ${
                             clickedButton === id ? activeColor : ''
                           }`}
                           aria-label={ariaLabel}
                         >
                           {icon}
+                          <span>{label}</span>
                           {clickedButton === id && tooltipMessage && (
                             <ActionTooltip message={tooltipMessage} />
                           )}
@@ -422,7 +475,7 @@ export function EnhancedCalculatorForm<T extends Record<string, any>>({
                           </button>
                         )}
                       </header>
-                      <dl className="grid grid-cols-2 gap-2 text-sm">
+                      <dl className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                         {scenario.results.map((result, index) => (
                           <div key={index} className="flex justify-between">
                             <dt className="text-gray-600">{result.label}:</dt>

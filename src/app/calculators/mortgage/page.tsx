@@ -4,7 +4,7 @@ import { MortgageCalculatorPageContent } from "./page-content";
 
 export const metadata: Metadata = {
   title: "Mortgage Calculator | WealthWiseGrow",
-  description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Get detailed payment breakdowns and loan summaries to make informed home buying decisions.",
+  description: "Estimate a mortgage payment in your selected currency, including optional property tax, insurance, and mortgage insurance.",
   keywords: [
     "mortgage calculator", 
     "home loan", 
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     "interest rate", 
     "property tax", 
     "home insurance", 
-    "PMI",
+    "mortgage insurance",
     "loan calculator",
     "home buying",
     "real estate",
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   ],
   openGraph: {
     title: "Mortgage Calculator | WealthWiseGrow",
-    description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI. Get detailed payment breakdowns and amortization schedules.",
+    description: "Estimate principal, interest, property tax, insurance, and optional mortgage-insurance costs.",
     type: "website",
     url: "/calculators/mortgage",
     siteName: "WealthWiseGrow",
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Mortgage Calculator | WealthWiseGrow",
-    description: "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
+    description: "Estimate mortgage principal, interest, taxes, insurance, and optional mortgage insurance.",
   },
   alternates: {
     canonical: "/calculators/mortgage",
@@ -50,7 +50,7 @@ const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Mortgage Calculator",
-  "description": "Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI.",
+  "description": "Estimate a mortgage payment with optional property tax, insurance, and mortgage insurance.",
   "applicationCategory": "FinanceApplication",
   "operatingSystem": "All",
   "offers": {
@@ -61,9 +61,8 @@ const jsonLd = {
   "url": "https://wealthwisegrow.com/calculators/mortgage",
   "featureList": [
     "Calculate monthly mortgage payments",
-    "Include property taxes and insurance",
-    "Calculate PMI (Private Mortgage Insurance)",
-    "Generate amortization schedule",
+    "Include optional property taxes and insurance",
+    "Include optional mortgage insurance",
     "Compare loan scenarios"
   ]
 };

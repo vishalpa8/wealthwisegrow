@@ -16,6 +16,18 @@
   animation: fadeIn 0.3s ease-in-out;
 }
 
+html[data-embed="1"] .site-chrome {
+  display: none !important;
+}
+
+html[data-embed="1"] .site-shell {
+  display: block;
+  width: 100%;
+  max-width: none;
+  padding: 0;
+  gap: 0;
+}
+
 /* Ad placeholder styles */
 .ad-placeholder {
   @apply transition-all duration-300 ease-in-out;
@@ -117,6 +129,8 @@
     font-optical-sizing: auto;
     min-height: 100vh;
     line-height: 1.6;
+    overflow-x: clip;
+    overflow-wrap: break-word;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

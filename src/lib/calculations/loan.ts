@@ -36,7 +36,7 @@ export function calculateLoan(inputs: LoanInputs): LoanResults {
   }
 
   const monthlyRate = rate / 1200;
-  const numberOfPayments = years * 12;
+  const numberOfPayments = Math.min(1200, Math.max(1, Math.round(years * 12)));
 
   const monthlyPayment = calculateMonthlyPaymentWrapper(principal, rate, numberOfPayments);
   const roundedMonthlyPayment = Math.round(monthlyPayment * 100) / 100;
@@ -49,7 +49,6 @@ export function calculateLoan(inputs: LoanInputs): LoanResults {
     0
   );
 
-  const standardTotalPayment = standardSchedule.reduce((sum, item) => sum + item.payment, 0);
   const standardTotalInterest = standardSchedule.reduce((sum, item) => sum + item.interest, 0);
 
   const paymentSchedule = extraPayment > 0 

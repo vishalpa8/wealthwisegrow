@@ -16,6 +16,7 @@ Allow: /guides/
 # Block admin areas (if any)
 Disallow: /admin/
 Disallow: /api/
+Allow: /api/og
 
 # Block temporary files
 Disallow: /*.tmp$

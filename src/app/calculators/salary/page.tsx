@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
@@ -13,7 +12,7 @@ const initialValues: SalaryInputs = {
   hraPercent: 40,
   pfContribution: 12,
   professionalTax: 2400,
-  otherAllowances: 50000
+  otherAllowances: 0
 };
 
 export default function SalaryCalculatorPage() {
@@ -24,8 +23,7 @@ export default function SalaryCalculatorPage() {
     { label: 'Basic Salary %', name: 'basicPercent', type: 'percentage', placeholder: '50' },
     { label: 'HRA %', name: 'hraPercent', type: 'percentage', placeholder: '40' },
     { label: 'PF Contribution %', name: 'pfContribution', type: 'percentage', placeholder: '12' },
-    { label: 'Annual Professional Tax', name: 'professionalTax', type: 'number', placeholder: '2,400', unit: currency.symbol },
-    { label: 'Other Allowances (Annual)', name: 'otherAllowances', type: 'number', placeholder: '50,000', unit: currency.symbol }
+    { label: 'Annual Professional Tax', name: 'professionalTax', type: 'number', placeholder: '2,400', unit: currency.symbol }
   ];
 
   const calculate = (inputs: SalaryInputs) => {
@@ -38,35 +36,19 @@ export default function SalaryCalculatorPage() {
       otherAllowances: Math.abs(parseRobustNumber(inputs.otherAllowances)) || 0
     };
 
-    let salaryResults = calculateSalary(validatedValues);
-    if (!salaryResults || isNaN(salaryResults.netSalary) || salaryResults.netSalary < 0) {
-      salaryResults = {
-        basicSalary: validatedValues.ctc * (validatedValues.basicPercent / 100) / 12,
-        hra: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.hraPercent / 100) / 12,
-        grossSalary: validatedValues.ctc / 12,
-        pfDeduction: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12,
-        incomeTax: 0,
-        totalDeductions: validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12 + validatedValues.professionalTax / 12,
-        netSalary: validatedValues.ctc / 12 - (validatedValues.ctc * (validatedValues.basicPercent / 100) * (validatedValues.pfContribution / 100) / 12 + validatedValues.professionalTax / 12),
-        ctc: validatedValues.ctc,
-        otherAllowances: validatedValues.otherAllowances,
-        professionalTax: validatedValues.professionalTax,
-        monthlySalary: validatedValues.ctc / 12
-      };
-    }
-
-    const yearlyNetSalary = salaryResults.netSalary * 12;
+    const salaryResults = calculateSalary(validatedValues);
+    const yearlyNetSalary = salaryResults.netSalary;
     const takeHomePercentage = (yearlyNetSalary / validatedValues.ctc) * 100;
 
     const results: CalculatorResult[] = [
-      { label: 'Monthly Net Salary', value: salaryResults.netSalary, type: 'currency', highlight: true },
+      { label: 'Monthly Net Salary', value: salaryResults.monthlySalary, type: 'currency', highlight: true },
       { label: 'Annual Net Salary', value: yearlyNetSalary, type: 'currency' },
-      { label: 'Monthly Basic Salary', value: salaryResults.basicSalary, type: 'currency' },
-      { label: 'Monthly HRA', value: salaryResults.hra, type: 'currency' },
-      { label: 'Monthly Gross Salary', value: salaryResults.grossSalary, type: 'currency' },
-      { label: 'Monthly PF Deduction', value: salaryResults.pfDeduction, type: 'currency' },
-      { label: 'Monthly Income Tax', value: salaryResults.incomeTax, type: 'currency' },
-      { label: 'Total Monthly Deductions', value: salaryResults.totalDeductions, type: 'currency' },
+      { label: 'Monthly Basic Salary', value: salaryResults.basicSalary / 12, type: 'currency' },
+      { label: 'Monthly HRA', value: salaryResults.hra / 12, type: 'currency' },
+      { label: 'Monthly Gross Salary', value: salaryResults.grossSalary / 12, type: 'currency' },
+      { label: 'Monthly PF Deduction', value: salaryResults.pfDeduction / 12, type: 'currency' },
+      { label: 'Monthly Income Tax', value: salaryResults.incomeTax / 12, type: 'currency' },
+      { label: 'Total Monthly Deductions', value: salaryResults.totalDeductions / 12, type: 'currency' },
       { label: 'Take-home %', value: takeHomePercentage, type: 'percentage' }
     ];
 

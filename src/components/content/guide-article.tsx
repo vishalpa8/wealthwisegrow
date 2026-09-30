@@ -86,8 +86,23 @@ export function GuideArticle({ guide }: { guide: GuideContent }) {
         </div>
       </section>
 
+      {guide.sources && guide.sources.length > 0 && (
+        <section className="mt-8">
+          <h2 className="text-xl font-bold text-neutral-900 mb-3">Primary sources</h2>
+          <ul className="space-y-2">
+            {guide.sources.map((source) => (
+              <li key={source.href}>
+                <a href={source.href} target="_blank" rel="noreferrer" className="font-medium text-primary-600 hover:underline">
+                  {source.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <footer className="mt-8 rounded-lg border border-neutral-200 p-4 text-sm text-neutral-600">
-        <strong className="text-neutral-900">Editorial note:</strong> This guide is educational and does not replace professional financial advice. Last reviewed: {guide.lastReviewed}.
+        <strong className="text-neutral-900">Editorial note:</strong> Maintained by WealthWiseGrow for education and planning; no professional review is implied. Last content review: {guide.lastReviewed}.
       </footer>
     </article>
   );

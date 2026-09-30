@@ -29,9 +29,9 @@ export default function EditorialPolicyPage() {
             Accuracy is our top priority, especially given the YMYL (Your Money Your Life) nature of our content. 
           </p>
           <ul className="list-disc pl-6 space-y-2 text-neutral-600">
-            <li><strong>Expert Sourcing:</strong> Our content is researched using official government sources (Income Tax Department, RBI, etc.) and reputable financial publications.</li>
-            <li><strong>Regular Updates:</strong> We review our calculators and guides annually or whenever significant policy changes occur (e.g., Union Budget announcements).</li>
-            <li><strong>Verification:</strong> Mathematical models used in our calculators are verified against standard financial formulas and cross-checked with multiple sources.</li>
+            <li><strong>Primary sourcing:</strong> Regulated content uses official government or regulator sources where available.</li>
+            <li><strong>Dated rules:</strong> Country-specific tools display the rule year they implement so users can identify when an update is needed.</li>
+            <li><strong>Automated checks:</strong> Core formulas are covered by regression tests and corrected when a mismatch is confirmed.</li>
           </ul>
         </section>
 

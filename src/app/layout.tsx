@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import Script from "next/script";
 import "./globals.css";
 import { AdSenseWrapper } from "@/components/molecules/adsense-wrapper";
 import { CurrencyProvider } from "@/contexts/currency-context";
 import { Header } from "@/components/organisms/header";
 import { Footer } from "@/components/organisms/footer";
 import { GA4 } from "@/components/analytics/ga4";
+import { AdSenseScript } from "@/components/analytics/adsense-script";
+import { ConsentProvider } from "@/contexts/consent-context";
 import { organizationStructuredData, websiteStructuredData } from "@/lib/seo/structured-data";
 import Link from "next/link";
 
@@ -27,7 +30,7 @@ export const metadata: Metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://wealthwisegrow.com/og-image.png',
+        url: 'https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides',
         width: 1200,
         height: 630,
         alt: 'WealthWiseGrow - Financial Calculators & Investment Tools',
@@ -39,7 +42,7 @@ export const metadata: Metadata = {
     site: '@WealthWiseGrow',
     title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
     description: 'Comprehensive financial calculators and guides for better money management',
-    images: ['https://wealthwisegrow.com/og-image.png'],
+    images: ['https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides'],
   },
   robots: {
     index: true,
@@ -62,33 +65,38 @@ export default function RootLayout({
 }: Readonly<{
   children: ReactNode;
 }>) {
-  const adsenseScriptEnabled = process.env.NEXT_PUBLIC_ADSENSE_SCRIPT_ENABLED !== 'false';
+  const headerAdSlot = process.env.NEXT_PUBLIC_ADSENSE_HEADER_SLOT ?? "";
+  const sidebarAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT ?? "";
 
   return (
-    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
+    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-screen flex flex-col font-sans" suppressHydrationWarning>
-        <GA4 />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
-        />
-        {adsenseScriptEnabled && (
-          <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3402658627618101"
-            crossOrigin="anonymous"></script>
-        )}
-        <CurrencyProvider>
-          {/* Unified Header — replaces the previous inline header */}
+        <Script id="embed-preview" strategy="beforeInteractive">
+          {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
+        </Script>
+        <ConsentProvider>
+          <GA4 />
+          <AdSenseScript />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
+          />
+          <CurrencyProvider>
+          <div className="site-chrome">
           <Header />
+          </div>
 
-          <AdSenseWrapper adSlot="header-ad" className="w-full h-[90px] max-w-[728px] mx-auto mt-4" />
+          <div className="site-chrome">
+          <AdSenseWrapper adSlot={headerAdSlot} className="w-full h-[90px] max-w-[728px] mx-auto mt-4" />
+          </div>
 
-          <div className="flex flex-1 w-full container-wide gap-8 py-8">
+          <div className="site-shell flex flex-1 w-full container-wide gap-8 py-8">
             {/* Sidebar */}
-            <aside className="hidden lg:block w-80 space-y-4 flex-shrink-0">
+            <aside className="site-chrome hidden lg:block w-80 space-y-4 flex-shrink-0">
               <div className="card">
                 <h3 className="text-base font-semibold text-neutral-900 mb-4">
                   Popular Calculators
@@ -117,7 +125,7 @@ export default function RootLayout({
               </div>
 
               <div className="card">
-                <AdSenseWrapper adSlot="sidebar-ad" className="w-full h-[250px] max-w-[300px]" />
+                <AdSenseWrapper adSlot={sidebarAdSlot} className="w-full h-[250px] max-w-[300px]" />
               </div>
             </aside>
 
@@ -129,8 +137,11 @@ export default function RootLayout({
             </main>
           </div>
 
+          <div className="site-chrome">
           <Footer />
-        </CurrencyProvider>
+          </div>
+          </CurrencyProvider>
+        </ConsentProvider>
       </body>
     </html>
   );

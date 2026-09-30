@@ -155,9 +155,9 @@ export const calculatorSEOMap: Record<string, CalculatorSEOPage> = {
   },
   mortgage: {
     slug: "mortgage",
-    title: "Real Estate Mortgage EMI Calculator India",
-    description: "Estimate property mortgage payments, total interest over time, and repayment schedule for real estate loans.",
-    keywords: ["mortgage calculator", "mortgage calculator india", "home loan calculator", "property loan calculator"],
+    title: "Global Real Estate Mortgage Payment Calculator",
+    description: "Estimate mortgage principal, interest, property tax, insurance, and optional mortgage-insurance costs in your selected currency.",
+    keywords: ["mortgage calculator", "mortgage payment calculator", "home financing calculator", "property loan calculator"],
   },
   "mutual-fund": {
     slug: "mutual-fund",

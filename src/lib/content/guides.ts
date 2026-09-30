@@ -9,6 +9,7 @@ export type GuideContent = {
   }>;
   checklist: string[];
   relatedCalculators: Array<{ label: string; href: string }>;
+  sources?: Array<{ label: string; href: string }>;
 };
 
 export const guides = {
@@ -338,6 +339,12 @@ export const guides = {
       { label: "Income Tax Calculator", href: "/calculators/income-tax" },
       { label: "HRA Calculator", href: "/calculators/hra" },
       { label: "Salary Calculator", href: "/calculators/salary" },
+    ],
+    sources: [
+      {
+        label: "Income Tax Department — tax slabs for AY 2026-27",
+        href: "https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1",
+      },
     ],
   },
   "mutual-funds": {

@@ -38,7 +38,7 @@ export default function AboutPage() {
             <div>
               <h3 className="text-lg font-semibold text-neutral-900 mb-2">Accuracy & Precision</h3>
               <p className="text-sm text-neutral-600">
-                Our calculators are built on rigorous mathematical models and updated regularly to reflect the latest financial rules and tax slabs in India.
+                Our calculators use documented formulas and automated regression tests. Regulated tools identify the country and rule year they implement.
               </p>
             </div>
             <div>
@@ -56,7 +56,7 @@ export default function AboutPage() {
             In the world of personal finance (YMYL - Your Money Your Life), trust is everything. We are committed to:
           </p>
           <ul className="list-disc pl-6 space-y-2 text-neutral-600">
-            <li><strong>Expert Review:</strong> Our content and tools are reviewed for accuracy and relevance.</li>
+            <li><strong>Source-based review:</strong> Regulated content links to primary government or regulator sources where available.</li>
             <li><strong>Transparency:</strong> We clearly explain the methodology and formulas behind our calculators.</li>
             <li><strong>Independence:</strong> Our tools provide objective results to help you compare options fairly.</li>
           </ul>

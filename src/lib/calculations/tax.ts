@@ -1,4 +1,5 @@
 import { parseRobustNumber } from '../utils/number';
+import { calculateIndiaIncomeTax } from './india-tax';
 
 // Income Tax Calculator (India)
 export interface IncomeTaxInputs {
@@ -61,63 +62,23 @@ export function calculateIncomeTax(inputs: IncomeTaxInputs): IncomeTaxResults {
 
   const regime = inputs.regime || 'new';
   
-  const standardDeduction = regime === 'old' ? 50000 : 75000;
-  
-  let taxSlabs: { min: number; max: number; rate: number }[];
-  let taxableIncome: number;
-  
-  if (regime === 'new') {
-    taxableIncome = Math.max(0, annualIncome - deductions - standardDeduction);
-    taxSlabs = [
-      { min: 0, max: 300000, rate: 0 },
-      { min: 300000, max: 700000, rate: 5 },
-      { min: 700000, max: 1000000, rate: 10 },
-      { min: 1000000, max: 1200000, rate: 15 },
-      { min: 1200000, max: 1500000, rate: 20 },
-      { min: 1500000, max: Infinity, rate: 30 }
-    ];
-  } else {
-    taxableIncome = Math.max(0, annualIncome - deductions - standardDeduction);
-    
-    const basicExemption = age >= 60 ? (age >= 80 ? 500000 : 300000) : 250000;
-    taxSlabs = [
-      { min: 0, max: basicExemption, rate: 0 },
-      { min: basicExemption, max: basicExemption + 250000, rate: 5 },
-      { min: basicExemption + 250000, max: basicExemption + 500000, rate: 20 },
-      { min: basicExemption + 500000, max: Infinity, rate: 30 }
-    ];
-  }
-  
-  let incomeTax = 0;
-  const taxBrackets: TaxBracket[] = [];
-  
-  for (const slab of taxSlabs) {
-    if (taxableIncome > slab.min) {
-      const taxableAmountInSlab = Math.min(taxableIncome - slab.min, slab.max - slab.min);
-      const taxInSlab = taxableAmountInSlab * slab.rate / 100;
-      incomeTax += taxInSlab;
-      
-      taxBrackets.push({
-        range: slab.max === Infinity ? `₹${slab.min.toLocaleString()}+` : `₹${slab.min.toLocaleString()} - ₹${slab.max.toLocaleString()}`,
-        rate: slab.rate,
-        taxableAmount: taxableAmountInSlab,
-        tax: taxInSlab
-      });
-    }
-  }
-  
-  const cess = incomeTax * 0.04;
-  const totalTax = incomeTax + cess;
-  const netIncome = annualIncome - totalTax;
+  const calculation = calculateIndiaIncomeTax({
+    grossIncome: annualIncome,
+    age,
+    deductions,
+    regime,
+    salaried: true,
+    resident: true,
+  });
   
   return {
     grossIncome: annualIncome,
-    taxableIncome,
-    incomeTax,
-    cess,
-    totalTax,
-    netIncome,
-    taxBrackets
+    taxableIncome: calculation.taxableIncome,
+    incomeTax: calculation.incomeTax,
+    cess: calculation.cess,
+    totalTax: calculation.totalTax,
+    netIncome: calculation.netIncome,
+    taxBrackets: calculation.taxBrackets
   };
 }
 
@@ -126,6 +87,7 @@ export interface GSTInputs {
   amount: number;
   gstRate: number;
   type: 'exclusive' | 'inclusive';
+  supplyType?: 'intra-state' | 'inter-state';
 }
 
 export interface GSTResults {
@@ -141,7 +103,7 @@ export function calculateGST(inputs: GSTInputs): GSTResults {
   inputs = inputs || ({} as any);
   const amount = parseRobustNumber(inputs.amount);
   const gstRate = parseRobustNumber(inputs.gstRate);
-  const { type } = inputs;
+  const { type, supplyType = 'intra-state' } = inputs;
   
   let originalAmount: number;
   let gstAmount: number;
@@ -158,8 +120,9 @@ export function calculateGST(inputs: GSTInputs): GSTResults {
   }
   
   // For intra-state: CGST + SGST, for inter-state: IGST
-  const cgst = gstAmount / 2;
-  const sgst = gstAmount / 2;
+  const isInterState = supplyType === 'inter-state';
+  const cgst = isInterState ? 0 : gstAmount / 2;
+  const sgst = isInterState ? 0 : gstAmount / 2;
   const igst = gstAmount;
   
   return {
@@ -203,18 +166,23 @@ export function calculateSalary(inputs: SalaryInputs): SalaryResults {
   const hraPercent = parseRobustNumber(inputs.hraPercent);
   const pfContribution = parseRobustNumber(inputs.pfContribution);
   const annualProfessionalTax = parseRobustNumber(inputs.professionalTax);
-  const otherAllowances = parseRobustNumber(inputs.otherAllowances);
-  
+  void inputs.otherAllowances;
+
   const basicSalary = (ctc * basicPercent) / 100;
   const hra = (basicSalary * hraPercent) / 100;
-  const grossSalary = basicSalary + hra + otherAllowances;
-  
+  const otherAllowances = Math.max(0, ctc - basicSalary - hra);
+  const grossSalary = ctc;
   const annualPfDeduction = (basicSalary * pfContribution) / 100;
-  
-  const taxableIncome = Math.max(0, grossSalary - 50000 - annualPfDeduction);
-  const annualIncomeTax = calculateSimplifiedTax(taxableIncome);
-  
-  const totalDeductions = annualPfDeduction + annualProfessionalTax + annualIncomeTax;
+  const tax = calculateIndiaIncomeTax({
+    grossIncome: grossSalary,
+    age: 30,
+    regime: 'new',
+    salaried: true,
+    resident: true,
+  });
+  const annualIncomeTax = tax.totalTax;
+  const totalDeductions =
+    annualPfDeduction + annualProfessionalTax + annualIncomeTax;
   const netSalary = grossSalary - totalDeductions;
   
   return {
@@ -230,15 +198,6 @@ export function calculateSalary(inputs: SalaryInputs): SalaryResults {
     netSalary,
     monthlySalary: netSalary / 12
   };
-}
-
-function calculateSimplifiedTax(taxableIncome: number): number {
-  if (taxableIncome <= 300000) return 0;
-  if (taxableIncome <= 700000) return (taxableIncome - 300000) * 0.05;
-  if (taxableIncome <= 1000000) return 20000 + (taxableIncome - 700000) * 0.10;
-  if (taxableIncome <= 1200000) return 50000 + (taxableIncome - 1000000) * 0.15;
-  if (taxableIncome <= 1500000) return 80000 + (taxableIncome - 1200000) * 0.20;
-  return 140000 + (taxableIncome - 1500000) * 0.30;
 }
 
 // HRA Calculator

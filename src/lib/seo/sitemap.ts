@@ -9,11 +9,12 @@ export interface SitemapUrl {
 
 export const generateSitemap = (urls: SitemapUrl[]): string => {
   const urlElements = urls.map(({ url, lastModified, changeFrequency, priority }) => {
-    const lastMod = lastModified ? lastModified.toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+    const lastMod = lastModified
+      ? `\n    <lastmod>${lastModified.toISOString().split('T')[0]}</lastmod>`
+      : '';
     
     return `  <url>
-    <loc>${url}</loc>
-    <lastmod>${lastMod}</lastmod>
+    <loc>${url}</loc>${lastMod}
     <changefreq>${changeFrequency || 'weekly'}</changefreq>
     <priority>${priority || 0.5}</priority>
   </url>`;
@@ -27,6 +28,7 @@ ${urlElements}
 
 const guideUrls: SitemapUrl[] = Object.values(guides).map((guide) => ({
   url: `https://wealthwisegrow.com/guides/${guide.slug}`,
+  lastModified: new Date(guide.lastReviewed),
   changeFrequency: 'monthly',
   priority: 0.65
 }));
@@ -267,11 +269,6 @@ export const siteUrls: SitemapUrl[] = [
   },
   {
     url: 'https://wealthwisegrow.com/calculators/hra',
-    changeFrequency: 'yearly',
-    priority: 0.7
-  },
-  {
-    url: 'https://wealthwisegrow.com/calculators/tax',
     changeFrequency: 'yearly',
     priority: 0.7
   },

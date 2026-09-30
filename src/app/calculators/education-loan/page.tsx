@@ -4,7 +4,7 @@ import { SEOContent } from "@/components/molecules/seo-content";
 import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
-import { calculateEMI } from "@/lib/calculations/financial-math";
+import { calculateLoan } from "@/lib/calculations/loan";
 import { parseRobustNumber } from "@/lib/utils/number";
 
 interface EducationLoanInputs {
@@ -37,29 +37,17 @@ export default function EducationLoanCalculatorPage() {
     const years = Math.max(1, Math.abs(parseRobustNumber(values.years)) || 10);
     const extraPayment = Math.abs(parseRobustNumber(values.extraPayment)) || 0;
 
-    const months = years * 12;
-    const monthlyPayment = calculateEMI(principal, rate, months);
-    
-    // Simplification for performance: calculating total base interest without complex amortization array
-    const totalPayment = monthlyPayment * months;
-    const totalInterest = totalPayment - principal;
-
-    const annualInterest = totalInterest / years;
-    const taxBracket = 0.30;
-    const annualTaxSaving = Math.min(annualInterest, 50000) * taxBracket;
-    const totalTaxSaving = annualTaxSaving * years;
-
-    const educationROI = principal * 0.15;
-    const totalCareerBenefit = educationROI * 20;
+    const loan = calculateLoan({ principal, rate, years, extraPayment });
+    const monthlyPayment = loan.monthlyPayment + extraPayment;
+    const { totalPayment, totalInterest, payoffTime, interestSaved } = loan;
 
     const results: CalculatorResult[] = [
       { label: "Monthly EMI", value: isFinite(monthlyPayment) ? monthlyPayment : 0, type: "currency", highlight: true, tooltip: "Monthly installment for your education loan" },
       { label: "Total Payment", value: isFinite(totalPayment) ? totalPayment : 0, type: "currency", tooltip: "Total amount to be paid over loan tenure" },
       { label: "Total Interest", value: isFinite(totalInterest) ? totalInterest : 0, type: "currency", tooltip: "Total interest paid on the education loan" },
       { label: "Interest as % of Loan", value: principal > 0 ? (totalInterest / principal) * 100 : 0, type: "percentage", tooltip: "Interest as percentage of loan amount" },
-      { label: "Estimated Tax Savings", value: totalTaxSaving, type: "currency", tooltip: "Tax benefits on education loan interest (Section 80E)" },
-      { label: "Net Cost After Tax Benefits", value: totalPayment - totalTaxSaving, type: "currency", tooltip: "Effective cost after considering tax benefits" },
-      { label: "Estimated Career ROI", value: totalCareerBenefit, type: "currency", tooltip: "Estimated additional earnings over 20 years due to education" },
+      { label: "Payoff Time", value: payoffTime, type: "number", tooltip: "Estimated number of monthly payments" },
+      { label: "Interest Saved by Extra Payments", value: interestSaved, type: "currency", tooltip: "Estimated interest saved compared with the base EMI schedule" },
     ];
 
     return { results };
@@ -67,7 +55,7 @@ export default function EducationLoanCalculatorPage() {
 
   const seoContent = (
       <SEOContent title="Education Loan Tips"
-      description="Calculate education loan EMI with tax benefits and career ROI analysis. Plan your educational investment wisely."
+      description="Estimate education-loan EMI, repayment time, total interest, and the effect of optional extra payments."
       sections={[
         { title: "Compare Rates", content: "Compare interest rates from different lenders." },
         { title: "Understand Terms", content: "Understand the moratorium period and repayment terms." },
@@ -79,7 +67,7 @@ export default function EducationLoanCalculatorPage() {
   return (
     <BaseCalculatorTemplate<EducationLoanInputs>
       title="Student Education Loan EMI Calculator"
-      description="Calculate education loan EMI with tax benefits and career ROI analysis. Plan your educational investment wisely."
+      description="Estimate education-loan EMI, repayment time, total interest, and optional extra-payment savings. Tax treatment depends on your country and circumstances."
       initialValues={initialValues}
       fields={fields}
       calculate={calculate}

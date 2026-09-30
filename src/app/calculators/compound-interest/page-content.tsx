@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
-import { parseRobustNumber, safeDivide, safeMultiply, safePower, safeAdd, safeSubtract, roundToPrecision } from "@/lib/utils/number";
+import { parseRobustNumber, safeDivide, safeMultiply, safePower, safeAdd, safeSubtract } from "@/lib/utils/number";
 
 interface CompoundInterestInputs {
   principal: number;

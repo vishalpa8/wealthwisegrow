@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CalculatorLayout } from "@/components/templates/calculator-layout";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | WealthWiseGrow",
@@ -35,23 +36,31 @@ export default function PrivacyPolicyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-neutral-900 mb-4">Advertising and cookies</h2>
           <p className="text-neutral-600 mb-4">
-            WealthWiseGrow may use Google AdSense or similar advertising services. Third-party vendors, including Google, may use cookies to serve ads based on visits to this and other websites. Users can manage ad personalization through Google Ads Settings or their browser settings.
+            Google AdSense is disabled until the site is approved and configured with real ad units. When enabled, Google and its partners may use cookies or similar identifiers to provide and measure advertising.
+          </p>
+          <p className="text-neutral-600 mb-4">
+            Learn <a href="https://policies.google.com/technologies/partner-sites" rel="noreferrer" target="_blank" className="text-primary-600 hover:underline">how Google uses information from partner sites</a> and manage personalization through <a href="https://adssettings.google.com/" rel="noreferrer" target="_blank" className="text-primary-600 hover:underline">Google Ads Settings</a>.
           </p>
         </section>
 
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-neutral-900 mb-4">Analytics</h2>
           <p className="text-neutral-600 mb-4">
-            We may use privacy-conscious analytics to understand aggregate usage, improve calculator accuracy, and prioritize new guides. We do not use analytics to collect sensitive personal financial inputs from calculators.
+            Google Analytics collects aggregate usage information such as pages visited, browser type, approximate location, and device category. Calculator inputs are not intentionally sent to Google Analytics.
+          </p>
+          <p className="text-neutral-600 mb-4">
+            You can opt out of Google Analytics with the <a href="https://tools.google.com/dlpage/gaoptout" rel="noreferrer" target="_blank" className="text-primary-600 hover:underline">Google Analytics opt-out browser add-on</a>, or block cookies in your browser settings.
           </p>
         </section>
 
         <section>
           <h2 className="text-2xl font-bold text-neutral-900 mb-4">Contact</h2>
           <p className="text-neutral-600">
-            For privacy questions, email <a href="mailto:support@wealthwisegrow.com" className="text-primary-600 hover:underline">support@wealthwisegrow.com</a>.
+            {siteConfig.contactEmail
+              ? <>For privacy questions, email <a href={`mailto:${siteConfig.contactEmail}`} className="text-primary-600 hover:underline">{siteConfig.contactEmail}</a>.</>
+              : "A public contact mailbox is being configured. This page will be updated as soon as it is available."}
           </p>
-          <p className="text-sm text-neutral-500 mt-6">Last reviewed: May 4, 2026</p>
+          <p className="text-sm text-neutral-500 mt-6">Last reviewed: September 30, 2026</p>
         </section>
       </div>
     </CalculatorLayout>

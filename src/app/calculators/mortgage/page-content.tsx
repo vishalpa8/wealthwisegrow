@@ -12,7 +12,7 @@ const initialValues: MortgageInputs = {
   principal: 500000,
   downPayment: 100000,
   rate: 7.5,
-  years: 30,
+  years: 25,
   propertyTax: 6000,
   insurance: 1500,
   pmi: 0,
@@ -29,12 +29,12 @@ export function MortgageCalculatorPageContent() {
     { label: "Annual Property Tax", name: "propertyTax", type: "number", placeholder: "6,000", unit: currency.symbol },
     { label: "Annual Home Insurance", name: "insurance", type: "number", placeholder: "1,500", unit: currency.symbol },
     {
-      label: "PMI (Private Mortgage Insurance)",
+      label: "Monthly Mortgage Insurance",
       name: "pmi",
       type: "number",
       placeholder: "0",
       unit: currency.symbol,
-      tooltip: "Required if your down payment is less than 20% of the home's purchase price."
+      tooltip: "Optional lender-required mortgage insurance. Rules vary by country and loan product."
     },
   ], [currency.symbol]);
 
@@ -103,7 +103,7 @@ export function MortgageCalculatorPageContent() {
         <div className="space-y-2">
           <div className="flex items-start space-x-2">
             <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">20% down payment avoids PMI</p>
+            <p className="text-sm text-neutral-600">Mortgage-insurance rules vary by country and lender</p>
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-success-500 text-sm">✓</span>
@@ -111,7 +111,7 @@ export function MortgageCalculatorPageContent() {
           </div>
           <div className="flex items-start space-x-2">
             <span className="text-success-500 text-sm">✓</span>
-            <p className="text-sm text-neutral-600">Consider 15-year vs 30-year terms</p>
+            <p className="text-sm text-neutral-600">Compare multiple terms and total interest, not only the monthly payment</p>
           </div>
         </div>
       </div>
@@ -121,7 +121,7 @@ export function MortgageCalculatorPageContent() {
   return (
     <BaseCalculatorTemplate<MortgageInputs>
       title="Real Estate Mortgage EMI Calculator"
-      description="Calculate your monthly mortgage payment including principal, interest, taxes, insurance, and PMI."
+      description="Estimate a mortgage payment in your selected currency, with optional property tax, home insurance, and lender-required mortgage insurance."
       initialValues={initialValues}
       fields={fields}
       calculate={calculate}

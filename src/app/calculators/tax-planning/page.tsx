@@ -4,6 +4,7 @@ import { BaseCalculatorTemplate, ChartConfig } from "@/components/templates/base
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { parseRobustNumber } from "@/lib/utils/number";
+import { calculateIndiaIncomeTax, INDIA_TAX_YEAR } from "@/lib/calculations/india-tax";
 import { PieChart, FileText, TrendingDown } from "lucide-react";
 
 interface TaxPlanningInputs {
@@ -26,39 +27,6 @@ const initialValues: TaxPlanningInputs = {
   regime: 'old'
 };
 
-const oldRegimeTaxSlabs = [
-  { min: 0, max: 250000, rate: 0 },
-  { min: 250000, max: 500000, rate: 5 },
-  { min: 500000, max: 1000000, rate: 20 },
-  { min: 1000000, max: Infinity, rate: 30 }
-];
-
-const newRegimeTaxSlabs = [
-  { min: 0, max: 300000, rate: 0 },
-  { min: 300000, max: 600000, rate: 5 },
-  { min: 600000, max: 900000, rate: 10 },
-  { min: 900000, max: 1200000, rate: 15 },
-  { min: 1200000, max: 1500000, rate: 20 },
-  { min: 1500000, max: Infinity, rate: 30 }
-];
-
-function calculateTaxVal(taxableIncome: number, regime: 'old' | 'new', age: number): { tax: number; marginalRate: number } {
-  const slabs = regime === 'old' ? [...oldRegimeTaxSlabs] : [...newRegimeTaxSlabs];
-  if (regime === 'old' && age >= 60 && slabs[0]) {
-    slabs[0].max = age >= 80 ? 500000 : 300000;
-  }
-  let tax = 0;
-  let marginalRate = 0;
-  for (const slab of slabs) {
-    if (taxableIncome > slab.min) {
-      const taxableInThisSlab = Math.min(taxableIncome, slab.max) - slab.min;
-      tax += (taxableInThisSlab * slab.rate) / 100;
-      marginalRate = slab.rate;
-    }
-  }
-  return { tax, marginalRate };
-}
-
 function calculateTaxPlanningCore(inputs: TaxPlanningInputs) {
   const annualIncome = Math.abs(parseRobustNumber(inputs.annualIncome));
   const age = Math.max(18, Math.abs(parseRobustNumber(inputs.age)));
@@ -68,24 +36,31 @@ function calculateTaxPlanningCore(inputs: TaxPlanningInputs) {
   const otherDeductions = Math.abs(parseRobustNumber(inputs.otherDeductions));
   const regime = inputs.regime || 'new';
 
-  if (annualIncome === 0) {
-    return { grossIncome: 0, totalDeductions: 0, taxableIncome: 0, incomeTax: 0, cess: 0, totalTax: 0, netIncome: 0, effectiveTaxRate: 0, marginalTaxRate: 0, taxSavings: 0 };
-  }
-
-  let totalDeductions = 0;
-  if (regime === 'old') {
-    totalDeductions = Math.min(section80C, 150000) + Math.min(section80D, age >= 60 ? 50000 : 25000) + section24B + otherDeductions;
-  }
-
-  const taxableIncome = Math.max(0, annualIncome - totalDeductions);
-  const { tax: incomeTax, marginalRate } = calculateTaxVal(taxableIncome, regime, age);
-  const cess = incomeTax * 0.04;
-  const totalTax = incomeTax + cess;
-  const netIncome = annualIncome - totalTax;
+  const totalDeductions =
+    regime === 'old'
+      ? Math.min(section80C, 150000) +
+        Math.min(section80D, age >= 60 ? 50000 : 25000) +
+        Math.max(0, section24B) +
+        Math.max(0, otherDeductions)
+      : 0;
+  const tax = calculateIndiaIncomeTax({
+    grossIncome: annualIncome,
+    age,
+    regime,
+    deductions: totalDeductions,
+    salaried: true,
+    resident: true,
+  });
+  const { taxableIncome, incomeTax, cess, totalTax, netIncome, marginalRate } = tax;
   const effectiveTaxRate = annualIncome > 0 ? (totalTax / annualIncome) * 100 : 0;
-  
-  const { tax: taxWithoutDeductions } = calculateTaxVal(annualIncome, regime, age);
-  const taxSavings = Math.max(0, (taxWithoutDeductions + taxWithoutDeductions * 0.04) - totalTax);
+  const withoutDeductions = calculateIndiaIncomeTax({
+    grossIncome: annualIncome,
+    age,
+    regime,
+    salaried: true,
+    resident: true,
+  });
+  const taxSavings = Math.max(0, withoutDeductions.totalTax - totalTax);
 
   return { grossIncome: annualIncome, totalDeductions, taxableIncome, incomeTax, cess, totalTax, netIncome, effectiveTaxRate, marginalTaxRate: marginalRate, taxSavings };
 }
@@ -178,7 +153,7 @@ export default function TaxPlanningCalculatorPage() {
   return (
     <BaseCalculatorTemplate<TaxPlanningInputs>
       title="Tax Saving Investment Planning Calculator"
-      description="Compare old vs new tax regime, calculate tax liability, and optimize your tax savings with detailed analysis."
+      description={`Compare Indian old and new tax regimes for FY ${INDIA_TAX_YEAR.financialYear} (AY ${INDIA_TAX_YEAR.assessmentYear}) using the current slab and rebate rules.`}
       initialValues={initialValues}
       fields={fields}
       calculate={calculate}

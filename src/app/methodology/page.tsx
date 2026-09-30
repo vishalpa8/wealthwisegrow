@@ -49,11 +49,11 @@ export default function MethodologyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-bold text-neutral-900 mb-4">Tax Calculation Logic</h2>
           <p className="text-neutral-600 mb-4">
-            Our tax calculators (Income Tax, GST, HRA) use the latest slabs and rules defined by the Government of India. We update these annually following the Union Budget.
+            Country-specific tools identify the rule set they implement. The income-tax calculators currently use Indian FY 2025-26 / AY 2026-27 slabs, standard deductions, Section 87A rebate, and 4% cess.
           </p>
           <ul className="list-disc pl-6 space-y-2 text-neutral-600">
-            <li><strong>Income Tax:</strong> Supports both Old and New Tax Regimes.</li>
-            <li><strong>GST:</strong> Applies standard GST rates (5%, 12%, 18%, 28%) to net or gross amounts.</li>
+            <li><strong>Income Tax:</strong> Supports Indian old and new regimes for the stated year. <a href="https://www.incometax.gov.in/iec/foportal/help/individual/return-applicable-1" target="_blank" rel="noreferrer" className="text-primary-600 hover:underline">Official Income Tax Department source</a>.</li>
+            <li><strong>GST:</strong> Applies the user-entered rate to inclusive or exclusive prices and displays either CGST+SGST or IGST based on supply type.</li>
             <li><strong>HRA:</strong> Uses the standard three-rule comparison for exemption calculation.</li>
           </ul>
         </section>

@@ -52,12 +52,12 @@ describe('Preservation: Loan Calculator Core Calculations', () => {
             
             // Calculate expected monthly payment using mortgage formula
             const monthlyRate = annualRate / 1200;
-            const numberOfPayments = years * 12;
+            const numberOfPayments = Math.round(years * 12);
             const powerTerm = Math.pow(1 + monthlyRate, numberOfPayments);
             const expectedMonthly = principal * (monthlyRate * powerTerm) / (powerTerm - 1);
             
-            // Verify the formula is correct (within floating point precision)
-            expect(result.monthlyPayment).toBeCloseTo(expectedMonthly, 1);
+            // The production calculator returns currency rounded to paise.
+            expect(result.monthlyPayment).toBeCloseTo(expectedMonthly, 2);
           }
         ),
         { numRuns: 100 }

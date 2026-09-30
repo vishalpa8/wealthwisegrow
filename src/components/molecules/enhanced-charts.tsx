@@ -124,7 +124,8 @@ export function SimplePieChart({
             <Tooltip 
               formatter={(value: any, name: any) => {
                 const percentage = (((value as number) / total) * 100).toFixed(1);
-                return [`${formatCurrency(value as number)} (${percentage}%)`, String(name)];
+                const formatted = formatCurrency(value as number);
+                return [showPercentages ? `${formatted} (${percentage}%)` : formatted, String(name)];
               }}
               contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
             />

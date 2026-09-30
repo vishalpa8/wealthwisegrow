@@ -29,7 +29,7 @@ export function calculateEMI(principal: number, annualRate: number, totalMonths:
   
   const p = safeBig(principal);
   const rate = safeBig(annualRate).div(100).div(12);
-  const months = Math.round(totalMonths);
+  const months = Math.max(1, Math.round(totalMonths));
   
   if (rate.eq(0)) return p.div(months).toNumber();
   
@@ -53,7 +53,7 @@ export function calculateFutureValue(principal: number, annualRate: number, tota
   
   const p = safeBig(principal);
   const ratePerPeriod = safeBig(annualRate).div(100).div(periodsPerYear || 1);
-  const periods = Math.round(totalPeriods);
+  const periods = Math.max(1, Math.round(totalPeriods));
   
   return p.times(safeBig(1).plus(ratePerPeriod).pow(periods)).toNumber();
 }
@@ -66,7 +66,7 @@ export function calculatePresentValue(futureValue: number, annualRate: number, t
   
   const fv = safeBig(futureValue);
   const ratePerPeriod = safeBig(annualRate).div(100).div(periodsPerYear || 1);
-  const periods = Math.round(totalPeriods);
+  const periods = Math.max(1, Math.round(totalPeriods));
   
   const denominator = safeBig(1).plus(ratePerPeriod).pow(periods);
   if (denominator.eq(0)) return 0;
@@ -83,7 +83,7 @@ export function calculateSIPFutureValue(monthlyInvestment: number, annualRate: n
   
   const pmt = safeBig(monthlyInvestment);
   const rate = safeBig(annualRate).div(100).div(12);
-  const months = Math.round(totalMonths);
+  const months = Math.max(1, Math.round(totalMonths));
   
   if (rate.eq(0)) return pmt.times(months).toNumber();
   
@@ -103,7 +103,7 @@ export function calculateRequiredSIP(targetCorpus: number, annualRate: number, t
   
   const fv = safeBig(targetCorpus);
   const rate = safeBig(annualRate).div(100).div(12);
-  const months = Math.round(totalMonths);
+  const months = Math.max(1, Math.round(totalMonths));
   
   if (rate.eq(0)) return fv.div(months).toNumber();
   

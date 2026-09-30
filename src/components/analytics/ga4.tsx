@@ -1,11 +1,13 @@
 "use client";
 
 import Script from "next/script";
+import { useConsent } from "@/contexts/consent-context";
 
 export function GA4() {
   const measurementId = process.env.NEXT_PUBLIC_GA_ID;
+  const { analyticsAllowed } = useConsent();
 
-  if (!measurementId) {
+  if (!measurementId || !analyticsAllowed) {
     return null;
   }
 

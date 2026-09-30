@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Search, X } from 'lucide-react';
 import { Button } from '../atoms/button';
 
 interface Calculator {
@@ -16,67 +17,75 @@ interface Calculator {
 }
 
 const calculators: Calculator[] = [
-  { 
-    name: 'Mortgage', 
-    description: 'Calculate your monthly mortgage payments with taxes and insurance.', 
-    path: '/calculators/mortgage', 
-    category: 'Loans', 
-    icon: '🏠', 
+  {
+    name: 'Mortgage',
+    description: 'Calculate your monthly mortgage payments with taxes and insurance.',
+    path: '/calculators/mortgage',
+    category: 'Loans',
+    icon: '🏠',
     difficulty: 'Medium',
     estimatedTime: '3-5 min',
-    features: ['Monthly Payment', 'Total Interest', 'Amortization Schedule', 'Tax & Insurance']
+    features: ['Monthly Payment', 'Total Interest', 'Amortization Schedule', 'Tax & Insurance'],
   },
-  { 
-    name: 'Loan', 
-    description: 'Calculate EMI for personal, home, car, business, and education loans.', 
-    path: '/calculators/loan', 
-    category: 'Loans', 
-    icon: '💳', 
+  {
+    name: 'Loan',
+    description: 'Calculate EMI for personal, home, car, business, and education loans.',
+    path: '/calculators/loan',
+    category: 'Loans',
+    icon: '💳',
     difficulty: 'Easy',
     estimatedTime: '2-3 min',
-    features: ['EMI Calculator', 'Multiple Loan Types', 'Interest Breakdown', 'Prepayment Analysis']
+    features: ['EMI Calculator', 'Multiple Loan Types', 'Interest Breakdown', 'Total Cost'],
   },
-  { 
-    name: 'Investment', 
-    description: 'Calculate future value of investments including lump sum and SIP.', 
-    path: '/calculators/investment', 
-    category: 'Investments', 
-    icon: '📈', 
+  {
+    name: 'Investment',
+    description: 'Calculate future value of investments including lump sum and SIP.',
+    path: '/calculators/investment',
+    category: 'Investments',
+    icon: '📈',
     difficulty: 'Medium',
     estimatedTime: '4-6 min',
-    features: ['SIP Calculator', 'Lump Sum', 'Goal Planning', 'Returns Analysis']
+    features: ['SIP Calculator', 'Lump Sum', 'Goal Planning', 'Returns Analysis'],
   },
-  { 
-    name: 'Retirement', 
-    description: 'Plan your retirement savings and calculate required corpus.', 
-    path: '/calculators/retirement', 
-    category: 'Planning', 
-    icon: '🧓', 
+  {
+    name: 'Retirement',
+    description: 'Plan your retirement savings and calculate required corpus.',
+    path: '/calculators/retirement',
+    category: 'Planning',
+    icon: '🧓',
     difficulty: 'Advanced',
     estimatedTime: '5-8 min',
-    features: ['Corpus Calculation', 'Inflation Adjustment', 'Multiple Scenarios', 'Goal Tracking']
+    features: ['Corpus Calculation', 'Inflation Adjustment', 'Multiple Scenarios', 'Goal Tracking'],
   },
-  { 
-    name: 'Budget', 
-    description: 'Create and manage your monthly budget effectively.', 
-    path: '/calculators/budget', 
-    category: 'Planning', 
-    icon: '💰', 
+  {
+    name: 'Budget',
+    description: 'Create and manage your monthly budget effectively.',
+    path: '/calculators/budget',
+    category: 'Planning',
+    icon: '💰',
     difficulty: 'Easy',
     estimatedTime: '3-4 min',
-    features: ['Income Tracking', 'Expense Categories', 'Savings Goals', 'Budget Analysis']
+    features: ['Income Tracking', 'Expense Categories', 'Savings Goals', 'Budget Analysis'],
   },
-  { 
-    name: 'Income Tax', 
-    description: 'Calculate your annual income tax liability.', 
-    path: '/calculators/income-tax', 
-    category: 'Tax', 
-    icon: '📋', 
+  {
+    name: 'Income Tax',
+    description: 'Estimate Indian income tax for FY 2025-26 under the old and new regimes.',
+    path: '/calculators/income-tax',
+    category: 'Tax',
+    icon: '📋',
     difficulty: 'Advanced',
     estimatedTime: '6-10 min',
-    features: ['Tax Calculation', 'Deductions', 'Tax Saving', 'Regime Comparison']
+    features: ['Tax Calculation', 'Deductions', 'Rebate & Cess', 'Regime Comparison'],
   },
 ];
+
+const categories = ['All', 'Loans', 'Investments', 'Planning', 'Tax'];
+
+const difficultyColor: Record<Calculator['difficulty'], string> = {
+  Easy: 'bg-green-100 text-green-800',
+  Medium: 'bg-yellow-100 text-yellow-800',
+  Advanced: 'bg-red-100 text-red-800',
+};
 
 interface CalculatorExplorerProps {
   isOpen: boolean;
@@ -87,85 +96,110 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
   const [selectedCalculator, setSelectedCalculator] = useState<Calculator | null>(null);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [previewKey, setPreviewKey] = useState(0);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewLoaded, setPreviewLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
-  const categories = ['All', 'Loans', 'Investments', 'Planning', 'Tax'];
-  
-  const filteredCalculators = calculators.filter(calc => {
+  const query = searchTerm.trim().toLowerCase();
+  const filteredCalculators = calculators.filter((calc) => {
     const matchesCategory = selectedCategory === 'All' || calc.category === selectedCategory;
-    const matchesSearch = !searchTerm.trim() || 
-      calc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      calc.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      calc.category.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch =
+      !query ||
+      calc.name.toLowerCase().includes(query) ||
+      calc.description.toLowerCase().includes(query) ||
+      calc.category.toLowerCase().includes(query);
     return matchesCategory && matchesSearch;
   });
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'Easy': return 'bg-green-100 text-green-800';
-      case 'Medium': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+  const selectCalculator = (calculator: Calculator) => {
+    setSelectedCalculator(calculator);
+    setPreviewVisible(false);
+    setPreviewLoaded(false);
+  };
+
+  const openPreview = () => {
+    setPreviewVisible(true);
+    setPreviewLoaded(false);
+    setPreviewKey((key) => key + 1);
+  };
+
+  const reloadPreview = () => {
+    setPreviewLoaded(false);
+    setPreviewKey((key) => key + 1);
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900">Explore Calculators</h2>
-            <p className="text-gray-600 mt-1">Find the perfect calculator for your financial needs</p>
+    <div
+      className="fixed inset-0 z-[60] flex items-stretch justify-center bg-black/50 sm:items-center sm:p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="calculator-explorer-title"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <div className="flex h-[100dvh] w-full max-w-6xl flex-col overflow-hidden bg-white sm:h-[90dvh] sm:rounded-2xl">
+        <div className="flex items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 sm:px-6">
+          <div className="min-w-0">
+            <h2 id="calculator-explorer-title" className="text-xl font-bold text-gray-900 sm:text-2xl">
+              Explore Calculators
+            </h2>
+            <p className="mt-1 text-sm text-gray-600 sm:text-base">
+              Find the right calculator for your financial needs
+            </p>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+            className="shrink-0 rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100"
+            aria-label="Close calculator explorer"
           >
-            <span className="text-2xl">✕</span>
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-        <div className="flex h-[calc(90vh-120px)]">
-          {/* Left Panel - Calculator List */}
-          <div className="w-1/2 border-r border-gray-200 overflow-y-auto">
-            {/* Search and Filter */}
-            <div className="p-4 border-b border-gray-100 space-y-4">
-              {/* Search Box */}
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+          <div
+            className={`min-h-0 flex-1 flex-col overflow-y-auto lg:flex lg:w-[42%] lg:flex-none lg:border-r lg:border-gray-200 ${
+              selectedCalculator ? 'hidden' : 'flex'
+            }`}
+          >
+            <div className="space-y-4 border-b border-gray-100 p-4">
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                </div>
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
-                  type="text"
+                  type="search"
                   placeholder="Search calculators..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  aria-label="Search calculators"
+                  className="w-full rounded-lg border border-gray-300 py-2 pl-9 pr-4 text-base focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:text-sm"
                 />
-                {searchTerm && (
-                  <button
-                    onClick={() => setSearchTerm('')}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
               </div>
-              
-              {/* Category Filter */}
-              <div className="flex flex-wrap gap-2">
+
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1">
                 {categories.map((category) => (
                   <button
+                    type="button"
                     key={category}
                     onClick={() => setSelectedCategory(category)}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                    className={`shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
                       selectedCategory === category
                         ? 'bg-gray-900 text-white'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -175,62 +209,55 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
                   </button>
                 ))}
               </div>
-              
-              {/* Results count */}
-              <div className="text-xs text-gray-500">
+
+              <p className="text-xs text-gray-500">
                 {filteredCalculators.length} calculator{filteredCalculators.length !== 1 ? 's' : ''} found
-              </div>
+              </p>
             </div>
 
-            {/* Calculator List */}
-            <div className="p-4 space-y-3">
-              {filteredCalculators.length > 0 ? filteredCalculators.map((calculator) => (
-                <div
-                  key={calculator.name}
-                  onClick={() => setSelectedCalculator(calculator)}
-                  className={`p-4 rounded-lg border cursor-pointer transition-all duration-200 ${
-                    selectedCalculator?.name === calculator.name
-                      ? 'border-gray-900 bg-gray-50'
-                      : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start">
-                      <span className="text-2xl mr-3 flex-shrink-0">{calculator.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 flex items-center flex-wrap gap-2 mb-1">
-                          <span>{calculator.name}</span>
-                          
-                        </h3>
-                        <p className="text-sm text-gray-600 leading-relaxed">{calculator.description}</p>
+            <div className="space-y-3 p-4">
+              {filteredCalculators.length > 0 ? (
+                filteredCalculators.map((calculator) => (
+                  <button
+                    type="button"
+                    key={calculator.name}
+                    onClick={() => selectCalculator(calculator)}
+                    className={`w-full rounded-lg border p-4 text-left transition-colors ${
+                      selectedCalculator?.name === calculator.name
+                        ? 'border-gray-900 bg-gray-50'
+                        : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span className="shrink-0 text-2xl" aria-hidden="true">{calculator.icon}</span>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-gray-900">{calculator.name}</h3>
+                        <p className="mt-1 text-sm leading-relaxed text-gray-600">{calculator.description}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700">
+                            {calculator.category}
+                          </span>
+                          <span className={`rounded-full px-2 py-1 text-xs font-medium ${difficultyColor[calculator.difficulty]}`}>
+                            {calculator.difficulty}
+                          </span>
+                          <span className="text-xs text-gray-500">{calculator.estimatedTime}</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2 flex-wrap gap-1">
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                        {calculator.category}
-                      </span>
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${getDifficultyColor(calculator.difficulty)}`}>
-                        {calculator.difficulty}
-                      </span>
-                    </div>
-                    <span className="text-xs text-gray-500 ml-2">{calculator.estimatedTime}</span>
-                  </div>
-                </div>
-              )) : (
-                <div className="text-center py-8">
-                  <div className="text-4xl mb-2">🔍</div>
-                  <p className="text-gray-500 text-sm">
+                  </button>
+                ))
+              ) : (
+                <div className="py-8 text-center">
+                  <p className="text-sm text-gray-500">
                     {searchTerm ? `No calculators found for "${searchTerm}"` : 'No calculators in this category'}
                   </p>
                   <button
+                    type="button"
                     onClick={() => {
                       setSearchTerm('');
                       setSelectedCategory('All');
                     }}
-                    className="text-blue-600 hover:text-blue-700 text-sm mt-2"
+                    className="mt-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     Clear filters
                   </button>
@@ -239,80 +266,95 @@ export function CalculatorExplorer({ isOpen, onClose }: CalculatorExplorerProps)
             </div>
           </div>
 
-          {/* Right Panel - Calculator Details */}
-          <div className="w-1/2 overflow-y-auto">
+          <div
+            className={`min-h-0 flex-1 overflow-y-auto lg:block ${selectedCalculator ? 'block' : 'hidden'}`}
+          >
             {selectedCalculator ? (
-              <div className="p-6">
-                {/* Calculator Header */}
-                <div className="text-center mb-6">
-                  <span className="text-6xl mb-4 block">{selectedCalculator.icon}</span>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedCalculator.name} Calculator</h3>
-                  <p className="text-gray-600">{selectedCalculator.description}</p>
+              <div className="space-y-5 p-4 sm:p-6">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCalculator(null)}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:text-blue-800 lg:hidden"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  All calculators
+                </button>
+
+                <div className="flex items-start gap-3">
+                  <span className="text-4xl" aria-hidden="true">{selectedCalculator.icon}</span>
+                  <div className="min-w-0">
+                    <h3 className="text-xl font-bold text-gray-900 sm:text-2xl">
+                      {selectedCalculator.name} Calculator
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-600 sm:text-base">{selectedCalculator.description}</p>
+                  </div>
                 </div>
 
-                {/* Calculator Info */}
-                <div className="space-y-6">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gray-600">Difficulty</div>
-                      <div className={`text-sm font-semibold mt-1 px-2 py-1 rounded-full inline-block ${getDifficultyColor(selectedCalculator.difficulty)}`}>
-                        {selectedCalculator.difficulty}
-                      </div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gray-600">Time</div>
-                      <div className="text-sm font-semibold text-gray-900 mt-1">{selectedCalculator.estimatedTime}</div>
-                    </div>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <div className="text-sm font-medium text-gray-600">Category</div>
-                      <div className="text-sm font-semibold text-gray-900 mt-1">{selectedCalculator.category}</div>
-                    </div>
-                  </div>
+                <div className="flex flex-wrap gap-2 text-xs">
+                  <span className={`rounded-full px-2 py-1 font-medium ${difficultyColor[selectedCalculator.difficulty]}`}>
+                    {selectedCalculator.difficulty}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-700">
+                    {selectedCalculator.category}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-2 py-1 font-medium text-gray-700">
+                    {selectedCalculator.estimatedTime}
+                  </span>
+                </div>
 
-                  {/* Features */}
-                  <div>
-                    <h4 className="font-semibold text-gray-900 mb-3">Key Features:</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      {selectedCalculator.features.map((feature, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <span className="text-green-500 mr-2">✓</span>
-                          {feature}
+                <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {selectedCalculator.features.map((feature) => (
+                    <li key={feature} className="flex items-center text-sm text-gray-600">
+                      <span className="mr-2 text-green-500" aria-hidden="true">✓</span>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+
+                <Link href={selectedCalculator.path} onClick={onClose} className="block">
+                  <Button className="w-full" size="lg">
+                    Open full calculator
+                  </Button>
+                </Link>
+
+                {!previewVisible ? (
+                  <Button type="button" variant="outline" className="w-full" size="lg" onClick={openPreview}>
+                    Preview calculator
+                  </Button>
+                ) : (
+                  <div className="overflow-hidden rounded-xl border border-gray-200">
+                    <div className="flex items-center justify-between gap-2 border-b border-gray-100 px-4 py-2">
+                      <p className="text-sm font-medium text-gray-700">Live preview</p>
+                      <button
+                        type="button"
+                        onClick={reloadPreview}
+                        className="text-sm font-medium text-blue-700 hover:text-blue-800"
+                      >
+                        Reload
+                      </button>
+                    </div>
+                    <div className="relative h-[60dvh] min-h-[420px] w-full bg-white">
+                      {!previewLoaded && (
+                        <div className="absolute inset-0 flex items-center justify-center text-sm text-gray-500">
+                          Loading calculator preview...
                         </div>
-                      ))}
+                      )}
+                      <iframe
+                        key={`${selectedCalculator.path}-${previewKey}`}
+                        title={`${selectedCalculator.name} calculator preview`}
+                        src={`${selectedCalculator.path}?embed=1`}
+                        onLoad={() => setPreviewLoaded(true)}
+                        className="absolute inset-0 h-full w-full border-0"
+                      />
                     </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    <Link href={selectedCalculator.path} className="w-full">
-                      <Button className="w-full" size="lg">
-                        <span className="mr-2">🚀</span>
-                        Start Calculating
-                      </Button>
-                    </Link>
-                    <Button variant="outline" className="w-full" size="lg">
-                      <span className="mr-2">👁️</span>
-                      Preview Calculator
-                    </Button>
-                  </div>
-
-                  {/* Quick Tips */}
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="font-semibold text-blue-900 mb-2">💡 Quick Tip</h4>
-                    <p className="text-sm text-blue-800">
-                      {selectedCalculator.difficulty === 'Easy' && "Perfect for beginners! This calculator is straightforward and easy to use."}
-                      {selectedCalculator.difficulty === 'Medium' && "Requires some financial knowledge. Take your time to understand each input."}
-                      {selectedCalculator.difficulty === 'Advanced' && "Complex calculator with multiple variables. Consider consulting a financial advisor for major decisions."}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-full text-center p-6">
+              <div className="flex h-full items-center justify-center p-6 text-center">
                 <div>
-                  <div className="text-6xl mb-4">🧮</div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a Calculator</h3>
-                  <p className="text-gray-600">Choose a calculator from the list to see detailed information and features.</p>
+                  <h3 className="mb-2 text-xl font-semibold text-gray-900">Select a calculator</h3>
+                  <p className="text-gray-600">Choose a calculator from the list to see its features and a live preview.</p>
                 </div>
               </div>
             )}

@@ -27,7 +27,7 @@ export default function Home() {
             </h1>
             <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Access 39+ professional financial calculators for mortgages, loans, investments, and retirement planning. 
-              Get instant, accurate results to make informed financial decisions.
+              Get instant estimates with documented assumptions to support informed financial decisions.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-10">
               <Button
@@ -101,7 +101,7 @@ export default function Home() {
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center hover:shadow-md transition-shadow duration-200">
               <div className="text-2xl mb-1">🔒</div>
-              <div className="text-xs text-gray-600 font-medium">100% Private</div>
+              <div className="text-xs text-gray-600 font-medium">Local Calculations</div>
             </div>
             <div className="bg-white rounded-xl border border-gray-200 p-4 text-center hover:shadow-md transition-shadow duration-200">
               <div className="text-2xl mb-1">🆓</div>
@@ -124,28 +124,28 @@ export default function Home() {
 
         {/* Calculator Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <Link href="/calculators" className="group text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+          <Link href="/calculators#loans-emi" className="group text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl hover:from-blue-100 hover:to-blue-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
             <div className="h-12 w-12 bg-blue-500 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
               <span className="text-2xl text-white">🏠</span>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Loans & EMI</h3>
             <p className="text-sm text-gray-600">Mortgage, Personal, Car, Business</p>
           </Link>
-          <Link href="/calculators" className="group text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:from-green-100 hover:to-green-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+          <Link href="/calculators#investment-sip" className="group text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl hover:from-green-100 hover:to-green-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
             <div className="h-12 w-12 bg-green-500 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
               <span className="text-2xl text-white">📈</span>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Investments</h3>
             <p className="text-sm text-gray-600">SIP, Mutual Funds, FD, Gold</p>
           </Link>
-          <Link href="/calculators" className="group text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+          <Link href="/calculators#financial-planning" className="group text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl hover:from-purple-100 hover:to-purple-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
             <div className="h-12 w-12 bg-purple-500 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
               <span className="text-2xl text-white">💰</span>
             </div>
             <h3 className="font-semibold text-gray-900 mb-2">Planning</h3>
             <p className="text-sm text-gray-600">Budget, Retirement, Goals</p>
           </Link>
-          <Link href="/calculators" className="group text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl hover:from-orange-100 hover:to-orange-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
+          <Link href="/calculators#tax-planning" className="group text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl hover:from-orange-100 hover:to-orange-200 transition-all duration-200 hover:shadow-md hover:-translate-y-1">
             <div className="h-12 w-12 bg-orange-500 rounded-lg flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-200">
               <span className="text-2xl text-white">📋</span>
             </div>
@@ -184,10 +184,10 @@ export default function Home() {
                 <span className="text-3xl">🎯</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                Accurate & Reliable
+                Transparent & Testable
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Professional-grade algorithms ensure precise results for your financial planning and decision-making.
+                Documented formulas, dated regulatory assumptions, and automated tests make results easier to understand and verify.
               </p>
             </div>
 
@@ -206,10 +206,10 @@ export default function Home() {
                 <span className="text-3xl">🔒</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                100% Private
+                Calculator Privacy
               </h3>
               <p className="text-gray-600 leading-relaxed">
-                Your data stays on your device. No registration required, no data collection, completely private.
+                Calculator inputs are processed in your browser and are not sent to our servers.
               </p>
             </div>
           </div>

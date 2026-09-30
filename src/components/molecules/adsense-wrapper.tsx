@@ -1,6 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { useConsent } from '@/contexts/consent-context';
 
 const AdSense = dynamic(() => import('./adsense'), {
   ssr: false,
@@ -14,7 +15,12 @@ export interface AdSenseWrapperProps {
 }
 
 export function AdSenseWrapper({ adSlot, className, style }: AdSenseWrapperProps) {
-  if (process.env.NEXT_PUBLIC_ADSENSE_ENABLED !== 'true') {
+  const { advertisingAllowed } = useConsent();
+  if (
+    process.env.NEXT_PUBLIC_ADSENSE_ENABLED !== 'true' ||
+    !advertisingAllowed ||
+    !/^\d+$/.test(adSlot)
+  ) {
     return null;
   }
 

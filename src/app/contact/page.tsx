@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { CalculatorLayout } from "@/components/templates/calculator-layout";
 import { Mail, MessageSquare, MapPin } from "lucide-react";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Contact Us | WealthWiseGrow",
@@ -26,8 +27,9 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-neutral-900">Email</h3>
-                <p className="text-neutral-600 text-sm">support@wealthwisegrow.com</p>
-                <p className="text-neutral-500 text-xs mt-1">We typically respond within 24-48 hours.</p>
+                <p className="text-neutral-600 text-sm">
+                  {siteConfig.contactEmail ?? "Contact mailbox is being configured."}
+                </p>
               </div>
             </div>
             
@@ -47,7 +49,7 @@ export default function ContactPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-neutral-900">Location</h3>
-                <p className="text-neutral-600 text-sm">Digital First - Serving users across India.</p>
+                <p className="text-neutral-600 text-sm">Online service available worldwide. Country-specific tools are clearly labelled.</p>
               </div>
             </div>
           </div>
@@ -63,12 +65,18 @@ export default function ContactPage() {
             <li><strong>Content corrections:</strong> the page, the statement, and a source such as an official circular or notification.</li>
             <li><strong>Suggestions:</strong> the calculator or guide you would like us to add or improve.</li>
           </ul>
-          <a
-            href="mailto:support@wealthwisegrow.com?subject=WealthWiseGrow%20feedback"
-            className="block w-full text-center bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
-          >
-            Email support@wealthwisegrow.com
-          </a>
+          {siteConfig.contactEmail ? (
+            <a
+              href={`mailto:${siteConfig.contactEmail}?subject=WealthWiseGrow%20feedback`}
+              className="block w-full text-center bg-primary-600 hover:bg-primary-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              Email {siteConfig.contactEmail}
+            </a>
+          ) : (
+            <p className="rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
+              Direct email is temporarily unavailable while a free public mailbox is configured.
+            </p>
+          )}
           <p className="text-neutral-500 text-sm mt-4">
             See our <a href="/corrections" className="text-primary-600 hover:underline">corrections policy</a> for how reported errors are reviewed and fixed.
           </p>

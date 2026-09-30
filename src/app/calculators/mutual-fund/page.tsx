@@ -6,6 +6,7 @@ import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { parseRobustNumber } from "@/lib/utils/number";
+import { calculateXirr, DatedCashFlow } from "@/lib/calculations/xirr";
 
 const initialValues = {
   investmentType: 'lumpsum',
@@ -17,7 +18,6 @@ const initialValues = {
   currentNav: 12,
   entryLoad: 0,
   exitLoad: 0,
-  taxBracket: 'none'
 };
 
 export default function MutualFundCalculatorPage() {
@@ -60,7 +60,7 @@ export default function MutualFundCalculatorPage() {
       showIf: (values: any) => values.investmentType === 'sip',
     },
     {
-      label: 'Purchase NAV',
+      label: 'Purchase / Average NAV',
       name: 'purchaseNav',
       type: 'number',
       placeholder: '10.00',
@@ -89,17 +89,6 @@ export default function MutualFundCalculatorPage() {
       placeholder: '0',
       step: 0.01,
     },
-    {
-      label: 'Tax Bracket',
-      name: 'taxBracket',
-      type: 'select',
-      options: [
-        { value: 'none', label: 'No Tax' },
-        { value: '10', label: '10%' },
-        { value: '20', label: '20%' },
-        { value: '30', label: '30%' }
-      ],
-    }
   ], [currency.symbol]);
 
   const calculate = (values: typeof initialValues) => {
@@ -114,6 +103,7 @@ export default function MutualFundCalculatorPage() {
     let totalInvestment = 0;
     let units = 0;
     let currentValue = 0;
+    const cashFlows: DatedCashFlow[] = [];
 
     const initialInvestment = Math.abs(parseRobustNumber(values.initialInvestment)) || 0;
     const monthlyInvestment = Math.abs(parseRobustNumber(values.monthlyInvestment)) || 0;
@@ -127,6 +117,10 @@ export default function MutualFundCalculatorPage() {
       units = investmentAfterLoad / purchaseNav;
       currentValue = units * currentNav * (1 - exitLoad / 100);
       totalInvestment = initialInvestment;
+      cashFlows.push(
+        { date: new Date(startDateTime), amount: -initialInvestment },
+        { date: new Date(endDateTime), amount: currentValue },
+      );
     } else {
       const startDateObj = new Date(values.startDate);
       const endDateObj = new Date(values.endDate || Date.now());
@@ -137,18 +131,22 @@ export default function MutualFundCalculatorPage() {
         const monthlyInvestmentAfterLoad = monthlyInvestment * (1 - entryLoad / 100);
         units += monthlyInvestmentAfterLoad / purchaseNav;
         totalInvestment += monthlyInvestment;
+        const contributionDate = new Date(startDateObj);
+        contributionDate.setMonth(contributionDate.getMonth() + i);
+        cashFlows.push({ date: contributionDate, amount: -monthlyInvestment });
       }
       currentValue = units * currentNav * (1 - exitLoad / 100);
+      cashFlows.push({ date: endDateObj, amount: currentValue });
     }
 
     const absoluteReturns = totalInvestment > 0 ? ((currentValue - totalInvestment) / totalInvestment) * 100 : 0;
-    const cagr = (totalInvestment > 0 && durationInYears > 0) ? 
-      (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100 : 0;
-
-    const taxRate = parseInt(values.taxBracket) || 0;
+    const annualizedReturn =
+      values.investmentType === 'sip'
+        ? calculateXirr(cashFlows)
+        : (totalInvestment > 0 && durationInYears > 0)
+          ? (Math.pow(currentValue / totalInvestment, 1 / durationInYears) - 1) * 100
+          : null;
     const gains = currentValue - totalInvestment;
-    const taxAmount = (gains * taxRate) / 100;
-    const postTaxValue = currentValue - taxAmount;
 
     const results: CalculatorResult[] = [
       {
@@ -173,8 +171,8 @@ export default function MutualFundCalculatorPage() {
         type: 'percentage',
       },
       {
-        label: 'CAGR',
-        value: cagr,
+        label: values.investmentType === 'sip' ? 'XIRR' : 'CAGR',
+        value: annualizedReturn ?? 0,
         type: 'percentage',
       },
       {
@@ -184,28 +182,13 @@ export default function MutualFundCalculatorPage() {
       }
     ];
 
-    if (values.taxBracket !== 'none') {
-      results.push(
-        {
-          label: 'Tax Amount',
-          value: taxAmount,
-          type: 'currency',
-        },
-        {
-          label: 'Post-tax Value',
-          value: postTaxValue,
-          type: 'currency',
-        }
-      );
-    }
-
     return { results };
   };
 
   return (
     <BaseCalculatorTemplate<typeof initialValues>
-      title="Historical Mutual Fund Returns & CAGR Calculator"
-      description="Calculate your mutual fund returns including CAGR, absolute returns, and tax implications."
+      title="Mutual Fund NAV Return, CAGR & XIRR Calculator"
+      description="Estimate returns from supplied NAV values. Lumpsum results use CAGR; dated SIP cash flows use XIRR. This tool does not retrieve historical NAV data or calculate country-specific tax."
       initialValues={initialValues}
       fields={fields}
       calculate={calculate}

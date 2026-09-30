@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CalculatorLayout } from "@/components/templates/calculator-layout";
+import { siteConfig } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Terms of Service | WealthWiseGrow",
@@ -40,9 +41,11 @@ export default function TermsOfServicePage() {
         <section>
           <h2 className="text-2xl font-bold text-neutral-900 mb-4">Contact</h2>
           <p className="text-neutral-600">
-            Questions about these terms can be sent to <a href="mailto:support@wealthwisegrow.com" className="text-primary-600 hover:underline">support@wealthwisegrow.com</a>.
+            {siteConfig.contactEmail
+              ? <>Questions about these terms can be sent to <a href={`mailto:${siteConfig.contactEmail}`} className="text-primary-600 hover:underline">{siteConfig.contactEmail}</a>.</>
+              : "A public contact mailbox is being configured."}
           </p>
-          <p className="text-sm text-neutral-500 mt-6">Last reviewed: May 4, 2026</p>
+          <p className="text-sm text-neutral-500 mt-6">Last reviewed: September 30, 2026</p>
         </section>
       </div>
     </CalculatorLayout>

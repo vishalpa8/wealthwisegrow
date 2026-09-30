@@ -11,15 +11,13 @@ interface BreakEvenInputs {
   variableCostPerUnit: number;
   sellingPricePerUnit: number;
   targetProfit: number;
-  currentSales: number;
 }
 
 const initialValues: BreakEvenInputs = {
   fixedCost: 100000,
   variableCostPerUnit: 50,
   sellingPricePerUnit: 150,
-  targetProfit: 50000,
-  currentSales: 0
+  targetProfit: 50000
 };
 
 export function BreakEvenContent() {
@@ -57,13 +55,6 @@ export function BreakEvenContent() {
       placeholder: '50,000',
       unit: currency.symbol,
       tooltip: 'Desired profit amount (optional)'
-    },
-    {
-      label: 'Current Sales (Units)',
-      name: 'currentSales',
-      type: 'number',
-      placeholder: '0',
-      tooltip: 'Current number of units sold (for analysis)'
     }
   ], [currency.symbol]);
 
@@ -72,8 +63,6 @@ export function BreakEvenContent() {
     const variableCostPerUnit = Math.abs(parseRobustNumber(inputs.variableCostPerUnit)) || 50;
     const sellingPricePerUnit = Math.abs(parseRobustNumber(inputs.sellingPricePerUnit)) || 150;
     const targetProfit = Math.abs(parseRobustNumber(inputs.targetProfit)) || 0;
-    const currentSales = Math.abs(parseRobustNumber(inputs.currentSales)) || 0;
-
     const effectiveSellingPrice = Math.max(sellingPricePerUnit, variableCostPerUnit + 1);
     const contributionMargin = effectiveSellingPrice - variableCostPerUnit;
     const contributionMarginRatio = (contributionMargin / effectiveSellingPrice) * 100;

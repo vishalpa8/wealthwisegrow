@@ -260,9 +260,11 @@ describe('Advanced Mathematical Verification - Comprehensive Test Suite', () => 
     
     test('should verify income tax slab calculations', () => {
       const testCases = [
-        { income: 500000, expectedTax: 6250 },
-        { income: 1000000, expectedTax: 42500 },
-        { income: 1500000, expectedTax: 125000 },
+        // FY 2025-26 new regime: ₹75,000 standard deduction and section 87A
+        // rebate up to ₹12 lakh of taxable income.
+        { income: 500000, expectedTax: 0 },
+        { income: 1000000, expectedTax: 0 },
+        { income: 1500000, expectedTax: 93750 },
       ];
 
       testCases.forEach(({ income, expectedTax }) => {

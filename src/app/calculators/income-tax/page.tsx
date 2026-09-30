@@ -5,6 +5,7 @@ import { BaseCalculatorTemplate } from "@/components/templates/base-calculator";
 import { EnhancedCalculatorField, CalculatorResult } from "@/components/organisms/enhanced-calculator-form";
 import { useCurrency } from "@/contexts/currency-context";
 import { calculateIncomeTax, IncomeTaxInputs } from '@/lib/calculations/tax';
+import { INDIA_TAX_YEAR } from '@/lib/calculations/india-tax';
 import { parseRobustNumber } from '@/lib/utils/number';
 
 const initialValues = {
@@ -41,7 +42,7 @@ export default function IncomeTaxCalculatorPage() {
       ],
     },
     {
-      label: 'Deductions',
+      label: 'Old Regime Deductions',
       name: 'deductions',
       type: 'number',
       placeholder: '1,50,000',
@@ -99,7 +100,7 @@ export default function IncomeTaxCalculatorPage() {
   return (
     <BaseCalculatorTemplate<typeof initialValues>
       title="Old vs New Regime Income Tax Calculator"
-      description="Calculate your income tax liability under both old and new tax regimes in India."
+      description={`Estimate Indian income tax for FY ${INDIA_TAX_YEAR.financialYear} (AY ${INDIA_TAX_YEAR.assessmentYear}). Old-regime deductions are ignored when the new regime is selected.`}
       initialValues={initialValues}
       fields={fields}
       calculate={calculate}

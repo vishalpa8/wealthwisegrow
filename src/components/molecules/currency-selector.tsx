@@ -28,7 +28,10 @@ export function CurrencySelector({ className = '', size = 'md' }: CurrencySelect
         }
       }}
     >
-      <SelectTrigger className={`w-auto min-w-[120px] ${sizeClasses[size]} ${className}`}>
+      <SelectTrigger
+        aria-label="Select currency"
+        className={`w-auto min-w-[88px] sm:min-w-[120px] ${sizeClasses[size]} ${className}`}
+      >
         <SelectValue>
           <div className="flex items-center gap-2">
             <span className="font-medium">{currency.symbol}</span>

@@ -1,3 +1,5 @@
+import { siteConfig } from "@/lib/site";
+
 export const organizationStructuredData = {
   "@context": "https://schema.org",
   "@type": "Organization",
@@ -5,18 +7,18 @@ export const organizationStructuredData = {
   "url": "https://wealthwisegrow.com",
   "logo": {
     "@type": "ImageObject",
-    "url": "https://wealthwisegrow.com/logo.png",
+    "url": "https://wealthwisegrow.com/icon.png",
     "width": 512,
     "height": 512
   },
-  "description": "India-focused financial calculator platform for loans, SIP, tax, salary, retirement, savings, and personal finance planning.",
-  "contactPoint": {
+  "description": "Financial calculator platform with global planning tools and clearly identified India-specific tax and savings tools.",
+  ...(siteConfig.contactEmail ? { "contactPoint": {
     "@type": "ContactPoint",
     "contactType": "customer support",
-    "email": "support@wealthwisegrow.com",
-    "areaServed": "IN",
+    "email": siteConfig.contactEmail,
+    "areaServed": "Worldwide",
     "availableLanguage": ["en"]
-  }
+  }} : {})
 };
 
 export const websiteStructuredData = {
@@ -24,15 +26,7 @@ export const websiteStructuredData = {
   "@type": "WebSite",
   "name": "WealthWiseGrow",
   "url": "https://wealthwisegrow.com",
-  "description": "Access India-focused financial calculators and personal finance guides for loans, SIP, tax, salary, retirement, savings, and wealth planning.",
-  "potentialAction": {
-    "@type": "SearchAction",
-    "target": {
-      "@type": "EntryPoint",
-      "urlTemplate": "https://wealthwisegrow.com/calculators?q={search_term_string}"
-    },
-    "query-input": "required name=search_term_string"
-  }
+  "description": "Access financial calculators and personal finance guides for loans, SIP, tax, salary, retirement, savings, and wealth planning."
 };
 
 export const breadcrumbStructuredData = (items: Array<{name: string, url: string}>) => ({
