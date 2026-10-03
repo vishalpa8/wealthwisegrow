@@ -9,40 +9,49 @@ import { Footer } from "@/components/organisms/footer";
 import { GA4 } from "@/components/analytics/ga4";
 import { AdSenseScript } from "@/components/analytics/adsense-script";
 import { ConsentProvider } from "@/contexts/consent-context";
-import { organizationStructuredData, websiteStructuredData } from "@/lib/seo/structured-data";
+import {
+  organizationStructuredData,
+  websiteStructuredData,
+} from "@/lib/seo/structured-data";
 import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "WealthWiseGrow - Financial Calculators & Investment Tools",
-  description: "Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth. Make smarter financial decisions with WealthWiseGrow.",
-  keywords: "financial calculator, mortgage calculator, loan calculator, investment calculator, retirement planning, personal finance",
-  authors: [{ name: 'WealthWiseGrow' }],
-  metadataBase: new URL('https://wealthwisegrow.com'),
+  description:
+    "Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth. Make smarter financial decisions with WealthWiseGrow.",
+  keywords:
+    "financial calculator, mortgage calculator, loan calculator, investment calculator, retirement planning, personal finance",
+  authors: [{ name: "WealthWiseGrow" }],
+  metadataBase: new URL("https://wealthwisegrow.com"),
   alternates: {
-    canonical: '/',
+    canonical: "/",
   },
   openGraph: {
-    title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
-    description: 'Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth.',
-    url: 'https://wealthwisegrow.com',
-    siteName: 'WealthWiseGrow',
-    locale: 'en_IN',
-    type: 'website',
+    title: "WealthWiseGrow - Financial Calculators & Investment Tools",
+    description:
+      "Access a comprehensive suite of financial calculators and investment tools for mortgages, loans, investments, retirement planning, and wealth growth.",
+    url: "https://wealthwisegrow.com",
+    siteName: "WealthWiseGrow",
+    locale: "en_IN",
+    type: "website",
     images: [
       {
-        url: 'https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides',
+        url: "https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides",
         width: 1200,
         height: 630,
-        alt: 'WealthWiseGrow - Financial Calculators & Investment Tools',
+        alt: "WealthWiseGrow - Financial Calculators & Investment Tools",
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
-    site: '@WealthWiseGrow',
-    title: 'WealthWiseGrow - Financial Calculators & Investment Tools',
-    description: 'Comprehensive financial calculators and guides for better money management',
-    images: ['https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides'],
+    card: "summary_large_image",
+    site: "@WealthWiseGrow",
+    title: "WealthWiseGrow - Financial Calculators & Investment Tools",
+    description:
+      "Comprehensive financial calculators and guides for better money management",
+    images: [
+      "https://wealthwisegrow.com/api/og?title=WealthWiseGrow&description=Financial%20Calculators%20and%20Planning%20Guides",
+    ],
   },
   robots: {
     index: true,
@@ -50,13 +59,15 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
   },
   verification: {
-    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ?? 'BQbxAlPpr1EKvw8az0zGMf9Yw5rTS19XNb0zBRTIvO8',
+    google:
+      process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION ??
+      "BQbxAlPpr1EKvw8az0zGMf9Yw5rTS19XNb0zBRTIvO8",
   },
 };
 
@@ -69,77 +80,123 @@ export default function RootLayout({
   const sidebarAdSlot = process.env.NEXT_PUBLIC_ADSENSE_SIDEBAR_SLOT ?? "";
 
   return (
-    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col font-sans" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="scroll-smooth"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
+      <body
+        className="min-h-screen flex flex-col font-sans"
+        suppressHydrationWarning
+      >
         <Script id="embed-preview" strategy="beforeInteractive">
           {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
         </Script>
         <ConsentProvider>
           <GA4 />
           <AdSenseScript />
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationStructuredData) }}
+          <Script
+            src="https://quge5.com/88/tag.min.js"
+            strategy="afterInteractive"
+            data-zone="290065"
+            data-cfasync="false"
           />
           <script
             type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteStructuredData) }}
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(organizationStructuredData),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(websiteStructuredData),
+            }}
           />
           <CurrencyProvider>
-          <div className="site-chrome">
-          <Header />
-          </div>
+            <div className="site-chrome">
+              <Header />
+            </div>
 
-          <div className="site-chrome">
-          <AdSenseWrapper adSlot={headerAdSlot} className="w-full h-[90px] max-w-[728px] mx-auto mt-4" />
-          </div>
+            <div className="site-chrome">
+              <AdSenseWrapper
+                adSlot={headerAdSlot}
+                className="w-full h-[90px] max-w-[728px] mx-auto mt-4"
+              />
+            </div>
 
-          <div className="site-shell flex flex-1 w-full container-wide gap-8 py-8">
-            {/* Sidebar */}
-            <aside className="site-chrome hidden lg:block w-80 space-y-4 flex-shrink-0">
-              <div className="card">
-                <h3 className="text-base font-semibold text-neutral-900 mb-4">
-                  Popular Calculators
-                </h3>
-                <nav aria-label="Popular calculators">
-                  <ul className="space-y-1">
-                    {[
-                      { href: "/calculators/mortgage", emoji: "🏠", label: "Mortgage Calculator" },
-                      { href: "/calculators/loan", emoji: "💳", label: "Loan Calculator" },
-                      { href: "/calculators/investment", emoji: "📈", label: "Investment Calculator" },
-                      { href: "/calculators/retirement", emoji: "🧓", label: "Retirement Calculator" },
-                      { href: "/calculators/budget", emoji: "💰", label: "Budget Calculator" },
-                    ].map(({ href, emoji, label }) => (
-                      <li key={href}>
-                        <Link
-                          href={href}
-                          className="flex items-center px-3 py-2 rounded-lg hover:bg-neutral-50 transition-colors"
-                        >
-                          <span className="text-lg mr-3" aria-hidden="true">{emoji}</span>
-                          <span className="text-sm font-medium text-neutral-700">{label}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </nav>
-              </div>
+            <div className="site-shell flex flex-1 w-full container-wide gap-8 py-8">
+              {/* Sidebar */}
+              <aside className="site-chrome hidden lg:block w-80 space-y-4 flex-shrink-0">
+                <div className="card">
+                  <h3 className="text-base font-semibold text-neutral-900 mb-4">
+                    Popular Calculators
+                  </h3>
+                  <nav aria-label="Popular calculators">
+                    <ul className="space-y-1">
+                      {[
+                        {
+                          href: "/calculators/mortgage",
+                          emoji: "🏠",
+                          label: "Mortgage Calculator",
+                        },
+                        {
+                          href: "/calculators/loan",
+                          emoji: "💳",
+                          label: "Loan Calculator",
+                        },
+                        {
+                          href: "/calculators/investment",
+                          emoji: "📈",
+                          label: "Investment Calculator",
+                        },
+                        {
+                          href: "/calculators/retirement",
+                          emoji: "🧓",
+                          label: "Retirement Calculator",
+                        },
+                        {
+                          href: "/calculators/budget",
+                          emoji: "💰",
+                          label: "Budget Calculator",
+                        },
+                      ].map(({ href, emoji, label }) => (
+                        <li key={href}>
+                          <Link
+                            href={href}
+                            className="flex items-center px-3 py-2 rounded-lg hover:bg-neutral-50 transition-colors"
+                          >
+                            <span className="text-lg mr-3" aria-hidden="true">
+                              {emoji}
+                            </span>
+                            <span className="text-sm font-medium text-neutral-700">
+                              {label}
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </nav>
+                </div>
 
-              <div className="card">
-                <AdSenseWrapper adSlot={sidebarAdSlot} className="w-full h-[250px] max-w-[300px]" />
-              </div>
-            </aside>
+                <div className="card">
+                  <AdSenseWrapper
+                    adSlot={sidebarAdSlot}
+                    className="w-full h-[250px] max-w-[300px]"
+                  />
+                </div>
+              </aside>
 
-            {/* Main Content */}
-            <main className="flex-1 min-w-0">
-              <div className="animate-fade-in">
-                {children}
-              </div>
-            </main>
-          </div>
+              {/* Main Content */}
+              <main className="flex-1 min-w-0">
+                <div className="animate-fade-in">{children}</div>
+              </main>
+            </div>
 
-          <div className="site-chrome">
-          <Footer />
-          </div>
+            <div className="site-chrome">
+              <Footer />
+            </div>
           </CurrencyProvider>
         </ConsentProvider>
       </body>
