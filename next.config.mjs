@@ -5,12 +5,13 @@ const contentSecurityPolicy = [
   "form-action 'self' mailto:",
   "frame-ancestors 'self'",
   "object-src 'none'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https://www.googletagmanager.com https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://quge5.com https://5gvci.com`,
-  "style-src 'self' 'unsafe-inline'",
+  // Monetag rotates its ad-serving domains, so scripts, requests, and frames allow any HTTPS origin.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''} https:`,
+  "style-src 'self' 'unsafe-inline' https:",
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
-  "connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://quge5.com https://*.quge5.com https://5gvci.com https://*.5gvci.com",
-  "frame-src 'self' https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://quge5.com https://*.quge5.com https://5gvci.com https://*.5gvci.com",
+  "font-src 'self' data: https:",
+  "connect-src 'self' https:",
+  "frame-src 'self' https:",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",
 ].join('; ');
