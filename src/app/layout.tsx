@@ -90,6 +90,14 @@ export default function RootLayout({
         className="min-h-screen flex flex-col font-sans"
         suppressHydrationWarning
       >
+        <head>
+          <script
+            src="https://quge5.com/88/tag.min.js"
+            data-zone="290065"
+            async
+            data-cfasync="false"
+          />
+        </head>
         <Script id="embed-preview" strategy="beforeInteractive">
           {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
         </Script>
