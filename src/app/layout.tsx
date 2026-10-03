@@ -96,12 +96,6 @@ export default function RootLayout({
         <ConsentProvider>
           <GA4 />
           <AdSenseScript />
-          <Script
-            src="https://quge5.com/88/tag.min.js"
-            strategy="afterInteractive"
-            data-zone="290065"
-            data-cfasync="false"
-          />
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
