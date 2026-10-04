@@ -90,18 +90,26 @@ export default function RootLayout({
         className="min-h-screen flex flex-col font-sans"
         suppressHydrationWarning
       >
-        <head>
-          <script
-            src="https://ekhay.com/vignette.min.js?z=11946359"
-            async
-            data-cfasync="false"
-          />
-          <script
-            src="https://b3mny.com/tag.min.js?z=11946358"
-            async
-            data-cfasync="false"
-          />
-        </head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11953842',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11953841',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(s){s.dataset.zone='11953840',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+          }}
+        />
+        <script
+          src="https://5gvci.com/act/files/tag.min.js?z=11953806"
+          async
+          data-cfasync="false"
+        />
         <Script id="embed-preview" strategy="beforeInteractive">
           {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
         </Script>
