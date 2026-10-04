@@ -92,8 +92,12 @@ export default function RootLayout({
       >
         <head>
           <script
-            src="https://quge5.com/88/tag.min.js"
-            data-zone="290065"
+            src="https://ekhay.com/vignette.min.js?z=11946359"
+            async
+            data-cfasync="false"
+          />
+          <script
+            src="https://b3mny.com/tag.min.js?z=11946358"
             async
             data-cfasync="false"
           />
