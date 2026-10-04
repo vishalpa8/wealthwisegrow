@@ -90,26 +90,33 @@ export default function RootLayout({
         className="min-h-screen flex flex-col font-sans"
         suppressHydrationWarning
       >
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='11953842',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='11953841',s.src='https://nap5k.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(s){s.dataset.zone='11953840',s.src='https://n6wxm.com/vignette.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
-          }}
-        />
-        <script
-          src="https://5gvci.com/act/files/tag.min.js?z=11953806"
-          async
-          data-cfasync="false"
-        />
+        {[
+          ["11953900", "https://n6wxm.com/vignette.min.js"],
+          ["11953842", "https://n6wxm.com/vignette.min.js"],
+          ["11953840", "https://n6wxm.com/vignette.min.js"],
+          ["11953813", "https://n6wxm.com/vignette.min.js"],
+          ["11953809", "https://n6wxm.com/vignette.min.js"],
+          ["11946359", "https://n6wxm.com/vignette.min.js"],
+          ["11953841", "https://nap5k.com/tag.min.js"],
+          ["11953812", "https://nap5k.com/tag.min.js"],
+          ["11953808", "https://nap5k.com/tag.min.js"],
+          ["11946358", "https://nap5k.com/tag.min.js"],
+        ].map(([zone, src]) => (
+          <script
+            key={zone}
+            dangerouslySetInnerHTML={{
+              __html: `(function(s){s.dataset.zone='${zone}',s.src='${src}'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))`,
+            }}
+          />
+        ))}
+        {["11953814", "11953810", "11953806", "11946360"].map((zone) => (
+          <script
+            key={zone}
+            src={`https://5gvci.com/act/files/tag.min.js?z=${zone}`}
+            async
+            data-cfasync="false"
+          />
+        ))}
         <Script id="embed-preview" strategy="beforeInteractive">
           {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
         </Script>
