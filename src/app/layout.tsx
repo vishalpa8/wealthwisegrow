@@ -109,7 +109,7 @@ export default function RootLayout({
             }}
           />
         ))}
-        {["11953814", "11953810", "11953806", "11946360"].map((zone) => (
+        {["11953806", "11946360"].map((zone) => (
           <script
             key={zone}
             src={`https://5gvci.com/act/files/tag.min.js?z=${zone}`}
