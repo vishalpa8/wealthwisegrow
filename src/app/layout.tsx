@@ -109,14 +109,11 @@ export default function RootLayout({
             }}
           />
         ))}
-        {["11953806", "11946360"].map((zone) => (
-          <script
-            key={zone}
-            src={`https://5gvci.com/act/files/tag.min.js?z=${zone}`}
-            async
-            data-cfasync="false"
-          />
-        ))}
+        <script
+          src="https://5gvci.com/act/files/tag.min.js?z=11953806"
+          async
+          data-cfasync="false"
+        />
         <Script id="embed-preview" strategy="beforeInteractive">
           {`if (new URLSearchParams(location.search).get("embed") === "1") document.documentElement.dataset.embed = "1";`}
         </Script>
